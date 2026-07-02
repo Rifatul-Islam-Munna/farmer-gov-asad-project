@@ -7,7 +7,7 @@ import '../../../admin/presentation/admin_workspace.dart';
 import '../../../agent/presentation/agent_assist_panel.dart';
 import '../../../medicine_seller/presentation/seller_workspace.dart';
 import '../widgets/buyer_workspace.dart';
-import '../widgets/sell_goods_panel.dart';
+import '../widgets/farmer_workspace.dart';
 
 @RoutePage()
 class ListingFormPage extends StatelessWidget {
@@ -21,14 +21,14 @@ class ListingFormPage extends StatelessWidget {
       'agent' => 'Farmer assistance',
       'medicineSeller' => 'Shop inventory',
       'admin' => 'Administration',
-      _ => 'Sell goods',
+      _ => 'Farmer marketplace',
     };
     final body = switch (role) {
       'buyer' => const BuyerWorkspace(),
       'agent' => const AgentAssistPanel(),
       'medicineSeller' => const SellerWorkspace(),
       'admin' => const AdminWorkspace(),
-      _ => const SellGoodsPanel(),
+      _ => const FarmerWorkspace(),
     };
 
     return Scaffold(appBar: AppBar(title: Text(title)), body: body);
