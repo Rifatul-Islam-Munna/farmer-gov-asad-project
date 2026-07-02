@@ -1,203 +1,261 @@
 # Farmer Government Platform — Product and Technical Plan
 
-## 1. Purpose
+## Branch Policy
 
-The Farmer Government Platform will connect farmers, buyers, field agents, medicine sellers, and administrators in one mobile-first agricultural ecosystem.
+- [x] All active feature work is committed directly to `development`.
+- [x] `main` remains the stable branch.
+- [x] Generated AutoRoute output is committed directly to `development`.
+- [ ] Remove every branch except `main` and `development`.
+- [ ] Remove the accidental `farmer_app/` directory.
+- [ ] Merge `development` into `main` only after backend and Flutter checks pass.
 
-The platform will help farmers:
+## Status Legend
 
-1. Identify crop insects or diseases from a phone camera image and receive treatment suggestions.
-2. List agricultural goods for sale with quantity, government reference price, and a farmer-defined minimum price.
-3. Monitor current and previous market prices and receive practical farming suggestions.
-
-The marketplace will allow buyers to discover goods, contact farmers, negotiate, and complete a deal only after both parties confirm it.
-
-Agents will support farmers who cannot independently use the app by creating verified farmer accounts and posting goods on their behalf with OTP authorization.
-
-Medicine sellers will publish their shop location and available agricultural medicines so the platform can recommend nearby sellers after an insect or disease is identified.
+- [x] Completed and committed to `development`.
+- [~] Started or partially implemented.
+- [ ] Not started.
+- [!] Requires executable verification.
 
 ---
 
-## 2. User Roles
+# 1. Completed Foundation
 
-The platform will support the following roles:
+## 1.1 Documentation and Project Structure
 
-### 2.1 Admin
+- [x] Use the existing Flutter project at `farmer/`.
+- [x] Keep the NestJS backend at `backend/`.
+- [x] Create the `development` branch.
+- [x] Add `farmer/PLAN.md`.
+- [x] Add `farmer/TASKS.md`.
+- [x] Add Farmer setup and verification commands to `farmer/README.md`.
+- [~] Remove the accidental `farmer_app/` folder.
+- [~] Keep only `main` and `development` branches.
 
-Admin users will manage the platform through an administration interface.
+## 1.2 Backend Authentication and Users
 
-Main responsibilities:
+- [x] Use MongoDB/Mongoose for users.
+- [x] Support `admin`, `agent`, `farmer`, `buyer`, and `medicineSeller`.
+- [x] Add farmer land amount.
+- [x] Add document fields for buyer, agent, and medicine seller.
+- [x] Add business name, shop name, address, and verification status.
+- [x] Add role-specific DTO validation.
+- [x] Persist role-specific registration fields.
+- [x] Keep register, login, OTP verification, profile, and logout routes.
+- [!] Run backend build and ESLint in an environment with package access.
 
-- Manage users and role approvals.
-- Review agent, buyer, and medicine-seller documents.
-- Manage agricultural goods and categories.
-- Manage government and market reference prices.
-- Review farmer sale posts.
-- Review reported users, products, and deals.
-- Manage pest, disease, medicine, and pesticide reference data.
-- Monitor marketplace activity and platform analytics.
+## 1.3 Flutter Application Foundation
 
-### 2.2 Farmer
+- [x] Add the requested Flutter package list.
+- [x] Use Flutter default fonts.
+- [x] Add `.env` and `.env.example`.
+- [x] Initialize GetIt.
+- [x] Register SharedPreferences.
+- [x] Register FlutterSecureStorage.
+- [x] Initialize CachedQuery and CachedStorage.
+- [x] Add optional OneSignal initialization through `.env`.
+- [x] Add global AppToast messenger key.
+- [x] Add green agricultural theme.
+- [x] Add Android internet, camera, image, location, and notification permissions.
+- [!] Run Flutter package installation, generation, analyze, and tests.
 
-Farmer registration information:
+## 1.4 Networking and Session
 
-- Full name.
+- [x] Add `.env`-configured Dio base URL.
+- [x] Add connect, send, and receive timeouts.
+- [x] Add JSON headers.
+- [x] Add PrettyDioLogger.
+- [x] Inject `access_token` from secure storage.
+- [x] Clear the session on HTTP 401.
+- [x] Redirect to login on HTTP 401.
+- [x] Prevent repeated simultaneous HTTP 401 redirects.
+- [x] Save token, role, and user name.
+- [x] Add server-backed logout with guaranteed local cleanup.
+
+## 1.5 Freezed and JSON Models
+
+- [x] Add `UserModel`.
+- [x] Add `AuthResponseModel`.
+- [x] Add `LoginRequestModel`.
+- [x] Add `RegisterRequestModel`.
+- [x] Add JsonSerializable-compatible conversion methods.
+- [ ] Generate and commit all `.freezed.dart` and `.g.dart` files.
+
+## 1.6 AutoRoute and Initial Screens
+
+- [x] Add global router instance.
+- [x] Add nested AutoRoute configuration.
+- [x] Commit generated AutoRoute definitions directly to `development`.
+- [x] Add Liverpool-style animated `AutoTabsScaffold`.
+- [x] Add independent Home, Marketplace, Post, and Profile stacks.
+- [x] Add agricultural splash screen.
+- [x] Add backend-connected login page.
+- [x] Add role-aware registration page.
+- [x] Add farmer land field.
+- [x] Add buyer, agent, and medicine-seller document UI.
+- [x] Add medicine-seller shop and address fields.
+- [x] Add Farmer home dashboard foundation.
+- [x] Add demo Marketplace and price page.
+- [x] Add Profile and logout page.
+- [~] Keep the Post tab as a safe placeholder until the listing backend is implemented.
+
+---
+
+# 2. Product Vision
+
+The platform connects farmers, buyers, agents, medicine sellers, and administrators.
+
+Farmers will:
+
+1. Photograph crop insects or diseases and receive diagnosis and treatment suggestions.
+2. Create agricultural goods listings with quantity, government reference price, and minimum price.
+3. Monitor current and previous market prices and receive practical suggestions.
+
+Buyers will search listings, negotiate offers, and confirm deals.
+
+Agents will create farmer accounts and post on behalf of farmers only after farmer OTP authorization.
+
+Medicine sellers will publish location and inventory so farmers can find nearby treatment products.
+
+---
+
+# 3. User Roles
+
+## Admin
+
+- Manage users and verification.
+- Review documents.
+- Manage goods and categories.
+- Manage government and market prices.
+- Moderate listings and deals.
+- Manage pest, disease, medicine, and pesticide data.
+- View analytics and audit history.
+
+Admin registration must not be public.
+
+## Farmer
+
+Required information:
+
+- Name.
 - Mobile number.
-- Password or OTP-based access.
-- Total land amount.
-- Optional location information.
+- Password or OTP access.
+- Land amount.
+- Optional location.
 
-Main capabilities:
+Capabilities:
 
-- Capture or upload crop/insect images.
-- Receive a demo insect diagnosis and treatment suggestion.
-- View nearby medicine sellers who stock the suggested product.
-- Create goods-for-sale posts.
-- Search and manually select a good.
-- Capture a good image for automatic demo identification.
-- Enter available quantity in kilograms.
-- View the government reference price.
-- Set a minimum acceptable price.
-- Publish the sale post.
-- Receive buyer offers.
-- Accept or reject a proposed deal.
-- View current and previous market prices.
-- View price increase/decrease indicators.
-- View farming suggestions and notices.
+- Crop and insect diagnosis.
+- Treatment suggestions.
+- Nearby medicine seller discovery.
+- Goods listing creation.
+- Market-price monitoring.
+- Buyer offer management.
+- Deal confirmation.
 
-### 2.3 Buyer
+## Buyer
 
-Buyer registration information:
+Required information:
 
-- Full name.
+- Name.
 - Mobile number.
-- Required identity or business documents.
-- Optional business and location information.
+- Password.
+- Identity or business documents.
+- Optional business details and location.
 
-Main capabilities:
+Capabilities:
 
-- Browse the farmer marketplace.
-- Search by goods name and category.
-- Filter by location, quantity, minimum price, and availability.
-- View farmer listing details.
-- View the current government and market price.
-- Contact the farmer.
-- Submit an offer for a selected quantity and price.
-- Confirm the buyer side of a negotiated deal.
-- Track pending, accepted, rejected, and completed deals.
-- View current agricultural market rates.
+- Search and filter listings.
+- View listing, quantity, price, and farmer information.
+- Submit offers and counteroffers.
+- Contact farmers.
+- Confirm final deals.
 
-### 2.4 Agent
+## Agent
 
-Agent registration information:
+Required information:
 
-- Full name.
+- Name.
 - Mobile number.
-- Required identity and authorization documents.
+- Password.
+- Identity or authorization documents.
 - Service location.
 
-Main capabilities:
+Capabilities:
 
-- Search existing farmers by phone number or identity.
-- Create a new farmer account.
-- Trigger an OTP to the farmer's phone.
-- Complete farmer creation only after OTP confirmation.
-- Create a sale listing on behalf of a farmer.
-- Select the represented farmer.
-- Trigger a posting OTP to the farmer's phone.
-- Publish only after the farmer provides the OTP.
-- View previously assisted farmers and delegated posts.
-- Track agent activity for audit purposes.
+- Create farmer accounts through OTP.
+- Search farmers.
+- Post on behalf of farmers through OTP.
+- View activity and audit history.
 
-### 2.5 Medicine Seller / Pharmacist
+## Medicine Seller
 
-Medicine seller registration information:
+Required information:
 
-- Owner or representative name.
+- Name.
 - Mobile number.
+- Password.
 - Shop name.
-- Shop address and geographic coordinates.
-- Required business or identity documents.
+- Shop address and location.
+- Identity or business documents.
 
-Main capabilities:
+Capabilities:
 
-- Maintain shop profile and location.
-- Add medicines, pesticides, and agricultural treatment products.
-- Set stock availability.
-- Update product quantity and availability status.
+- Manage shop profile.
+- Manage medicine and pesticide inventory.
+- Maintain stock and price.
 - Receive farmer inquiries.
-- Appear in nearby-shop recommendations when a diagnosis suggests a stocked product.
+- Appear in nearby seller recommendations.
 
 ---
 
-## 3. Farmer Application Experience
+# 4. Farmer Home Features
 
-## 3.1 Farmer Home Page
+## Crop and Insect Detection
 
-The farmer home page will prioritize three primary services.
+1. Capture or select an image.
+2. Upload through a typed DTO.
+3. Show detected pest or disease.
+4. Show confidence, symptoms, and risk.
+5. Show medicine or pesticide suggestions.
+6. Show safety instructions.
+7. Show nearby sellers with stock.
 
-### A. Crop and Insect Detection
+The first provider will be a demo. Every valid image may return the same controlled diagnosis. The provider must remain replaceable without changing the Flutter UI.
+
+## Sell Agricultural Goods
 
 The farmer can:
 
-1. Open the camera or select an image.
-2. Submit the image to the detection service.
-3. See the detected insect or disease.
-4. See confidence, symptoms, and risk level.
-5. See recommended medicine or pesticide.
-6. See safety instructions and application guidance.
-7. See nearby medicine sellers who currently stock the recommendation.
+- Search a good manually.
+- Capture an image for demo identification.
+- Enter quantity.
+- Select grade.
+- Enter harvest date and location.
+- View government price.
+- View market price.
+- Set minimum price.
+- Review and publish.
 
-For the first development phase, detection will be a demo implementation. Any submitted image will return the same controlled diagnosis response. The app and backend must still call the feature through proper DTOs, repositories, services, and API endpoints so the demo implementation can later be replaced by a real machine-learning or third-party API without changing the UI flow.
+## Market Prices and Suggestions
 
-### B. Sell Agricultural Goods
+The farmer can view:
 
-The farmer can create a listing through either method:
-
-- Search and manually select the good.
-- Capture or upload an image for automatic demo identification.
-
-The sale form will include:
-
-- Selected good.
-- Good image.
-- Quantity and unit, initially kilograms.
-- Quality or grade.
-- Harvest date.
-- Location.
-- Government reference price.
-- Current market price.
-- Farmer's minimum acceptable price.
-- Optional description.
-
-The system will automatically prefill the government reference price based on the selected good and location. The farmer may set a minimum price according to platform rules.
-
-### C. Market Price and Farmer Suggestions
-
-The farmer can see:
-
-- Current price by good.
-- Previous day's price.
-- Price difference.
-- Percentage change.
+- Current price.
+- Previous price.
+- Difference and percentage movement.
 - Up, down, or stable indicator.
-- Government reference price.
-- Regional market price.
-- Practical suggestions based on price movement.
-- Admin notices and agricultural recommendations.
-
-Initial price information will be managed from platform data or an admin-managed source. External pricing sources can be integrated later.
+- Government reference rate.
+- Regional rate.
+- Farmer suggestions and admin notices.
 
 ---
 
-## 4. Marketplace and Deal Workflow
+# 5. Marketplace and Deals
 
-## 4.1 Listing Lifecycle
-
-Recommended listing statuses:
+Listing statuses:
 
 - `draft`
-- `pending_otp`
+- `pendingOtp`
 - `published`
 - `reserved`
 - `sold`
@@ -205,173 +263,84 @@ Recommended listing statuses:
 - `cancelled`
 - `rejected`
 
-## 4.2 Buyer Offer Lifecycle
-
-A buyer will submit:
-
-- Listing ID.
-- Requested quantity.
-- Offered unit price.
-- Proposed total price.
-- Optional message.
-
-Recommended offer statuses:
+Offer statuses:
 
 - `pending`
 - `countered`
-- `accepted_by_buyer`
-- `accepted_by_farmer`
+- `acceptedByBuyer`
+- `acceptedByFarmer`
 - `confirmed`
 - `rejected`
 - `cancelled`
 - `expired`
 
-A deal becomes confirmed only when both buyer and farmer have accepted the same final terms.
+A deal is confirmed only when buyer and farmer accept the same quantity and price.
 
-## 4.3 Contact and Negotiation
-
-The first release should support a structured contact action and offer history. Real-time chat may be introduced later.
-
-The platform should retain:
-
-- Original listing terms.
-- Every buyer offer.
-- Farmer counteroffers.
-- Final agreed quantity and price.
-- Buyer confirmation time.
-- Farmer confirmation time.
-- Audit history.
+The platform must retain the original listing, offers, counteroffers, confirmations, and audit history.
 
 ---
 
-## 5. Agent Authorization Workflow
+# 6. Agent OTP Workflows
 
-## 5.1 Creating a Farmer Account
+## Create Farmer
 
 1. Agent enters farmer information.
-2. Backend validates that the phone number is not already registered.
-3. Backend creates a temporary farmer-registration request.
-4. OTP is sent to the farmer's phone.
-5. Agent enters the OTP provided by the farmer.
-6. Backend verifies the OTP.
-7. Farmer account is created.
-8. Agent action is stored in an audit record.
-
-## 5.2 Posting on Behalf of a Farmer
-
-1. Agent prepares the same sale form used by a farmer.
-2. Agent searches and selects a farmer.
-3. Backend creates a pending delegated-post request.
-4. OTP is sent directly to the farmer.
+2. Backend validates the phone number.
+3. Backend creates a pending request.
+4. OTP goes to the farmer.
 5. Agent enters the farmer-provided OTP.
-6. Backend verifies the OTP and farmer relationship.
-7. Listing is published under the farmer's ownership.
-8. The listing stores the assisting agent ID for audit purposes.
+6. Backend verifies it.
+7. Farmer account is created.
+8. Agent action is audited.
 
-No agent-created farmer account or delegated listing should become active without farmer OTP verification.
+## Post for Farmer
 
----
-
-## 6. Medicine Seller and Recommendation Workflow
-
-Medicine sellers will maintain an inventory of agricultural treatment products.
-
-Each inventory item should contain:
-
-- Product name.
-- Product category.
-- Manufacturer.
-- Active ingredient.
-- Supported pests or diseases.
-- Stock status.
-- Optional stock quantity.
-- Unit and package size.
-- Price.
-- Last updated time.
-
-After a diagnosis, the recommendation service will:
-
-1. Match the suggested medicine or pesticide to seller inventory.
-2. Filter sellers with available stock.
-3. Rank sellers by distance from the farmer.
-4. Return shop name, location, phone number, distance, and stock status.
-
-The first release may use manually entered seller coordinates and a simple distance calculation.
+1. Agent prepares the listing.
+2. Agent selects a farmer.
+3. Backend creates a pending delegated request.
+4. OTP goes to the farmer.
+5. Agent enters the farmer-provided OTP.
+6. Backend verifies authorization.
+7. Listing is owned by the farmer.
+8. Assisting agent ID is stored.
 
 ---
 
-## 7. Demo AI and Third-Party Integration Strategy
+# 7. Demo Provider Strategy
 
-The application will use adapter-based integration so demo services can later be replaced without changing feature screens.
+## Diagnosis Provider
 
-## 7.1 Crop/Insect Detection Adapter
+- Accept an image.
+- Return a typed diagnosis.
+- Demo returns one fixed diagnosis and treatment.
+- Future provider may use an internal model or third-party API.
 
-Interface responsibilities:
+## Goods Identification Provider
 
-- Receive an uploaded image.
-- Return a typed diagnosis response.
-- Return treatment recommendations.
+- Accept an image.
+- Return a good and confidence score.
+- Demo returns one fixed good.
+- Farmer can correct the result.
 
-Demo behavior:
+## OTP Provider
 
-- Accept any valid image.
-- Return one predefined pest or disease.
-- Return predefined treatment and medicine suggestions.
+- Development provider may log a demo OTP.
+- Production provider will use an SMS gateway.
+- Production responses must not expose OTP values.
 
-Future behavior:
+## Market Price Provider
 
-- Call an internal model, cloud vision API, or agricultural AI provider.
-
-## 7.2 Goods Identification Adapter
-
-Interface responsibilities:
-
-- Receive an image.
-- Return the identified agricultural good.
-- Return a confidence score and suggested category.
-
-Demo behavior:
-
-- Accept any valid image.
-- Return one predefined good.
-
-Future behavior:
-
-- Replace the demo provider with an image-classification API.
-
-## 7.3 OTP Adapter
-
-Demo behavior:
-
-- Generate and store an OTP.
-- Log or return it only in development mode.
-
-Production behavior:
-
-- Use an SMS gateway.
-- Never expose OTP values in production API responses.
-
-## 7.4 Market Price Provider
-
-Initial behavior:
-
-- Read admin-managed prices from the platform database.
-
-Future behavior:
-
-- Import government or market prices from an approved external source.
+- Initial data is managed in MongoDB by admin.
+- Future data may come from an approved external source.
 
 ---
 
-## 8. Backend Architecture
+# 8. Backend Architecture
 
-The NestJS backend should be divided into domain modules.
-
-Recommended modules:
+Planned NestJS modules:
 
 - `auth`
 - `users`
-- `roles`
 - `documents`
 - `otp`
 - `farmers`
@@ -393,46 +362,37 @@ Recommended modules:
 - `audit-logs`
 - `admin`
 
-MongoDB will be the primary database.
+Standards:
 
-Important backend practices:
-
-- DTO validation with `class-validator`.
-- Mongoose schemas with explicit indexes.
-- Role-based authorization.
+- MongoDB/Mongoose.
+- DTO validation.
+- Role and ownership guards.
 - JWT access tokens.
 - OTP expiration and attempt limits.
-- File upload validation.
-- Request and activity audit logs.
-- Pagination, filtering, and sorting for marketplace endpoints.
-- Consistent API response and error formats.
+- File validation.
+- Audit logging.
+- Pagination and filtering.
+- Consistent errors and responses.
 - Swagger documentation.
 
 ---
 
-## 9. Flutter Architecture
+# 9. Flutter Architecture
 
-The existing Flutter project is located in `farmer/` and must be used. No second Flutter application folder should be created.
-
-Recommended structure:
+Only `farmer/` is the active Flutter app.
 
 ```text
 farmer/lib/
-  app/
   core/
-    api/
-    config/
-    errors/
+    navigation/
     network/
     router/
     storage/
     theme/
     utils/
-    widgets/
   features/
     auth/
-    onboarding/
-    farmer_home/
+    home/
     diagnosis/
     marketplace/
     market_prices/
@@ -443,277 +403,114 @@ farmer/lib/
     profile/
 ```
 
-Each feature should be implemented in small, reviewable chunks.
-
-Recommended feature structure:
-
-```text
-feature_name/
-  data/
-    datasources/
-    models/
-    repositories/
-  domain/
-    entities/
-    repositories/
-    usecases/
-  presentation/
-    pages/
-    widgets/
-    controllers/
-```
-
-A simplified version may be used initially, but API, model, repository, and UI responsibilities must remain separated.
-
----
-
-## 10. Model and Serialization Standard
-
 Every API model must use Freezed and JsonSerializable.
 
-Example convention:
-
-```dart
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'auth_response.model.freezed.dart';
-part 'auth_response.model.g.dart';
-
-@freezed
-abstract class AuthResponseModel with _$AuthResponseModel {
-  const factory AuthResponseModel({
-    required String accessToken,
-    required UserModel user,
-  }) = _AuthResponseModel;
-
-  factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$AuthResponseModelFromJson(json);
-}
-```
-
-Rules:
-
-- Do not manually parse production API models unless technically required.
-- Keep request DTO models separate from response models.
-- Use explicit JSON key annotations when backend and Dart names differ.
-- Keep domain entities separate where business logic requires it.
-- Run code generation after each model group is implemented.
+AutoRoute must preserve independent nested stacks and reset a tab stack to its root when switching tabs.
 
 ---
 
-## 11. Navigation Plan
+# 10. Delivery Phases
 
-AutoRoute will be used with nested routes.
+## Phase 0 — Foundation
 
-Proposed route structure:
+- [x] Backend roles and registration fields.
+- [x] Flutter packages and initialization.
+- [x] Environment, Dio, storage, and theme.
+- [x] Model source files.
+- [x] Nested AutoRoute source and generated definitions.
+- [x] Splash, login, registration, Home, Marketplace, Profile, and shell.
+- [ ] Generate Freezed and JSON output.
+- [ ] Run backend and Flutter executable checks.
+- [ ] Remove duplicate folder and extra branches.
 
-```text
-/
-/login
-/register
-/onboarding
-/main
-  /farmer
-    /home
-    /diagnosis
-    /sell
-    /prices
-    /offers
-  /buyer
-    /marketplace
-    /listing/:id
-    /offers
-    /deals
-  /agent
-    /home
-    /create-farmer
-    /post-for-farmer
-    /activity
-  /medicine-seller
-    /home
-    /inventory
-    /inventory/add
-    /shop-profile
-  /admin
-    /dashboard
-```
+## Phase 1 — Authentication Completion
 
-Navigation will be role-aware after login. A user will be redirected to the correct shell and home page according to their role.
+- [~] Login and registration API integration.
+- [x] Logout integration.
+- [ ] Document upload API.
+- [ ] Verification-pending flow.
+- [ ] Role-based shell redirects.
+- [ ] Backend role guards.
 
----
+## Phase 2 — Farmer Dashboard and Prices
 
-## 12. Registration and Onboarding Plan
+- [~] Farmer dashboard.
+- [~] Demo prices and Marketplace.
+- [ ] Market-price backend.
+- [ ] Farmer suggestions API.
 
-The registration flow will begin with role selection.
+## Phase 3 — Diagnosis
 
-### Farmer
+- [ ] Diagnosis backend and DTOs.
+- [ ] Demo provider.
+- [ ] Camera/gallery flow.
+- [ ] Result UI.
+- [ ] Nearby seller matching.
 
-Required:
+## Phase 4 — Listings
 
-- Name.
-- Phone number.
-- Password or OTP.
-- Land amount.
-
-### Agent
-
-Required:
-
-- Name.
-- Phone number.
-- Password.
-- Identity or authorization documents.
-- Service location.
-
-### Buyer
-
-Required:
-
-- Name.
-- Phone number.
-- Password.
-- Identity or business documents.
-- Optional business information.
-
-### Medicine Seller
-
-Required:
-
-- Name.
-- Phone number.
-- Password.
-- Shop name.
-- Shop address.
-- Location.
-- Business or identity documents.
-
-### Admin
-
-Admin accounts should be provisioned securely and should not be available through open public registration.
-
----
-
-## 13. Security and Trust Requirements
-
-- Hash all passwords.
-- Store mobile tokens in secure storage.
-- Apply role-based backend guards.
-- Use expiring OTPs.
-- Limit OTP attempts and resend frequency.
-- Record agent actions and delegated operations.
-- Validate file type and size.
-- Hide private documents from unauthorized roles.
-- Prevent users from changing listing ownership.
-- Require both parties to confirm final deal terms.
-- Preserve deal audit records.
-- Protect admin endpoints.
-- Use environment variables for secrets and third-party credentials.
-
----
-
-## 14. Delivery Phases
-
-## Phase 0 — Repository and Architecture Cleanup
-
-- Use the existing `farmer/` Flutter project.
-- Remove the accidentally created duplicate Flutter folder.
-- Create and work from the `development` branch.
-- Add required packages.
-- Configure environment loading, Dio, secure storage, Freezed, JsonSerializable, and AutoRoute.
-
-## Phase 1 — Authentication and Role Onboarding
-
-- Splash screen.
-- Login.
-- Role selection.
-- Role-specific registration.
-- Document selection UI.
-- Farmer land information.
-- Secure session storage.
-- Logout.
-- Role-based nested navigation.
-
-## Phase 2 — Farmer Home and Market Prices
-
-- Farmer dashboard.
-- Three main farmer services.
-- Market price list.
-- Historical comparison and trend indicators.
-- Farmer suggestions.
-
-## Phase 3 — Demo Diagnosis
-
-- Camera and gallery image selection.
-- Typed diagnosis request and response models.
-- Demo diagnosis endpoint and provider.
-- Treatment details.
-- Nearby medicine seller recommendations.
-
-## Phase 4 — Farmer Marketplace Listing
-
-- Goods master data.
-- Goods search.
-- Demo image identification.
-- Quantity and minimum price form.
-- Government reference price autofill.
-- Listing creation and farmer listing history.
+- [~] Post tab placeholder.
+- [ ] Goods catalog backend.
+- [ ] Demo goods identification.
+- [ ] Full listing form.
+- [ ] Listing history.
 
 ## Phase 5 — Buyer Marketplace and Deals
 
-- Marketplace browsing and search.
-- Listing details.
-- Buyer offers.
-- Farmer acceptance or counteroffer.
-- Buyer and farmer dual confirmation.
-- Deal history.
+- [ ] Marketplace search backend.
+- [ ] Listing details.
+- [ ] Offers and counteroffers.
+- [ ] Dual confirmation.
+- [ ] Deal history.
 
-## Phase 6 — Agent Workflows
+## Phase 6 — Agent
 
-- Create farmer through OTP.
-- Search farmers.
-- Post on behalf of farmer through OTP.
-- Agent activity history and audit data.
+- [ ] Create farmer through OTP.
+- [ ] Search farmers.
+- [ ] Post through OTP.
+- [ ] Agent audit history.
 
 ## Phase 7 — Medicine Seller
 
-- Shop onboarding.
-- Location data.
-- Inventory management.
-- Diagnosis-to-nearby-seller matching.
+- [ ] Seller onboarding completion.
+- [ ] Inventory backend and UI.
+- [ ] Location and nearby matching.
 
-## Phase 8 — Administration and Production Integrations
+## Phase 8 — Administration and Production
 
-- Admin management tools.
-- Production SMS provider.
-- Production AI/image recognition provider.
-- Approved market price data source.
-- Notifications.
-- Reporting, analytics, moderation, and deployment hardening.
+- [ ] Admin tools.
+- [ ] Production SMS.
+- [ ] Production AI providers.
+- [ ] Approved price provider.
+- [ ] Notifications.
+- [ ] Deployment hardening.
 
 ---
 
-## 15. Initial Definition of Done
+# 11. Definition of Done
 
 A feature is complete only when:
 
-- Backend schema, DTOs, service, controller, and Swagger documentation are complete.
-- Flutter request and response models use Freezed and JsonSerializable.
-- Repository and API layers are separated from the UI.
-- Loading, success, empty, and error states are implemented.
-- Role permissions are enforced on the backend.
+- Backend schema, DTO, service, controller, authorization, and Swagger are complete.
+- Flutter models use Freezed and JsonSerializable.
+- Generated files are committed to `development`.
+- API and UI responsibilities are separated.
+- Loading, success, empty, and error states exist.
+- Backend permissions are enforced.
 - Navigation is connected.
-- Basic validation is included.
-- Tests or documented manual verification steps exist.
-- The corresponding item in `TASKS.md` is checked as complete.
+- Validation is implemented.
+- Backend build and lint pass.
+- Flutter generation, analyze, and tests pass.
+- `PLAN.md` and `TASKS.md` are updated on `development`.
 
 ---
 
-## 16. Immediate Next Step
+# 12. Next Work Chunk
 
-After approval of this plan, implementation should begin with Phase 0 only:
-
-1. Clean up the duplicate Flutter folder.
-2. Configure the existing `farmer/` project.
-3. Add the supplied package list without custom fonts.
-4. Add `.env`, Dio, secure storage, Freezed, JsonSerializable, and AutoRoute.
-5. Build the role model and authentication model foundation in small code chunks.
+1. Generate and commit Freezed and JsonSerializable output on `development`.
+2. Run and fix backend build and ESLint.
+3. Run and fix Flutter analyze and tests.
+4. Remove `farmer_app/`.
+5. Remove every branch except `main` and `development`.
+6. Build document upload.
+7. Add role-aware shell redirects.
