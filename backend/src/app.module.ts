@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AdminModule } from './admin/admin.module';
 import { AgentModule } from './agents/agent.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -26,12 +27,14 @@ import { UserModule } from './user/user.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URL') ??
+        uri:
+          configService.get<string>('MONGODB_URL') ??
           'mongodb://127.0.0.1:27017/farmer-gov-asad-project',
         autoIndex: true,
       }),
     }),
     UserModule,
+    AdminModule,
     GoodModule,
     MarketDataModule,
     ListingModule,
