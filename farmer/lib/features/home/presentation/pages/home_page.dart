@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../../../core/storage/session_storage.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../diagnosis/presentation/crop_diagnosis_panel.dart';
 import '../role_home_content.dart';
 
 @RoutePage()
@@ -102,11 +103,13 @@ class HomePage extends StatelessWidget {
                   if (action.tabIndex != null) {
                     context.tabsRouter.setActiveIndex(action.tabIndex!);
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Camera diagnosis UI is connected in the next screen step.',
-                        ),
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (_) => const FractionallySizedBox(
+                        heightFactor: 0.94,
+                        child: CropDiagnosisPanel(),
                       ),
                     );
                   }
