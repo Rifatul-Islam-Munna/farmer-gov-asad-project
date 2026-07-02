@@ -9,20 +9,14 @@ import '../core/storage/session_storage.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/pages/verification_pending_page.dart';
 
-const _tabs = [
-  _NavigationTab(Icons.home_outlined, Icons.home_rounded, 'Home'),
-  _NavigationTab(Icons.storefront_outlined, Icons.storefront_rounded, 'Market'),
-  _NavigationTab(Icons.add_box_outlined, Icons.add_box_rounded, 'Post'),
-  _NavigationTab(Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
-];
-
 @RoutePage()
 class MainShellPage extends StatelessWidget {
   const MainShellPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (!GetIt.I<SessionStorage>().isApproved) {
+    final session = GetIt.I<SessionStorage>();
+    if (!session.isApproved) {
       return const VerificationPendingPage();
     }
 
@@ -44,20 +38,24 @@ class MainShellPage extends StatelessWidget {
         profileTab(),
       ],
       bottomNavigationBuilder: (_, tabsRouter) {
-        return _BottomNavigation(tabsRouter: tabsRouter);
+        return _BottomNavigation(
+          tabsRouter: tabsRouter,
+          role: session.role,
+        );
       },
     );
   }
 }
 
 class _BottomNavigation extends StatelessWidget {
-  const _BottomNavigation({required this.tabsRouter});
+  const _BottomNavigation({required this.tabsRouter, required this.role});
 
   final TabsRouter tabsRouter;
+  final String role;
 
-  void _changeTab(int index) {
+  void _changeTab(int index, int count) {
     HapticFeedback.selectionClick();
-    for (var tabIndex = 0; tabIndex < _tabs.length; tabIndex++) {
+    for (var tabIndex = 0; tabIndex < count; tabIndex++) {
       tabsRouter.stackRouterOfIndex(tabIndex)?.popUntilRoot();
     }
     tabsRouter.setActiveIndex(index);
@@ -65,6 +63,8 @@ class _BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tabs = _tabsForRole(role);
+
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -76,14 +76,14 @@ class _BottomNavigation extends StatelessWidget {
           height: 66,
           child: Row(
             children: List.generate(
-              _tabs.length,
+              tabs.length,
               (index) {
-                final tab = _tabs[index];
+                final tab = tabs[index];
                 final active = tabsRouter.activeIndex == index;
 
                 return Expanded(
                   child: InkWell(
-                    onTap: () => _changeTab(index),
+                    onTap: () => _changeTab(index, tabs.length),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -116,6 +116,46 @@ class _BottomNavigation extends StatelessWidget {
       ),
     );
   }
+}
+
+List<_NavigationTab> _tabsForRole(String role) {
+  final third = switch (role) {
+    'agent' => const _NavigationTab(
+        Icons.support_agent_outlined,
+        Icons.support_agent_rounded,
+        'Assist',
+      ),
+    'buyer' => const _NavigationTab(
+        Icons.handshake_outlined,
+        Icons.handshake_rounded,
+        'Deals',
+      ),
+    'medicineSeller' => const _NavigationTab(
+        Icons.inventory_2_outlined,
+        Icons.inventory_2_rounded,
+        'Inventory',
+      ),
+    _ => const _NavigationTab(
+        Icons.add_box_outlined,
+        Icons.add_box_rounded,
+        'Sell',
+      ),
+  };
+
+  return [
+    const _NavigationTab(Icons.home_outlined, Icons.home_rounded, 'Home'),
+    const _NavigationTab(
+      Icons.storefront_outlined,
+      Icons.storefront_rounded,
+      'Market',
+    ),
+    third,
+    const _NavigationTab(
+      Icons.person_outline_rounded,
+      Icons.person_rounded,
+      'Profile',
+    ),
+  ];
 }
 
 class _NavigationTab {
