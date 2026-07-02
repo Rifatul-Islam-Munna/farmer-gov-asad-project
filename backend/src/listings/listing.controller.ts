@@ -18,8 +18,9 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
 import { UserType } from '../user/user.entity';
-import { CreateListingDto, SearchListingsDto } from './listing.dto';
+import { CreateListingDto } from './listing.dto';
 import { ListingOwnerGuard } from './listing-owner.guard';
+import { ListingSearchDto } from './listing-search.dto';
 import { ListingService } from './listing.service';
 
 @ApiTags('Listings')
@@ -29,7 +30,7 @@ export class ListingController {
 
   @Get()
   @ApiOperation({ summary: 'Search published farmer listings' })
-  search(@Query() query: SearchListingsDto) {
+  search(@Query() query: ListingSearchDto) {
     return this.listingService.search(query);
   }
 
