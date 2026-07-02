@@ -29,10 +29,34 @@ export class GoodService implements OnModuleInit {
       { code: 'fruit', name: 'Fruits', icon: 'nutrition', active: true },
     ];
     const goods = [
-      { code: 'rice', name: 'Rice', categoryCode: 'grain', defaultUnit: 'kg', active: true },
-      { code: 'potato', name: 'Potato', categoryCode: 'vegetable', defaultUnit: 'kg', active: true },
-      { code: 'tomato', name: 'Tomato', categoryCode: 'vegetable', defaultUnit: 'kg', active: true },
-      { code: 'onion', name: 'Onion', categoryCode: 'vegetable', defaultUnit: 'kg', active: true },
+      {
+        code: 'rice',
+        name: 'Rice',
+        categoryCode: 'grain',
+        defaultUnit: 'kg',
+        active: true,
+      },
+      {
+        code: 'potato',
+        name: 'Potato',
+        categoryCode: 'vegetable',
+        defaultUnit: 'kg',
+        active: true,
+      },
+      {
+        code: 'tomato',
+        name: 'Tomato',
+        categoryCode: 'vegetable',
+        defaultUnit: 'kg',
+        active: true,
+      },
+      {
+        code: 'onion',
+        name: 'Onion',
+        categoryCode: 'vegetable',
+        defaultUnit: 'kg',
+        active: true,
+      },
     ];
 
     await Promise.all(
@@ -58,7 +82,11 @@ export class GoodService implements OnModuleInit {
   async createCategory(dto: CreateGoodsCategoryDto) {
     const data = await this.categoryModel.findOneAndUpdate(
       { code: dto.code.trim().toLowerCase() },
-      { ...dto, code: dto.code.trim().toLowerCase(), active: dto.active ?? true },
+      {
+        ...dto,
+        code: dto.code.trim().toLowerCase(),
+        active: dto.active ?? true,
+      },
       { upsert: true, returnDocument: 'after' },
     );
     return { data };
@@ -79,7 +107,10 @@ export class GoodService implements OnModuleInit {
   }
 
   async listCategories() {
-    const data = await this.categoryModel.find({ active: true }).sort({ name: 1 }).lean();
+    const data = await this.categoryModel
+      .find({ active: true })
+      .sort({ name: 1 })
+      .lean();
     return { data };
   }
 
@@ -91,7 +122,10 @@ export class GoodService implements OnModuleInit {
     if (query.search?.trim()) {
       filter.$text = { $search: query.search.trim() };
     }
-    const data = await this.goodModel.find(filter).sort({ name: 1 }).lean();
+    const data = await this.goodModel
+      .find(filter)
+      .sort({ name: 1 })
+      .lean();
     return { data };
   }
 }
