@@ -2,9 +2,12 @@ import 'package:animations/animations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
 
 import '../core/router/app_router.dart';
+import '../core/storage/session_storage.dart';
 import '../core/theme/app_theme.dart';
+import '../features/auth/presentation/pages/verification_pending_page.dart';
 
 const _tabs = [
   _NavigationTab(Icons.home_outlined, Icons.home_rounded, 'Home'),
@@ -19,6 +22,10 @@ class MainShellPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!GetIt.I<SessionStorage>().isApproved) {
+      return const VerificationPendingPage();
+    }
+
     return AutoTabsScaffold(
       homeIndex: 0,
       animationDuration: const Duration(milliseconds: 240),
