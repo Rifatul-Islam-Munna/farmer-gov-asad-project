@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -45,7 +44,9 @@ class DioHelper {
 
   static void init() {
     final baseUrl = _baseUrl;
-    logger.i('API base URL: $baseUrl');
+    if (kDebugMode) {
+      logger.i('API base URL: $baseUrl');
+    }
 
     _dio = Dio(
       BaseOptions(
@@ -65,23 +66,29 @@ class DioHelper {
           final token = await GetIt.I<SessionStorage>().getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['access_token'] = token;
+            options.headers[Headers.authorizationHeader] = 'Bearer $token';
           }
           handler.next(options);
         },
         onError: (error, handler) async {
-          logger.e(
-            'API request failed: ${error.requestOptions.uri}',
-            error: error.error ?? error,
-            stackTrace: error.stackTrace,
-          );
+          if (kDebugMode) {
+            logger.e(
+              'API request failed: ${error.requestOptions.uri}',
+              error: error.error ?? error,
+              stackTrace: error.stackTrace,
+            );
+          }
 
           if (error.response?.statusCode == 401 && !_isRedirecting) {
             _isRedirecting = true;
-            await GetIt.I<SessionStorage>().clear();
-            Future.microtask(() {
-              appRouter.replaceAll([const LoginRoute()]);
-            });
-            _isRedirecting = false;
+            try {
+              await GetIt.I<SessionStorage>().clear();
+              if (appRouter.current.name != LoginRoute.name) {
+                await appRouter.replaceAll([const LoginRoute()]);
+              }
+            } finally {
+              _isRedirecting = false;
+            }
           }
 
           handler.next(error);
@@ -89,15 +96,17 @@ class DioHelper {
       ),
     );
 
-    _dio!.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: false,
-        responseBody: true,
-        compact: true,
-        maxWidth: 90,
-      ),
-    );
+    if (kDebugMode) {
+      _dio!.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseHeader: false,
+          responseBody: true,
+          compact: true,
+          maxWidth: 90,
+        ),
+      );
+    }
   }
 }

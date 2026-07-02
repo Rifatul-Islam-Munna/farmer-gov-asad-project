@@ -1,6 +1,7 @@
 import 'package:cached_query/cached_query.dart';
 import 'package:cached_query_flutter/cached_query_flutter.dart';
 import 'package:cached_storage/cached_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/navigation/app_router_instance.dart';
 import 'core/network/network_client.dart';
+import 'core/network/typed_failure_interceptor.dart';
 import 'core/storage/session_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_toast.dart';
@@ -44,7 +46,9 @@ Future<void> setupLocator() async {
     ),
   );
 
-  logger.i('Services ready');
+  if (kDebugMode) {
+    logger.i('Services ready');
+  }
 }
 
 Future<void> main() async {
@@ -53,6 +57,7 @@ Future<void> main() async {
   await setupLocator();
   await dotenv.load(fileName: '.env');
   DioHelper.init();
+  DioHelper.dio.interceptors.add(TypedFailureInterceptor());
 
   CachedQuery.instance.configFlutter(
     config: GlobalQueryConfigFlutter(
@@ -71,7 +76,9 @@ Future<void> main() async {
 
   final oneSignalAppId = dotenv.env['ONESIGNAL_APP_ID'];
   if (oneSignalAppId != null && oneSignalAppId.trim().isNotEmpty) {
-    OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+    if (kDebugMode) {
+      OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
+    }
     OneSignal.initialize(oneSignalAppId.trim());
   }
 

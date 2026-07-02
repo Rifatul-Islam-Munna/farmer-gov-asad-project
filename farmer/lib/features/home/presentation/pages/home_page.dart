@@ -4,6 +4,8 @@ import 'package:get_it/get_it.dart';
 
 import '../../../../core/storage/session_storage.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../diagnosis/presentation/crop_diagnosis_panel.dart';
+import '../role_home_content.dart';
 
 @RoutePage()
 class HomePage extends StatelessWidget {
@@ -12,6 +14,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = GetIt.I<SessionStorage>();
+    final content = RoleHomeContent.forRole(session.role);
 
     return Scaffold(
       appBar: AppBar(
@@ -23,7 +26,7 @@ class HomePage extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             Text(
-              session.role,
+              content.label,
               style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
@@ -49,24 +52,24 @@ class HomePage extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(24),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Smart farming starts here',
-                        style: TextStyle(
+                        content.title,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 21,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
-                        'Identify crop problems, create listings and follow market prices.',
-                        style: TextStyle(
+                        content.description,
+                        style: const TextStyle(
                           color: Color(0xFFE5F4E1),
                           height: 1.4,
                         ),
@@ -74,12 +77,8 @@ class HomePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: 12),
-                Icon(
-                  Icons.agriculture_rounded,
-                  size: 58,
-                  color: Colors.white,
-                ),
+                const SizedBox(width: 12),
+                Icon(content.icon, size: 58, color: Colors.white),
               ],
             ),
           ),
@@ -93,43 +92,48 @@ class HomePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _ServiceCard(
-            icon: Icons.camera_alt_outlined,
-            title: 'Check crop or insect',
-            description: 'Take a picture and receive a demo diagnosis.',
-            onTap: () {},
+          ...content.actions.map(
+            (action) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ServiceCard(
+                icon: action.icon,
+                title: action.title,
+                description: action.description,
+                onTap: () {
+                  if (action.tabIndex != null) {
+                    context.tabsRouter.setActiveIndex(action.tabIndex!);
+                  } else {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (_) => const FractionallySizedBox(
+                        heightFactor: 0.94,
+                        child: CropDiagnosisPanel(),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
-          _ServiceCard(
-            icon: Icons.add_box_outlined,
-            title: 'Create goods post',
-            description: 'Identify a good, enter quantity and prepare a post.',
-            onTap: () => context.tabsRouter.setActiveIndex(2),
-          ),
-          const SizedBox(height: 12),
-          _ServiceCard(
-            icon: Icons.trending_up_rounded,
-            title: 'Market prices',
-            description: 'See current prices and daily movement.',
-            onTap: () => context.tabsRouter.setActiveIndex(1),
-          ),
-          const SizedBox(height: 24),
-          const Card(
+          const SizedBox(height: 10),
+          Card(
             child: Padding(
-              padding: EdgeInsets.all(18),
+              padding: const EdgeInsets.all(18),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     backgroundColor: Color(0xFFEAF4E6),
                     foregroundColor: AppColors.primary,
                     child: Icon(Icons.lightbulb_outline_rounded),
                   ),
-                  SizedBox(width: 14),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      'Check crops early and photograph unusual insects before applying treatment.',
-                      style: TextStyle(
+                      content.tip,
+                      style: const TextStyle(
                         height: 1.45,
                         color: AppColors.textSecondary,
                       ),

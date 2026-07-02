@@ -49,6 +49,7 @@ class AuthApi {
       token: response.accessToken,
       role: response.user.role.name,
       name: response.user.name,
+      status: response.user.verificationStatus,
     );
   }
 }

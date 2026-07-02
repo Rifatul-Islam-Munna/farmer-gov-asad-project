@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -13,11 +14,14 @@ import { Model } from 'mongoose';
 import { CreateUserDto, LoginDto } from './user.dto';
 import { USER_MODEL, User, UserType } from './user.entity';
 
+export type VerificationStatus = 'pending' | 'approved' | 'rejected';
+
 export type AccessPayload = {
   email: string;
   id: string;
-  role: string;
+  role: UserType;
   mobileNumber: string;
+  verificationStatus: VerificationStatus;
 };
 
 @Injectable()
@@ -40,7 +44,6 @@ export class UserService implements OnModuleInit {
     const existing = await this.userModel.findOne({
       $or: [{ email: adminEmail }, { phoneNumber: adminEmail }],
     });
-
     const credentialHash = await bcrypt.hash(adminPassword, 10);
 
     if (existing) {
@@ -67,11 +70,15 @@ export class UserService implements OnModuleInit {
   }
 
   async create(dto: CreateUserDto) {
+    if (dto.role === UserType.ADMIN) {
+      throw new ForbiddenException('Admin accounts cannot be publicly created');
+    }
+
     const email = dto.email?.trim().toLowerCase();
     const exists = await this.userModel
       .findOne({
         $or: [
-          { phoneNumber: dto.phoneNumber },
+          { phoneNumber: dto.phoneNumber.trim() },
           ...(email ? [{ email }] : []),
         ],
       })
@@ -81,9 +88,12 @@ export class UserService implements OnModuleInit {
       throw new HttpException('User already exists', HttpStatus.BAD_REQUEST);
     }
 
+    const verificationStatus: VerificationStatus =
+      dto.role === UserType.FARMER ? 'approved' : 'pending';
+
     const user = await this.userModel.create({
-      name: dto.name,
-      phoneNumber: dto.phoneNumber,
+      name: dto.name.trim(),
+      phoneNumber: dto.phoneNumber.trim(),
       email,
       gender: dto.gender,
       role: dto.role,
@@ -92,8 +102,7 @@ export class UserService implements OnModuleInit {
       businessName: dto.businessName,
       shopName: dto.shopName,
       address: dto.address,
-      verificationStatus:
-        dto.role === UserType.FARMER ? 'approved' : 'pending',
+      verificationStatus,
       credentialHash: await bcrypt.hash(dto.password, 10),
       isOtpVerified: true,
       otpNumber: '000000',
@@ -156,6 +165,7 @@ export class UserService implements OnModuleInit {
     return {
       message: 'User verified successfully',
       data: safeUser,
+      user: safeUser,
       access_token,
     };
   }
@@ -195,9 +205,12 @@ export class UserService implements OnModuleInit {
       {
         email: user.email ?? '',
         id: user._id?.toString(),
-        role: user.role,
+        role: user.role as UserType,
         mobileNumber: user.phoneNumber,
-      },
+        verificationStatus:
+          (user.verificationStatus as VerificationStatus | undefined) ??
+          'approved',
+      } satisfies AccessPayload,
       {
         secret: this.configService.getOrThrow<string>('ACCESS_TOKEN'),
         expiresIn: '10d',

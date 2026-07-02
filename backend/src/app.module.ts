@@ -2,8 +2,16 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AdminModule } from './admin/admin.module';
+import { AgentModule } from './agents/agent.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DealModule } from './deals/deal.module';
+import { GoodModule } from './goods/good.module';
+import { ListingModule } from './listings/listing.module';
+import { MarketDataModule } from './market-data.module';
+import { MedicineSellerModule } from './medicine-sellers/medicine-seller.module';
+import { SupportModule } from './support.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -27,6 +35,14 @@ import { UserModule } from './user/user.module';
       }),
     }),
     UserModule,
+    AdminModule,
+    SupportModule,
+    GoodModule,
+    MarketDataModule,
+    ListingModule,
+    DealModule,
+    AgentModule,
+    MedicineSellerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
