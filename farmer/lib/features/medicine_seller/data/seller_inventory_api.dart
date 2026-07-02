@@ -45,7 +45,27 @@ class SellerInventoryApi {
     final response = await _client.get<Map<String, dynamic>>(
       '/medicine-sellers/inventory/mine',
     );
-    final items = response.data?['data'] as List<dynamic>? ?? const [];
+    return _list(response.data?['data']);
+  }
+
+  Future<List<Map<String, dynamic>>> nearby({
+    required double latitude,
+    required double longitude,
+    required String medicineCode,
+  }) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/medicine-sellers/nearby',
+      queryParameters: {
+        'latitude': latitude,
+        'longitude': longitude,
+        'medicineCode': medicineCode,
+      },
+    );
+    return _list(response.data?['data']);
+  }
+
+  List<Map<String, dynamic>> _list(Object? raw) {
+    final items = raw as List<dynamic>? ?? const [];
     return items
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList(growable: false);
