@@ -25,8 +25,7 @@ export function ResourceManager({ kind }: { kind: Kind }) {
   const query = useQueryWrapper<PageData>(['admin', kind, search], endpoint);
 
   const action = useMutation({
-    mutationFn: async ({ id, value }: { id: string; value: string }) => {
-      const payload = kind === 'users' ? { verificationStatus: value } : { status: value };
+    mutationFn: async ({ id, payload }: { id: string; payload: Record<string, unknown> }) => {
       const result = kind === 'reports'
         ? await PostRequestAxios('/admin/report-action', { id, ...payload })
         : await PatchRequestAxios(`/admin/${kind}/${id}`, payload);
@@ -36,6 +35,16 @@ export function ResourceManager({ kind }: { kind: Kind }) {
     onSuccess: () => client.invalidateQueries({ queryKey: ['admin', kind] }),
   });
 
+  function controls(row: Record<string, unknown>) {
+    const id = String(row._id);
+    if (kind === 'users') return <div className="flex min-w-80 gap-2">
+      <Select value={String(row.verificationStatus)} onChange={(event) => action.mutate({ id, payload: { verificationStatus: event.target.value } })}>{settings.users.options.map((value) => <option key={value}>{value}</option>)}</Select>
+      <Select value={String(row.role)} onChange={(event) => action.mutate({ id, payload: { role: event.target.value } })}><option value="farmer">farmer</option><option value="buyer">buyer</option><option value="agent">agent</option><option value="medicineSeller">medicine seller</option><option value="admin">admin</option></Select>
+      <Button size="sm" variant={row.isActive === false ? 'default' : 'destructive'} onClick={() => action.mutate({ id, payload: { isActive: row.isActive === false } })}>{row.isActive === false ? 'Activate' : 'Suspend'}</Button>
+    </div>;
+    return <Select value={String(row.status || '')} onChange={(event) => action.mutate({ id, payload: { status: event.target.value } })}>{config.options.map((value) => <option key={value}>{value}</option>)}</Select>;
+  }
+
   return <AdminShell user={{ name: 'Administrator' }}>
     <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div><h1 className="text-2xl font-semibold">{config.title}</h1><p className="text-sm text-slate-500">Search, review and update platform records.</p></div>
@@ -43,8 +52,8 @@ export function ResourceManager({ kind }: { kind: Kind }) {
     </div>
     <Card><CardContent className="p-0">
       {query.isError ? <p className="p-5 text-sm text-red-700">{query.error.message}</p> : null}
-      <Table><TableHeader><TableRow>{config.fields.map((field) => <TableHead key={field}>{field}</TableHead>)}<TableHead>Action</TableHead></TableRow></TableHeader>
-        <TableBody>{(query.data?.data || []).map((row) => <TableRow key={String(row._id)}>{config.fields.map((field) => <TableCell key={field}>{String(row[field] ?? '—')}</TableCell>)}<TableCell><Select defaultValue={String(row.status || row.verificationStatus || '')} onChange={(event) => action.mutate({ id: String(row._id), value: event.target.value })}>{config.options.map((value) => <option key={value} value={value}>{value}</option>)}</Select></TableCell></TableRow>)}</TableBody>
+      <Table><TableHeader><TableRow>{config.fields.map((field) => <TableHead key={field}>{field}</TableHead>)}<TableHead>Controls</TableHead></TableRow></TableHeader>
+        <TableBody>{(query.data?.data || []).map((row) => <TableRow key={String(row._id)}>{config.fields.map((field) => <TableCell key={field}>{String(row[field] ?? '—')}</TableCell>)}<TableCell>{controls(row)}</TableCell></TableRow>)}</TableBody>
       </Table>
       {!query.isLoading && !query.data?.data.length ? <p className="p-8 text-center text-sm text-slate-500">No records found.</p> : null}
       {action.isError ? <p className="p-3 text-sm text-red-700">{action.error.message}</p> : null}
