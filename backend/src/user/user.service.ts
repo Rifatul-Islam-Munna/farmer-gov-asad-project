@@ -22,6 +22,7 @@ export type AccessPayload = {
   role: UserType;
   mobileNumber: string;
   verificationStatus: VerificationStatus;
+  isActive: boolean;
 };
 
 @Injectable()
@@ -53,6 +54,7 @@ export class UserService implements OnModuleInit {
       existing.credentialHash = credentialHash;
       existing.role = UserType.ADMIN;
       existing.verificationStatus = 'approved';
+      existing.isActive = true;
       existing.isOtpVerified = true;
       await existing.save();
       return;
@@ -65,6 +67,7 @@ export class UserService implements OnModuleInit {
       credentialHash,
       role: UserType.ADMIN,
       verificationStatus: 'approved',
+      isActive: true,
       isOtpVerified: true,
     });
   }
@@ -103,6 +106,7 @@ export class UserService implements OnModuleInit {
       shopName: dto.shopName,
       address: dto.address,
       verificationStatus,
+      isActive: true,
       credentialHash: await bcrypt.hash(dto.password, 10),
       isOtpVerified: true,
       otpNumber: '000000',
@@ -129,6 +133,10 @@ export class UserService implements OnModuleInit {
 
     if (!user) {
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
+    }
+
+    if (user.isActive === false) {
+      throw new ForbiddenException('This account has been suspended by an administrator');
     }
 
     const match = await bcrypt.compare(dto.password, user.credentialHash);
@@ -159,6 +167,10 @@ export class UserService implements OnModuleInit {
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
     }
 
+    if (user.isActive === false) {
+      throw new ForbiddenException('This account has been suspended by an administrator');
+    }
+
     const { credentialHash: _credentialHash, ...safeUser } = user;
     const access_token = await this.signToken(safeUser);
 
@@ -187,15 +199,42 @@ export class UserService implements OnModuleInit {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
+    if (user.isActive === false) {
+      throw new ForbiddenException('This account has been suspended by an administrator');
+    }
+
     return { data: user };
   }
 
-  async verifyAccessToken(token: string) {
+  async verifyAccessToken(token: string): Promise<AccessPayload> {
     try {
-      return await this.jwtService.verifyAsync<AccessPayload>(token, {
+      const payload = await this.jwtService.verifyAsync<AccessPayload>(token, {
         secret: this.configService.getOrThrow<string>('ACCESS_TOKEN'),
       });
-    } catch {
+      const user = await this.userModel
+        .findById(payload.id)
+        .select('email phoneNumber role verificationStatus isActive')
+        .lean();
+
+      if (!user) {
+        throw new UnauthorizedException('User no longer exists');
+      }
+      if (user.isActive === false) {
+        throw new ForbiddenException('This account has been suspended by an administrator');
+      }
+
+      return {
+        email: user.email ?? '',
+        id: payload.id,
+        role: user.role,
+        mobileNumber: user.phoneNumber,
+        verificationStatus: user.verificationStatus,
+        isActive: user.isActive !== false,
+      };
+    } catch (error) {
+      if (error instanceof ForbiddenException || error instanceof UnauthorizedException) {
+        throw error;
+      }
       throw new UnauthorizedException('Invalid or expired token');
     }
   }
@@ -210,6 +249,7 @@ export class UserService implements OnModuleInit {
         verificationStatus:
           (user.verificationStatus as VerificationStatus | undefined) ??
           'approved',
+        isActive: user.isActive !== false,
       } satisfies AccessPayload,
       {
         secret: this.configService.getOrThrow<string>('ACCESS_TOKEN'),
