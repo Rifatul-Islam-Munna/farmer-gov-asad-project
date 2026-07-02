@@ -36,6 +36,57 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
     setState(_reload);
   }
 
+  Future<void> _counter(NegotiationModel offer) async {
+    final quantity = TextEditingController(text: offer.quantity.toString());
+    final price = TextEditingController(text: offer.unitPrice.toString());
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Counteroffer'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: quantity,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Quantity',
+                prefixIcon: Icon(Icons.scale_rounded),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: price,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Unit price',
+                prefixIcon: Icon(Icons.payments_outlined),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Send counteroffer'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await MarketplaceApi().counterOffer(
+      id: offer.id,
+      quantity: double.parse(quantity.text),
+      unitPrice: double.parse(price.text),
+    );
+    setState(_reload);
+  }
+
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -66,7 +117,10 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text('My offers', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+          const Text(
+            'My offers',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+          ),
           FutureBuilder<List<NegotiationModel>>(
             future: _offers,
             builder: (context, snapshot) {
@@ -78,53 +132,73 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
               }
               final items = snapshot.data ?? const <NegotiationModel>[];
               if (items.isEmpty) {
-                return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No offers yet. Browse listings from Market.')));
+                return const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Text('No offers yet. Browse listings from Market.'),
+                  ),
+                );
               }
               return Column(
-                children: items.map((item) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const CircleAvatar(
-                            backgroundColor: Color(0xFFEAF4E6),
-                            foregroundColor: AppColors.primary,
-                            child: Icon(Icons.request_quote_rounded),
-                          ),
-                          title: Text('${item.quantity.toStringAsFixed(0)} units • BDT ${item.unitPrice.toStringAsFixed(0)}'),
-                          subtitle: Text(item.status),
-                        ),
-                        if (!['confirmed', 'rejected', 'cancelled'].contains(item.status))
-                          Row(
+                children: items
+                    .map(
+                      (item) => Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _reject(item.id),
-                                  icon: const Icon(Icons.close_rounded),
-                                  label: const Text('Reject'),
+                              ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const CircleAvatar(
+                                  backgroundColor: Color(0xFFEAF4E6),
+                                  foregroundColor: AppColors.primary,
+                                  child: Icon(Icons.request_quote_rounded),
                                 ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: FilledButton.icon(
-                                  onPressed: () => _accept(item.id),
-                                  icon: const Icon(Icons.check_rounded),
-                                  label: const Text('Accept'),
+                                title: Text(
+                                  '${item.quantity.toStringAsFixed(0)} units • BDT ${item.unitPrice.toStringAsFixed(0)}',
                                 ),
+                                subtitle: Text(item.status),
                               ),
+                              if (![
+                                'confirmed',
+                                'rejected',
+                                'cancelled',
+                              ].contains(item.status))
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    OutlinedButton.icon(
+                                      onPressed: () => _reject(item.id),
+                                      icon: const Icon(Icons.close_rounded),
+                                      label: const Text('Reject'),
+                                    ),
+                                    OutlinedButton.icon(
+                                      onPressed: () => _counter(item),
+                                      icon: const Icon(Icons.sync_alt_rounded),
+                                      label: const Text('Counter'),
+                                    ),
+                                    FilledButton.icon(
+                                      onPressed: () => _accept(item.id),
+                                      icon: const Icon(Icons.check_rounded),
+                                      label: const Text('Accept'),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
-                      ],
-                    ),
-                  ),
-                )).toList(growable: false),
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
               );
             },
           ),
           const SizedBox(height: 20),
-          const Text('Confirmed deals', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+          const Text(
+            'Confirmed deals',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+          ),
           FutureBuilder<List<Map<String, dynamic>>>(
             future: _deals,
             builder: (context, snapshot) {
@@ -133,20 +207,31 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
                 return const LinearProgressIndicator();
               }
               if (items.isEmpty) {
-                return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No confirmed deals yet.')));
+                return const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Text('No confirmed deals yet.'),
+                  ),
+                );
               }
               return Column(
-                children: items.map((item) => Card(
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFEAF4E6),
-                      foregroundColor: AppColors.primary,
-                      child: Icon(Icons.verified_rounded),
-                    ),
-                    title: Text('BDT ${item['totalPrice']}'),
-                    subtitle: Text('${item['quantity']} units • ${item['status']}'),
-                  ),
-                )).toList(growable: false),
+                children: items
+                    .map(
+                      (item) => Card(
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Color(0xFFEAF4E6),
+                            foregroundColor: AppColors.primary,
+                            child: Icon(Icons.verified_rounded),
+                          ),
+                          title: Text('BDT ${item['totalPrice']}'),
+                          subtitle: Text(
+                            '${item['quantity']} units • ${item['status']}',
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(growable: false),
               );
             },
           ),
