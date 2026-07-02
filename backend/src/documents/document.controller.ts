@@ -3,19 +3,13 @@ import {
   Controller,
   Post,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { existsSync, mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-import { AccessTokenGuard } from '../auth/access-token.guard';
-import { Roles } from '../auth/roles.decorator';
-import { RolesGuard } from '../auth/roles.guard';
-import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
 
 const uploadDirectory = join(process.cwd(), 'uploads', 'documents');
 if (!existsSync(uploadDirectory)) {
@@ -23,12 +17,9 @@ if (!existsSync(uploadDirectory)) {
 }
 
 @ApiTags('Documents')
-@ApiBearerAuth()
 @Controller('documents')
 export class DocumentController {
   @Post('upload')
-  @Roles(UserType.BUYER, UserType.AGENT, UserType.MEDICINE_SELLER)
-  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -46,16 +37,22 @@ export class DocumentController {
           'image/png',
           'image/webp',
         ];
+        const valid = allowed.includes(file.mimetype);
         callback(
-          allowed.includes(file.mimetype)
+          valid
             ? null
-            : new BadRequestException('Only PDF, JPG, PNG, or WEBP is allowed'),
-          allowed.includes(file.mimetype),
+            : new BadRequestException(
+                'Only PDF, JPG, PNG, or WEBP is allowed',
+              ),
+          valid,
         );
       },
     }),
   )
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Upload a validated registration document before account creation',
+  })
   upload(@UploadedFile() file?: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('Document file is required');
