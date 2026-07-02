@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../diagnosis/presentation/goods_detection_button.dart';
 import '../../data/datasources/marketplace_api.dart';
 import '../../data/models/listing.model.dart';
 
@@ -87,6 +88,15 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
           ),
         ),
         const SizedBox(height: 16),
+        GoodsDetectionButton(
+          onDetected: (code, name) {
+            setState(() {
+              _code.text = code;
+              _name.text = name;
+            });
+          },
+        ),
+        const SizedBox(height: 10),
         Form(
           key: _formKey,
           child: Card(
@@ -106,7 +116,11 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
                   const SizedBox(height: 10),
                   _number(_minimum, 'Minimum price'),
                   const SizedBox(height: 10),
-                  _field(_address, 'Pickup location', Icons.location_on_outlined),
+                  _field(
+                    _address,
+                    'Pickup location',
+                    Icons.location_on_outlined,
+                  ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: _saving ? null : _save,
@@ -119,7 +133,10 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
           ),
         ),
         const SizedBox(height: 20),
-        const Text('My listings', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        const Text(
+          'My listings',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
         FutureBuilder<List<ListingModel>>(
           future: _listings,
           builder: (context, snapshot) {
@@ -131,21 +148,34 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
             }
             final items = snapshot.data ?? const <ListingModel>[];
             if (items.isEmpty) {
-              return const Card(child: Padding(padding: EdgeInsets.all(20), child: Text('No listings yet.')));
+              return const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Text('No listings yet.'),
+                ),
+              );
             }
             return Column(
-              children: items.map((item) => Card(
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFEAF4E6),
-                    foregroundColor: AppColors.primary,
-                    child: Icon(Icons.inventory_2_outlined),
-                  ),
-                  title: Text(item.goodName),
-                  subtitle: Text('${item.availableQuantity.toStringAsFixed(0)} ${item.unit} • ${item.status}'),
-                  trailing: Text('BDT ${item.minimumPrice.toStringAsFixed(0)}'),
-                ),
-              )).toList(growable: false),
+              children: items
+                  .map(
+                    (item) => Card(
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Color(0xFFEAF4E6),
+                          foregroundColor: AppColors.primary,
+                          child: Icon(Icons.inventory_2_outlined),
+                        ),
+                        title: Text(item.goodName),
+                        subtitle: Text(
+                          '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} • ${item.status}',
+                        ),
+                        trailing: Text(
+                          'BDT ${item.minimumPrice.toStringAsFixed(0)}',
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
             );
           },
         ),
@@ -153,11 +183,16 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
     );
   }
 
-  TextFormField _field(TextEditingController controller, String label, IconData icon) {
+  TextFormField _field(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
-      validator: (value) => value == null || value.trim().isEmpty ? 'Required' : null,
+      validator: (value) =>
+          value == null || value.trim().isEmpty ? 'Required' : null,
     );
   }
 
@@ -166,7 +201,9 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
       controller: controller,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(labelText: label),
-      validator: (value) => double.tryParse(value ?? '') == null ? 'Enter a valid number' : null,
+      validator: (value) => double.tryParse(value ?? '') == null
+          ? 'Enter a valid number'
+          : null,
     );
   }
 }
