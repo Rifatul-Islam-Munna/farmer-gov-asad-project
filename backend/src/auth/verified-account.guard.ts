@@ -4,14 +4,18 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { UserService } from '../user/user.service';
 import { AuthenticatedRequest } from './access-token.guard';
 
 @Injectable()
 export class VerifiedAccountGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+  constructor(private readonly userService: UserService) {}
 
-    if (request.user?.verificationStatus !== 'approved') {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const profile = await this.userService.findProfile(request.user.id);
+
+    if (profile.data.verificationStatus !== 'approved') {
       throw new ForbiddenException(
         'Your account must be approved before using this feature',
       );
