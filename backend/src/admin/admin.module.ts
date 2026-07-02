@@ -6,6 +6,7 @@ import { REPORT_MODEL, ReportSchema } from '../reports/report.entity';
 import { USER_MODEL, UserSchema } from '../user/user.entity';
 import { UserModule } from '../user/user.module';
 import { GUIDANCE_MODEL, GuidanceSchema } from './admin-content.entity';
+import { AdminManagementController } from './admin-management.controller';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
@@ -20,7 +21,7 @@ import { AdminService } from './admin.service';
     ]),
     UserModule,
   ],
-  controllers: [AdminController],
+  controllers: [AdminController, AdminManagementController],
   providers: [AdminService],
   exports: [AdminService],
 })
