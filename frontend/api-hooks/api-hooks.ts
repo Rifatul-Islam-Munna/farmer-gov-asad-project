@@ -6,7 +6,7 @@ export type ApiFailure = {
 };
 
 const client = axios.create({
-  baseURL: '/api/backend',
+  baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
