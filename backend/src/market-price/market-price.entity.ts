@@ -26,11 +26,18 @@ export const MarketPriceSchema = new mongoose.Schema<MarketPrice>(
     marketPrice: { type: Number, required: true, min: 0 },
     previousMarketPrice: { type: Number, required: true, min: 0 },
     region: { type: String, required: true, default: 'National' },
-    marketName: { type: String, required: true, default: 'Government Market' },
+    marketName: {
+      type: String,
+      required: true,
+      default: 'Government Market',
+    },
     imageUrl: String,
     priceDate: { type: Date, required: true, index: true },
   },
   { timestamps: true, autoIndex: true },
 );
 
-MarketPriceSchema.index({ goodCode: 1, priceDate: -1 }, { unique: true });
+MarketPriceSchema.index(
+  { goodCode: 1, region: 1, priceDate: -1 },
+  { unique: true },
+);
