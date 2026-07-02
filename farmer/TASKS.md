@@ -1,185 +1,113 @@
-# Farmer Government Platform — Task Tracker
+# Farmer Government Platform — Active Task Board
 
-All active work must be committed directly to `development`.
+All work goes directly to `development`. Completed means committed. Verification passes remain unchecked until commands actually run.
 
-## Branch Rules
+## Repository
 
-- [x] Use `development` for all active feature work.
-- [x] Keep `main` as the stable branch.
-- [x] Commit generated AutoRoute output to `development`.
-- [ ] Delete every other branch.
-- [ ] Delete the accidental `farmer_app/` folder.
+- [x] Active Flutter app is `farmer/`.
+- [x] Active development branch is `development`.
+- [x] `main` remains stable.
+- [ ] Delete extra branch names.
+- [ ] Delete `farmer_app/`.
 
-## Completed Foundation
+## Backend Foundation
 
-### Backend
+- [x] MongoDB user schema and JWT authentication.
+- [x] Register, login, profile, OTP verification, and logout routes.
+- [x] Admin, agent, farmer, buyer, and medicine-seller roles.
+- [x] Farmer land field and role-specific profile fields.
+- [x] Public admin creation blocked.
+- [x] Reusable access-token guard.
+- [x] Profile and logout protected by the access-token guard.
+- [x] Reusable role guard and approval guard.
+- [x] Approval status added to JWT payloads.
+- [ ] Apply role, approval, and ownership guards to new domain modules.
+- [ ] Backend build passes.
+- [ ] Backend lint passes.
 
-- [x] MongoDB user schema.
-- [x] JWT setup.
-- [x] Register, login, OTP, profile, and logout routes.
-- [x] Roles: admin, agent, farmer, buyer, medicine seller.
-- [x] Farmer land amount.
-- [x] Document fields.
-- [x] Business name, shop name, address, verification status.
-- [x] Role-specific DTO validation.
-- [x] Role-specific persistence.
-- [ ] Run backend build.
-- [ ] Run backend ESLint.
-- [ ] Add role and ownership guards.
+## Flutter Foundation
 
-### Flutter Setup
+- [x] Requested packages and default fonts.
+- [x] Environment, permissions, GetIt, secure storage, cache, toast, and green theme.
+- [x] Dio URL validation, timeouts, JSON headers, token headers, and HTTP 401 handling.
+- [x] Token, role, name, and approval status persisted.
+- [x] Typed request failure, mapper, and interceptor.
+- [x] Verbose network and notification logs are debug-only.
+- [ ] `flutter pub get` passes.
 
-- [x] Add requested runtime and development packages.
-- [x] Use default fonts.
-- [x] Add `.env` and `.env.example`.
-- [x] Add Android internet, camera, image, location, and notification permissions.
-- [x] Initialize GetIt, SharedPreferences, secure storage, CachedQuery, CachedStorage, and optional OneSignal.
-- [x] Add AppToast and green agricultural theme.
-- [ ] Run `flutter pub get`.
+## Models
 
-### Networking and Session
-
-- [x] Add `.env` Dio URL, validation, timeouts, JSON headers, and PrettyDioLogger.
-- [x] Inject secure `access_token`.
-- [x] Clear session and redirect on HTTP 401.
-- [x] Store token, role, and name.
-- [x] Add server-backed logout.
-- [ ] Add typed API failures.
-- [ ] Disable verbose logs in release.
-
-### Models
-
-- [x] Add Freezed User, auth response, login request, and registration request sources.
+- [x] Freezed user, authentication, profile, API error, page info, document, and location model sources.
 - [ ] Generate and commit every `.freezed.dart` file.
 - [ ] Generate and commit every `.g.dart` file.
-- [ ] Add API error, pagination, document, and location models.
 
-### Navigation
+## Navigation and Initial UI
 
-- [x] Add global router and root router.
-- [x] Add nested Home, Marketplace, Post, and Profile stacks.
-- [x] Add Liverpool-style animated `AutoTabsScaffold`.
-- [x] Reset each tab stack on tab change.
-- [x] Commit `app_router.gr.dart` directly to `development`.
-- [ ] Regenerate AutoRoute and compare output.
-- [ ] Add authentication guard and role-aware redirects.
+- [x] Nested AutoRoute Home, Market, Post, and Profile stacks.
+- [x] Liverpool-style animated tab shell.
+- [x] Splash, login, registration, Home, Market, Profile, and logout.
+- [x] Green approval screen with guided icons.
+- [x] Backend status refresh from the approval screen.
+- [x] Hide all application tabs until approval.
+- [~] Approval routing is complete; role-specific approved shells remain.
+- [~] Post screen is still a placeholder.
 
-### Initial UI
+## Verification
 
-- [x] Agricultural splash screen.
-- [x] Backend-connected login page.
-- [x] Role-aware registration page.
-- [x] Farmer land field.
-- [x] Buyer, agent, and medicine-seller document UI.
-- [x] Medicine-seller shop and address fields.
-- [x] Farmer home foundation.
-- [x] Demo Marketplace and price screen.
-- [x] Profile and logout.
-- [~] Post tab placeholder.
-
-### Verification
-
-- [x] Replace default counter test.
-- [ ] Run code generation.
-- [ ] Run `flutter analyze` and `flutter test`.
-- [ ] Run backend build and ESLint.
-- [ ] Fix every reported issue.
+- [x] Flutter smoke test replaces the counter test.
+- [x] Linux/macOS verification script.
+- [x] Windows verification script.
+- [x] Scripts check backend first, then Flutter generation, analyze, and tests.
+- [ ] Run one verification script.
+- [ ] Fix every backend build or lint result.
+- [ ] Fix every Flutter generation, analyze, or test result.
 
 ---
 
-# Authentication Completion
+# Authentication Completion — In Progress
 
-- [ ] Reject public admin registration explicitly.
-- [ ] Add role and verification guards.
-- [ ] Add document-upload module with MIME and size validation.
+- [x] Access, role, and approval guards.
+- [x] Approval state stored in backend token and Flutter session.
+- [x] Profile refresh service.
+- [x] Pending/rejected review screen.
+- [x] Status refresh and logout actions.
+- [x] Block protected tabs while review is incomplete.
+- [ ] Backend document upload and validation.
 - [ ] Store uploaded document references.
-- [ ] Add verification-pending response and UI.
-- [ ] Add multipart upload and progress in Flutter.
-- [ ] Route users by role.
-- [ ] Add auth, storage, and Dio tests.
-
-# Farmer Dashboard and Market Prices
-
-- [~] Dashboard and demo price UI.
-- [ ] Goods catalog and categories.
-- [ ] Government and regional market-price schemas.
-- [ ] Price comparison, trends, and history.
-- [ ] Farmer suggestions and admin notices.
-- [ ] Loading, empty, error, search, and filter UI.
-
-# Demo Crop and Insect Diagnosis
-
-- [ ] Diagnosis backend module, DTOs, provider interface, and fixed demo provider.
-- [ ] Treatment, medicine, file validation, Swagger, and tests.
-- [ ] Freezed diagnosis models.
-- [ ] Camera/gallery capture, preview, multipart upload, progress, results, and retry.
-- [ ] Nearby medicine-seller results.
-
-# Medicine Sellers
-
-- [ ] Medicine catalog, seller profile, location, and inventory.
-- [ ] Stock, quantity, package size, and price.
-- [ ] Inventory CRUD and nearby search.
-- [ ] Diagnosis-to-inventory matching.
-- [ ] Seller dashboard and inventory UI.
-
-# Goods Detection and Listings
-
-- [ ] Goods categories, schema, indexes, admin CRUD, and public search.
-- [ ] Demo goods-identification provider and DTOs.
-- [ ] Listing schema, ownership, goods snapshot, images, quantity, grade, date, location, and prices.
-- [ ] Create, draft, publish, cancel, history, search, and filters.
-- [~] Post placeholder.
-- [ ] Complete typed listing form, review, publish, and history.
-
-# Buyer Marketplace and Deals
-
-- [~] Demo Marketplace UI.
-- [ ] Backend search, pagination, filters, details, and contact action.
-- [ ] Offers, counteroffers, buyer/farmer acceptance, dual confirmation, overselling protection, and audit history.
-- [ ] Offer and deal UI.
-
-# Agent OTP Workflows
-
-- [ ] OTP schema, purpose, expiry, attempts, resend, and consumed state.
-- [ ] Development provider and production SMS interface.
-- [ ] Create farmer through OTP.
-- [ ] Post for farmer through OTP.
-- [ ] Agent audit history and Flutter OTP screens.
-
-# Notifications
-
-- [ ] Notification model and device registration.
-- [ ] Offer, deal, OTP, and delegated-post notifications.
-- [ ] In-app list and read state.
-
-# Admin and Moderation
-
-- [ ] User/document review and account approval.
-- [ ] Goods, prices, suggestions, and notice management.
-- [ ] Listing, report, and dispute moderation.
-- [ ] Audit history.
-
-# Security and Production
-
-- [ ] Verify hashing and environment secrets.
-- [ ] Add role, ownership, document, and upload protection.
-- [ ] Add OTP, login, and upload rate limits.
-- [ ] Prevent query injection and overselling.
-- [ ] Remove sensitive logs and disable demo/verbose production behavior.
-- [ ] Configure production database, storage, SMS, and notifications.
+- [ ] Flutter upload progress and retry.
+- [ ] Admin review and approval tools.
+- [ ] Approved-user routing by role.
+- [ ] Authentication and guard tests.
 
 ---
 
-# Immediate Next Tasks
+# Farmer Dashboard and Market Prices — Next Feature
 
-- [ ] Delete all branches except `main` and `development`.
-- [ ] Delete `farmer_app/`.
-- [ ] Run `flutter pub get`.
-- [ ] Generate Freezed and JSON files.
-- [ ] Regenerate AutoRoute.
-- [ ] Run Flutter analyze and tests.
-- [ ] Run backend build and ESLint.
-- [ ] Fix every error.
-- [ ] Build document upload.
-- [ ] Add role-aware redirects.
+## Backend First
+
+- [ ] Goods category model and module.
+- [ ] Searchable goods model and module.
+- [ ] Market-price model and module.
+- [ ] Government and regional price fields.
+- [ ] Daily difference, percentage, and trend calculation.
+- [ ] Latest-price and price-history endpoints.
+- [ ] Farmer suggestions and admin notices.
+
+## Farmer App Second
+
+- [~] Green dashboard and demo price cards already exist.
+- [ ] Freezed goods and market-price models.
+- [ ] Connect latest-price API.
+- [ ] Connect price-history API.
+- [ ] Loading, empty, error, and retry states.
+- [ ] Search and category filters.
+- [ ] Trend details, suggestions, and notices.
+- [ ] Replace demo cards with backend data.
+
+## Immediate Order
+
+1. Run `scripts/verify-development.ps1` or `scripts/verify-development.sh`.
+2. Fix all verification results.
+3. Commit generated model files to `development`.
+4. Start the market-price backend module.
+5. Connect the Farmer price screen only after the backend is ready.
