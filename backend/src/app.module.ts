@@ -11,6 +11,7 @@ import { GoodModule } from './goods/good.module';
 import { ListingModule } from './listings/listing.module';
 import { MarketDataModule } from './market-data.module';
 import { MedicineSellerModule } from './medicine-sellers/medicine-seller.module';
+import { ReportModule } from './reports/report.module';
 import { SupportModule } from './support.module';
 import { UserModule } from './user/user.module';
 
@@ -36,6 +37,7 @@ import { UserModule } from './user/user.module';
     }),
     UserModule,
     AdminModule,
+    ReportModule,
     SupportModule,
     GoodModule,
     MarketDataModule,
