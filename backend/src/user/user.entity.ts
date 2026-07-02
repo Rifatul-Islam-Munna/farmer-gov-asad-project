@@ -27,6 +27,7 @@ export interface User {
     longitude?: number;
   };
   verificationStatus: 'pending' | 'approved' | 'rejected';
+  isActive: boolean;
   isOtpVerified: boolean;
   otpNumber?: string;
   otpValidatedAt?: Date;
@@ -66,6 +67,7 @@ export const UserSchema = new mongoose.Schema<User>(
       enum: ['pending', 'approved', 'rejected'],
       default: 'approved',
     },
+    isActive: { type: Boolean, default: true, index: true },
     isOtpVerified: { type: Boolean, default: true },
     otpNumber: String,
     otpValidatedAt: Date,
