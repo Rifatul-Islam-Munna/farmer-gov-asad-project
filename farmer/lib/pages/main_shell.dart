@@ -31,12 +31,7 @@ class MainShellPage extends StatelessWidget {
           child: child,
         );
       },
-      routes: [
-        homeTab(),
-        marketplaceTab(),
-        listingTab(),
-        profileTab(),
-      ],
+      routes: [homeTab(), marketplaceTab(), listingTab(), profileTab()],
       bottomNavigationBuilder: (_, tabsRouter) {
         return _BottomNavigation(
           tabsRouter: tabsRouter,
@@ -75,42 +70,39 @@ class _BottomNavigation extends StatelessWidget {
         child: SizedBox(
           height: 66,
           child: Row(
-            children: List.generate(
-              tabs.length,
-              (index) {
-                final tab = tabs[index];
-                final active = tabsRouter.activeIndex == index;
+            children: List.generate(tabs.length, (index) {
+              final tab = tabs[index];
+              final active = tabsRouter.activeIndex == index;
 
-                return Expanded(
-                  child: InkWell(
-                    onTap: () => _changeTab(index, tabs.length),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          active ? tab.activeIcon : tab.icon,
+              return Expanded(
+                child: InkWell(
+                  onTap: () => _changeTab(index, tabs.length),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        active ? tab.activeIcon : tab.icon,
+                        color: active
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tab.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight:
+                              active ? FontWeight.w700 : FontWeight.w500,
                           color: active
                               ? AppColors.primary
                               : AppColors.textSecondary,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          tab.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight:
-                                active ? FontWeight.w700 : FontWeight.w500,
-                            color: active
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
           ),
         ),
       ),
@@ -134,6 +126,11 @@ List<_NavigationTab> _tabsForRole(String role) {
         Icons.inventory_2_outlined,
         Icons.inventory_2_rounded,
         'Inventory',
+      ),
+    'admin' => const _NavigationTab(
+        Icons.admin_panel_settings_outlined,
+        Icons.admin_panel_settings_rounded,
+        'Admin',
       ),
     _ => const _NavigationTab(
         Icons.add_box_outlined,
