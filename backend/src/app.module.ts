@@ -11,6 +11,7 @@ import { GoodModule } from './goods/good.module';
 import { ListingModule } from './listings/listing.module';
 import { MarketDataModule } from './market-data.module';
 import { MedicineSellerModule } from './medicine-sellers/medicine-seller.module';
+import { SupportModule } from './support.module';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -35,6 +36,7 @@ import { UserModule } from './user/user.module';
     }),
     UserModule,
     AdminModule,
+    SupportModule,
     GoodModule,
     MarketDataModule,
     ListingModule,
