@@ -11,11 +11,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { CreateUserDto, LoginDto } from './user.dto';
-import {
-  USER_MODEL,
-  UserDocument,
-  UserType,
-} from './user.entity';
+import { USER_MODEL, User, UserType } from './user.entity';
 
 export type AccessPayload = {
   email: string;
@@ -28,7 +24,7 @@ export type AccessPayload = {
 export class UserService implements OnModuleInit {
   constructor(
     @InjectModel(USER_MODEL)
-    private readonly userModel: Model<UserDocument>,
+    private readonly userModel: Model<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
