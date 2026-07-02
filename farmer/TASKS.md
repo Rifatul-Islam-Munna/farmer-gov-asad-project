@@ -1,125 +1,155 @@
 # Farmer Government Platform — Active Task Board
 
-All work goes directly to `development`. Completed means committed. Build, lint, generation, analyze, and test passes remain unchecked until they actually run.
+All active work is committed directly to `development`. Checked items mean source code is committed. Build, lint, generation, analyze, and test items remain unchecked until the commands pass.
 
 ## Repository
 
-- [x] Active Flutter app is `farmer/`.
-- [x] Active development branch is `development`.
-- [x] `main` remains stable.
+- [x] Active Flutter app: `farmer/`.
+- [x] Active backend: `backend/`.
+- [x] Active feature branch: `development`.
+- [x] Stable branch: `main`.
 - [ ] Delete extra branch names.
-- [ ] Delete `farmer_app/`.
+- [ ] Delete duplicate `farmer_app/`.
+- [ ] Merge only after verification passes.
 
-## Backend Foundation
+## Foundation
 
-- [x] MongoDB user schema and JWT authentication.
-- [x] Register, login, profile, OTP verification, and logout routes.
-- [x] Admin, agent, farmer, buyer, and medicine-seller roles.
-- [x] Farmer land and role-specific profile fields.
-- [x] Public admin creation blocked.
-- [x] Access-token, role, and approval guards.
-- [x] Profile and logout protected.
-- [x] Approval guard checks current MongoDB status instead of stale JWT status.
-- [x] New admin write endpoints use role and approval guards.
-- [ ] Add ownership guards for user-owned resources.
-- [ ] Backend build passes.
-- [ ] Backend lint passes.
+- [x] MongoDB, JWT, Swagger, validation, and environment setup.
+- [x] Farmer, buyer, agent, medicine-seller, and admin roles.
+- [x] Register, login, OTP verification, profile, and logout.
+- [x] Access-token, role, approval, and listing-ownership guards.
+- [x] Green Flutter theme, nested AutoRoute shell, secure session, Dio, cache, and toast setup.
+- [x] Role-aware Home and third-tab workspaces.
+- [ ] Backend build and ESLint pass.
+- [ ] Flutter package install, generation, analyze, and tests pass.
 
-## Flutter Foundation
+## Authentication and Documents
 
-- [x] Requested packages, default fonts, environment, permissions, dependency injection, secure storage, cache, toast, and green theme.
-- [x] Dio validation, timeouts, token headers, HTTP 401 handling, typed failures, and debug-only verbose logs.
-- [x] Token, role, name, and approval status persisted.
-- [ ] `flutter pub get` passes.
+- [x] Role-specific registration fields.
+- [x] Public admin registration blocked.
+- [x] PDF/JPG/PNG/WEBP registration-document upload.
+- [x] Five-megabyte upload limit.
+- [x] Flutter multipart upload client.
+- [x] Registration stores backend document URLs.
+- [x] Pending/rejected approval screen with refresh and logout.
+- [x] Admin pending-user review, approve, and reject.
+- [ ] Admin document-preview UI.
+- [ ] Rejected-document correction and resubmission.
+- [ ] Production object storage.
 
-## Models
+## Goods and Market Prices
 
-- [x] Freezed auth, profile, API error, page info, document, and location model sources.
-- [x] Freezed goods category, agricultural good, and market-price model sources.
-- [ ] Generate and commit every `.freezed.dart` file.
-- [ ] Generate and commit every `.g.dart` file.
+- [x] Categories and searchable goods catalog.
+- [x] Demo rice, potato, tomato, and onion.
+- [x] Government, regional, current, and previous prices.
+- [x] Daily difference, percentage, and trend calculation.
+- [x] Latest-price and 30-day history APIs.
+- [x] Green price UI with backend data, search, refresh, and states.
+- [x] Role-targeted suggestion and notice backend.
+- [x] Admin notice-publishing UI.
+- [ ] Category-filter chips.
+- [ ] Price-history detail chart/page.
+- [ ] Replace temporary farmer tip with live guidance.
 
-## Navigation and Initial UI
+## Crop and Insect Diagnosis
 
-- [x] Nested AutoRoute Home, Market, Post, and Profile stacks.
-- [x] Liverpool-style animated tab shell.
-- [x] Splash, login, registration, Home, Market, Profile, and logout.
-- [x] Green approval screen with guided icons and backend refresh.
-- [x] Hide all application tabs until approval.
-- [~] Approval routing is complete; approved role-specific shells remain.
-- [~] Post screen remains a placeholder.
+- [x] Replaceable fixed demo provider.
+- [x] Validated diagnosis image endpoint.
+- [x] Demo insect, confidence, symptoms, risk, treatment, medicine, and safety response.
+- [x] Flutter camera/gallery permission and image upload flow.
+- [x] Diagnosis and treatment result UI.
+- [x] Nearby in-stock seller search from suggested medicine.
+- [ ] Typed Freezed diagnosis models.
+- [ ] Upload-progress percentage.
+- [ ] Production AI provider.
+
+## Farmer Listings
+
+- [x] Listing schema, statuses, ownership, quantities, prices, location, and audit fields.
+- [x] Search, details, farmer history, cancellation, and ownership guard.
+- [x] Atomic reservation to prevent overselling.
+- [x] Green Flutter sell-goods form and listing history.
+- [x] Camera-based demo goods identification with editable result.
+- [ ] Listing image gallery upload.
+- [ ] Draft edit/publish/cancel controls.
+- [ ] Harvest date, grade, and map controls.
+
+## Buyer Marketplace and Deals
+
+- [x] Farmer-listing browser and search.
+- [x] Buyer offer submission.
+- [x] Counteroffers.
+- [x] Buyer/farmer participant authorization.
+- [x] Buyer and farmer accept/reject controls.
+- [x] Dual confirmation and atomic reservation.
+- [x] Confirmed deal record and history.
+- [x] Buyer marketplace/deal workspace.
+- [x] Farmer Offers & Deals workspace.
+- [ ] Farmer contact action.
+- [ ] Deal completion, cancellation, and dispute workflow.
+
+## Agent Workflows
+
+- [x] Hashed OTP action model, 10-minute expiry, and five-attempt limit.
+- [x] Development-only demo OTP.
+- [x] Farmer search.
+- [x] OTP-assisted farmer creation.
+- [x] OTP-assisted listing on behalf of farmer.
+- [x] Farmer ownership plus assisting-agent audit field.
+- [x] Agent Flutter create-farmer, delegated-post, OTP, and history workspace.
+- [ ] Production SMS provider.
+- [ ] OTP resend endpoint and countdown.
+- [ ] Rich farmer selector instead of phone-only entry.
+
+## Medicine Sellers
+
+- [x] Medicine/pesticide/fertilizer catalog and demo products.
+- [x] Seller shop/location update.
+- [x] Inventory stock, unit, price, and shop fields.
+- [x] Seller inventory upsert and history.
+- [x] Radius-based nearby in-stock seller matching.
+- [x] Nearest-first distance results.
+- [x] Green seller location/inventory workspace.
+- [x] Farmer nearby seller UI with stock, distance, and price.
+- [ ] Device location and map picker.
+- [ ] Catalog dropdown instead of manual code.
+- [ ] Inventory edit/delete controls.
+
+## Administration
+
+- [x] Admin role dashboard and Admin tab.
+- [x] Pending-user review and verification updates.
+- [x] Suggestions/notices model and publishing form.
+- [x] Protected goods, medicine, and market-price writes.
+- [ ] Dedicated catalog/price management screens.
+- [ ] Listing moderation and user suspension.
+- [ ] Reports, disputes, and audit viewer.
+
+## Notifications and Production
+
+- [ ] Notification persistence and device registration.
+- [ ] Offer, deal, OTP, approval, and delegated-action notifications.
+- [ ] In-app notification list/read state.
+- [ ] Production SMS, AI, and object-storage adapters.
+- [ ] Login, OTP, upload, and public-search rate limits.
+- [ ] Monitoring, backups, deployment, and rollback.
 
 ## Verification
 
-- [x] Flutter smoke test replaces the counter test.
-- [x] Linux/macOS and Windows verification scripts.
-- [x] Scripts check backend before Flutter generation, analyze, and tests.
-- [ ] Run one verification script.
-- [ ] Fix all backend build and lint results.
-- [ ] Fix all Flutter generation, analyze, and test results.
+- [x] Linux/macOS verification script.
+- [x] Windows verification script.
+- [x] Backend checks run before Flutter checks.
+- [ ] Run a verification script.
+- [ ] Fix every backend build/lint result.
+- [ ] Generate and commit Freezed, JSON, and AutoRoute output.
+- [ ] Fix every Flutter analyze/test result.
+- [ ] Perform manual smoke tests for all five roles.
 
----
-
-# Authentication Completion — In Progress
-
-- [x] Access, role, and approval enforcement.
-- [x] Approval state stored in backend token and Flutter session.
-- [x] Profile refresh and pending/rejected review UI.
-- [x] Status refresh, logout, and protected-tab blocking.
-- [ ] Backend document upload and validation.
-- [ ] Store uploaded references instead of local paths.
-- [ ] Flutter upload progress, retry, and resubmission.
-- [ ] Admin review and approval tools.
-- [ ] Approved-user routing by role.
-- [ ] Authentication and guard tests.
-
----
-
-# Farmer Dashboard and Market Prices — In Progress
-
-## Backend First
-
-- [x] Goods category schema and module.
-- [x] Searchable agricultural goods schema and module.
-- [x] Seed demo categories and rice, potato, tomato, and onion.
-- [x] Public goods category and search endpoints.
-- [x] Admin-protected goods write endpoints.
-- [x] Market-price schema and module.
-- [x] Government, regional, current, and previous price fields.
-- [x] Regional daily uniqueness rules.
-- [x] Difference, percentage, and up/down/stable trend calculations.
-- [x] Seed demo daily prices.
-- [x] Latest-price endpoint.
-- [x] Thirty-day price-history endpoint.
-- [x] Admin-protected market-price write endpoint.
-- [ ] Farmer-suggestion backend endpoint.
-- [ ] Admin-notice backend endpoint.
-
-## Farmer App Second
-
-- [x] Green market banner with a demo image and safe agricultural fallback.
-- [x] Agricultural goods and trend icons.
-- [x] Typed goods catalog and market-price API clients.
-- [x] Connect latest-price API.
-- [x] Add pull-to-refresh.
-- [x] Add loading, empty, error, and retry states.
-- [x] Add goods-name search.
-- [x] Show government and market prices.
-- [x] Show percentage and up/down/stable trend cards.
-- [x] Replace static demo price cards with backend data.
-- [x] Add a temporary farmer suggestion card.
-- [ ] Add category filter chips using the goods catalog API.
-- [ ] Add a price-history details page using the history API.
-- [ ] Replace the temporary suggestion with backend suggestion data.
-- [ ] Add admin notices.
-
----
-
-# Immediate Next Tasks
+## Immediate Order
 
 1. Run `scripts/verify-development.ps1` or `scripts/verify-development.sh`.
-2. Fix all build, lint, generation, analyze, and test results.
-3. Commit generated Freezed and JSON files to `development`.
-4. Add category filters and a price-history details screen.
-5. Add farmer-suggestion and admin-notice backend endpoints.
-6. Continue document upload for authentication.
+2. Fix all reported source and formatting errors.
+3. Generate and commit all required Dart files.
+4. Run role-by-role manual smoke tests.
+5. Add notifications, production adapters, and moderation.
+6. Remove duplicate repository content and extra branches.
