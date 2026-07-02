@@ -49,6 +49,7 @@ export class UserService implements OnModuleInit {
       existing.phoneNumber = adminEmail;
       existing.credentialHash = credentialHash;
       existing.role = UserType.ADMIN;
+      existing.verificationStatus = 'approved';
       existing.isOtpVerified = true;
       await existing.save();
       return;
@@ -60,6 +61,7 @@ export class UserService implements OnModuleInit {
       phoneNumber: adminEmail,
       credentialHash,
       role: UserType.ADMIN,
+      verificationStatus: 'approved',
       isOtpVerified: true,
     });
   }
@@ -84,7 +86,14 @@ export class UserService implements OnModuleInit {
       phoneNumber: dto.phoneNumber,
       email,
       gender: dto.gender,
-      role: dto.role ?? UserType.USER,
+      role: dto.role,
+      landAmount: dto.landAmount,
+      documents: dto.documents ?? [],
+      businessName: dto.businessName,
+      shopName: dto.shopName,
+      address: dto.address,
+      verificationStatus:
+        dto.role === UserType.FARMER ? 'approved' : 'pending',
       credentialHash: await bcrypt.hash(dto.password, 10),
       isOtpVerified: true,
       otpNumber: '000000',
