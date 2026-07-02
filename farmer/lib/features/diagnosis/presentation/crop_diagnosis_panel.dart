@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../data/detection_api.dart';
+import 'diagnosis_result_card.dart';
 
 class CropDiagnosisPanel extends StatefulWidget {
   const CropDiagnosisPanel({super.key});
@@ -56,9 +57,6 @@ class _CropDiagnosisPanelState extends State<CropDiagnosisPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final diagnosis = _result?['diagnosis'] as Map?;
-    final treatment = _result?['treatment'] as Map?;
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -77,7 +75,10 @@ class _CropDiagnosisPanelState extends State<CropDiagnosisPanel> {
                   const Expanded(
                     child: Text(
                       'Crop and insect check',
-                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -100,7 +101,11 @@ class _CropDiagnosisPanelState extends State<CropDiagnosisPanel> {
                     ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.image_search_rounded, size: 64, color: AppColors.primary),
+                          Icon(
+                            Icons.image_search_rounded,
+                            size: 64,
+                            color: AppColors.primary,
+                          ),
                           SizedBox(height: 8),
                           Text('Take or select a crop image'),
                         ],
@@ -134,80 +139,22 @@ class _CropDiagnosisPanelState extends State<CropDiagnosisPanel> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Icon(Icons.auto_awesome_rounded),
                 label: Text(_busy ? 'Analyzing...' : 'Analyze image'),
               ),
-              if (diagnosis != null) ...[
+              if (_result != null) ...[
                 const SizedBox(height: 20),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.bug_report_rounded, color: AppColors.primary),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                diagnosis['name']?.toString() ?? 'Detected issue',
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                              ),
-                            ),
-                            Text('${((diagnosis['confidence'] as num? ?? 0) * 100).toStringAsFixed(0)}%'),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text('Risk: ${diagnosis['risk']}'),
-                        const SizedBox(height: 10),
-                        _items('Symptoms', diagnosis['symptoms']),
-                      ],
-                    ),
-                  ),
-                ),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Treatment and safety', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 8),
-                        _items('Steps', treatment?['steps']),
-                        const SizedBox(height: 8),
-                        _items('Safety', treatment?['safety']),
-                        const SizedBox(height: 8),
-                        Text('Suggested products: ${(treatment?['medicineCodes'] as List? ?? const []).join(', ')}'),
-                      ],
-                    ),
-                  ),
-                ),
-                const Text(
-                  'Demo result: the provider can be replaced later without changing this screen.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                ),
+                DiagnosisResultCard(result: _result!),
               ],
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _items(String title, Object? raw) {
-    final items = raw as List? ?? const [];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text('• $item'),
-            )),
-      ],
     );
   }
 }
