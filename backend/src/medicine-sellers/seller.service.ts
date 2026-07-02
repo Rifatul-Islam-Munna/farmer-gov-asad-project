@@ -66,9 +66,10 @@ export class SellerService {
     if (!seller) {
       throw new NotFoundException('Medicine seller not found');
     }
+    const location = seller.location;
     if (
-      seller.location?.latitude == null ||
-      seller.location.longitude == null ||
+      location?.latitude == null ||
+      location.longitude == null ||
       !seller.shopName ||
       !seller.address
     ) {
@@ -87,8 +88,8 @@ export class SellerService {
         price: dto.price,
         shopName: seller.shopName,
         address: seller.address,
-        latitude: seller.location.latitude,
-        longitude: seller.location.longitude,
+        latitude: location.latitude,
+        longitude: location.longitude,
         active: dto.active ?? true,
       },
       { upsert: true, returnDocument: 'after' },
