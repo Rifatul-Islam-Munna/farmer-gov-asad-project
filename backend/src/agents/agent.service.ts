@@ -167,7 +167,7 @@ export class AgentService {
     type: AgentActionType,
     agentId: string,
     farmerPhone: string,
-    payload: Record<string, unknown>,
+    payload: object,
     farmerId?: string,
   ) {
     const otp = this.generateOtp();
