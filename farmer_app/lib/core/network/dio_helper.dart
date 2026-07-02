@@ -6,7 +6,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../../main.dart' show logger;
 import '../../router/app_router.dart';
-import '../navigation/app_router_instance.dart';
+import '../../router/router_instance.dart';
 import '../storage/user_storage.dart';
 
 class DioHelper {
