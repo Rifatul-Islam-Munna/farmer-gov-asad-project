@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MarketPriceController } from './market-price/market-price.controller';
+import { MarketDataService } from './market-price/market-data.service';
 import {
   MARKET_PRICE_MODEL,
   MarketPriceSchema,
 } from './market-price/market-price.entity';
-import { MarketPriceService } from './market-price/market-price.service';
 import { UserModule } from './user/user.module';
 
 @Module({
@@ -16,7 +16,7 @@ import { UserModule } from './user/user.module';
     UserModule,
   ],
   controllers: [MarketPriceController],
-  providers: [MarketPriceService],
-  exports: [MarketPriceService],
+  providers: [MarketDataService],
+  exports: [MarketDataService],
 })
 export class MarketDataModule {}
