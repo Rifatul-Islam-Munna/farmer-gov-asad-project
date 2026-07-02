@@ -1,20 +1,9 @@
-enum UserRole {
-  farmer,
-  buyer,
-  agent,
-  medicineSeller;
+import '../data/models/user.model.dart';
 
-  String get apiValue {
-    return switch (this) {
-      UserRole.farmer => 'farmer',
-      UserRole.buyer => 'buyer',
-      UserRole.agent => 'agent',
-      UserRole.medicineSeller => 'medicineSeller',
-    };
-  }
-
+extension UserRolePresentation on UserRole {
   String get label {
     return switch (this) {
+      UserRole.admin => 'Admin',
       UserRole.farmer => 'Farmer',
       UserRole.buyer => 'Buyer',
       UserRole.agent => 'Agent',
@@ -24,6 +13,7 @@ enum UserRole {
 
   String get helperText {
     return switch (this) {
+      UserRole.admin => 'Manage the Farmer Government platform.',
       UserRole.farmer => 'Manage crops, sell goods and monitor market prices.',
       UserRole.buyer => 'Discover goods and make verified marketplace deals.',
       UserRole.agent => 'Create and assist farmer accounts with OTP approval.',
