@@ -2,8 +2,10 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export enum UserType {
   ADMIN = 'admin',
-  EDITOR = 'editor',
-  USER = 'user',
+  AGENT = 'agent',
+  FARMER = 'farmer',
+  BUYER = 'buyer',
+  MEDICINE_SELLER = 'medicineSeller',
 }
 
 export const USER_MODEL = 'User';
@@ -15,6 +17,16 @@ export interface User {
   credentialHash: string;
   role: UserType;
   gender?: string;
+  landAmount?: number;
+  documents: string[];
+  businessName?: string;
+  shopName?: string;
+  address?: string;
+  location?: {
+    latitude?: number;
+    longitude?: number;
+  };
+  verificationStatus: 'pending' | 'approved' | 'rejected';
   isOtpVerified: boolean;
   otpNumber?: string;
   otpValidatedAt?: Date;
@@ -38,8 +50,22 @@ export const UserSchema = new mongoose.Schema<User>(
     email: { type: String, trim: true, lowercase: true },
     phoneNumber: { type: String, required: true, unique: true, trim: true },
     credentialHash: { type: String, required: true },
-    role: { type: String, enum: UserType, default: UserType.USER },
+    role: { type: String, enum: UserType, default: UserType.FARMER },
     gender: String,
+    landAmount: { type: Number, min: 0 },
+    documents: { type: [String], default: [] },
+    businessName: String,
+    shopName: String,
+    address: String,
+    location: {
+      latitude: Number,
+      longitude: Number,
+    },
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
     isOtpVerified: { type: Boolean, default: true },
     otpNumber: String,
     otpValidatedAt: Date,
