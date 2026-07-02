@@ -15,19 +15,21 @@ class SessionStorage {
   final SharedPreferences _preferences;
   final FlutterSecureStorage _secureStorage;
 
+  Future<String?> getToken() {
+    return _secureStorage.read(key: _tokenKey);
+  }
+
   Future<bool> hasSession() async {
-    final token = await _secureStorage.read(key: _tokenKey);
+    final token = await getToken();
     return token != null && token.isNotEmpty;
   }
 
-  Future<void> saveDemoSession({
+  Future<void> saveSession({
+    required String token,
     required String role,
     required String name,
   }) async {
-    await _secureStorage.write(
-      key: _tokenKey,
-      value: 'demo-access-token',
-    );
+    await _secureStorage.write(key: _tokenKey, value: token);
     await _preferences.setString(_roleKey, role);
     await _preferences.setString(_nameKey, name);
   }
