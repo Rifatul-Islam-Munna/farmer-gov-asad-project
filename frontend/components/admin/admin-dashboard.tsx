@@ -1,99 +1,212 @@
 "use client"
 
 import * as React from "react"
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
-import { Boxes, Handshake, LayoutDashboard, LogOut, RefreshCcw, Search, ShieldCheck, ShoppingBasket, Users } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { API_URL, apiRequest, type AdminUser, type ApiEnvelope, type DashboardData, type Deal, type Good, type GoodsPayload, type InventoryItem, type Listing, type MarketPrice } from "@/lib/admin-api"
-import { AdminOverview } from "./admin-overview"
-import { AdminMarketControls } from "./admin-market-controls"
-import { DealsPanel, InventoryPanel, ListingsPanel, UsersPanel } from "./admin-resource-panels"
+import { AdminLogin } from "./admin-login"
+import { AdminShell, type AdminView } from "./admin-shell"
+import { CatalogPage } from "./catalog-page"
+import { DealsPage } from "./deals-page"
+import { InventoryPage } from "./inventory-page"
+import { ListingsPage } from "./listings-page"
+import { OverviewPage } from "./overview-page"
+import { PageSkeleton } from "./page-elements"
+import { ReportsPage } from "./reports-page"
+import { UsersPage } from "./users-page"
+import {
+  apiRequest,
+  type AdminDataSnapshot,
+  type AdminUser,
+  type ApiEnvelope,
+  type DashboardData,
+  type Deal,
+  type GoodsPayload,
+  type InventoryItem,
+  type Listing,
+  type MarketPrice,
+  type Offer,
+} from "@/lib/admin-api"
 
-type View = "overview" | "users" | "listings" | "deals" | "prices" | "inventory"
-const views: Array<[View, string, React.ComponentType<{ className?: string }>]> = [
-  ["overview", "Overview", LayoutDashboard], ["users", "Users", Users],
-  ["listings", "Listings", ShoppingBasket], ["deals", "Deals", Handshake],
-  ["prices", "Prices & goods", Search], ["inventory", "Inventory", Boxes],
-]
-const chartConfig = { deals: { label: "Deals", color: "var(--chart-1)" }, listings: { label: "Listings", color: "var(--chart-2)" } } satisfies ChartConfig
-const roleConfig = { value: { label: "Users", color: "var(--chart-3)" } } satisfies ChartConfig
-
-export function AdminDashboard() {
-  const [token, setToken] = React.useState<string | null>(null)
-  const [view, setView] = React.useState<View>("overview")
-  const [dashboard, setDashboard] = React.useState<DashboardData | null>(null)
-  const [users, setUsers] = React.useState<AdminUser[]>([])
-  const [listings, setListings] = React.useState<Listing[]>([])
-  const [deals, setDeals] = React.useState<Deal[]>([])
-  const [prices, setPrices] = React.useState<MarketPrice[]>([])
-  const [goods, setGoods] = React.useState<Good[]>([])
-  const [inventory, setInventory] = React.useState<InventoryItem[]>([])
-  const [search, setSearch] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
-  const [message, setMessage] = React.useState<string | null>(null)
-
-  React.useEffect(() => setToken(localStorage.getItem("farmer-admin-token")), [])
-  const load = React.useCallback(async () => {
-    if (!token) return
-    setLoading(true); setMessage(null)
-    try {
-      const [a,b,c,d,e,f,g] = await Promise.all([
-        apiRequest<ApiEnvelope<DashboardData>>("/admin/dashboard", {}, token),
-        apiRequest<ApiEnvelope<AdminUser[]>>("/admin/users?limit=500", {}, token),
-        apiRequest<ApiEnvelope<Listing[]>>("/admin/listings?limit=500", {}, token),
-        apiRequest<ApiEnvelope<Deal[]>>("/admin/deals?limit=500", {}, token),
-        apiRequest<ApiEnvelope<MarketPrice[]>>("/admin/prices", {}, token),
-        apiRequest<ApiEnvelope<GoodsPayload>>("/admin/goods", {}, token),
-        apiRequest<ApiEnvelope<InventoryItem[]>>("/admin/inventory?limit=500", {}, token),
-      ])
-      setDashboard(a.data); setUsers(b.data); setListings(c.data); setDeals(d.data)
-      setPrices(e.data); setGoods(f.data.goods); setInventory(g.data)
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not load data") }
-    finally { setLoading(false) }
-  }, [token])
-  React.useEffect(() => { void load() }, [load])
-
-  async function change(path: string, body: unknown, method = "PATCH") {
-    if (!token) return
-    try { await apiRequest(path, { method, body: JSON.stringify(body) }, token); setMessage("Saved successfully"); await load() }
-    catch (error) { setMessage(error instanceof Error ? error.message : "Could not save") }
-  }
-  function logout() { localStorage.removeItem("farmer-admin-token"); setToken(null) }
-  if (!token) return <Login onLogin={(value) => { localStorage.setItem("farmer-admin-token", value); setToken(value) }} />
-
-  const q = search.toLowerCase().trim()
-  const match = (...values: unknown[]) => values.some((value) => String(value ?? "").toLowerCase().includes(q))
-  const filteredUsers = users.filter((x) => match(x.name,x.phoneNumber,x.email,x.role,x.verificationStatus))
-  const filteredListings = listings.filter((x) => match(x.goodName,x.goodCode,x.ownerId,x.status,x.address))
-  const filteredDeals = deals.filter((x) => match(x._id,x.buyerId,x.farmerId,x.status))
-  const filteredInventory = inventory.filter((x) => match(x.shopName,x.medicineName,x.address,x.active))
-
-  return <div className="min-h-screen bg-muted/30 lg:grid lg:grid-cols-[250px_1fr]">
-    <aside className="border-b bg-background p-5 lg:sticky lg:top-0 lg:h-screen lg:border-r">
-      <div className="mb-8 flex items-center gap-3"><div className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground"><ShieldCheck /></div><div><div className="font-semibold">Farmer Government</div><div className="text-xs text-muted-foreground">Admin control center</div></div></div>
-      <nav className="grid grid-cols-2 gap-2 lg:grid-cols-1">{views.map(([key,label,Icon]) => <Button key={key} variant={view===key?"default":"ghost"} className="justify-start" onClick={()=>setView(key)}><Icon />{label}</Button>)}</nav>
-      <Card className="mt-8 hidden lg:block" size="sm"><CardHeader><CardTitle>API</CardTitle><CardDescription className="break-all">{API_URL}</CardDescription></CardHeader></Card>
-    </aside>
-    <main className="min-w-0">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur md:px-8"><div><h1 className="text-xl font-semibold capitalize">{views.find(x=>x[0]===view)?.[1]}</h1><p className="text-xs text-muted-foreground">Operations, controls and reports</p></div><div className="flex gap-2"><Button variant="outline" onClick={()=>void load()} disabled={loading}><RefreshCcw className={loading?"animate-spin":""}/>Refresh</Button><Button variant="ghost" onClick={logout}><LogOut/>Sign out</Button></div></header>
-      <div className="space-y-4 p-4 md:p-8">{message && <Card><CardContent className="py-3">{message}</CardContent></Card>}
-        {view!=="overview" && <div className="relative max-w-md"><Search className="absolute left-2 top-2 size-4 text-muted-foreground"/><Input className="pl-8" placeholder="Search current section" value={search} onChange={e=>setSearch(e.target.value)}/></div>}
-        {view==="overview" && <AdminOverview data={dashboard}/>} 
-        {view==="users" && <UsersPanel items={filteredUsers} change={change}/>} 
-        {view==="listings" && <ListingsPanel items={filteredListings} change={change}/>} 
-        {view==="deals" && <DealsPanel items={filteredDeals} change={change}/>} 
-        {view==="prices" && <AdminMarketControls prices={prices} goods={goods} save={change}/>} 
-        {view==="inventory" && <InventoryPanel items={filteredInventory} change={change}/>} 
-      </div>
-    </main>
-  </div>
+const emptyData: AdminDataSnapshot = {
+  dashboard: null,
+  users: [],
+  listings: [],
+  offers: [],
+  deals: [],
+  prices: [],
+  goods: [],
+  categories: [],
+  inventory: [],
 }
 
-function Login({onLogin}:{onLogin:(token:string)=>void}) { const [login,setLogin]=React.useState(""); const [password,setPassword]=React.useState(""); const [error,setError]=React.useState(""); async function submit(e:React.FormEvent){e.preventDefault();try{const r=await apiRequest<{access_token:string}>("/user/login-user",{method:"POST",body:JSON.stringify({phoneNumber:login,password})});onLogin(r.access_token)}catch(x){setError(x instanceof Error?x.message:"Login failed")}} return <main className="grid min-h-screen place-items-center p-4"><Card className="w-full max-w-md"><CardHeader><CardTitle>Administrator sign in</CardTitle><CardDescription>Use the configured admin email or phone and password.</CardDescription></CardHeader><CardContent><form className="space-y-4" onSubmit={submit}><div><Label className="mb-2">Email or phone</Label><Input value={login} onChange={e=>setLogin(e.target.value)} required/></div><div><Label className="mb-2">Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></div>{error&&<p className="text-sm text-destructive">{error}</p>}<Button className="w-full" type="submit"><ShieldCheck/>Sign in</Button></form></CardContent></Card></main> }
+export function AdminDashboard() {
+  const [hydrated, setHydrated] = React.useState(false)
+  const [token, setToken] = React.useState<string | null>(null)
+  const [view, setView] = React.useState<AdminView>("overview")
+  const [data, setData] = React.useState<AdminDataSnapshot>(emptyData)
+  const [loading, setLoading] = React.useState(false)
+  const [notice, setNotice] = React.useState<{
+    tone: "success" | "error"
+    message: string
+  } | null>(null)
+
+  React.useEffect(() => {
+    setToken(localStorage.getItem("farmer-admin-token"))
+    setHydrated(true)
+  }, [])
+
+  const load = React.useCallback(async () => {
+    if (!token) return
+    setLoading(true)
+    try {
+      const [dashboard, users, listings, offers, deals, prices, goods, inventory] =
+        await Promise.all([
+          apiRequest<ApiEnvelope<DashboardData>>("/admin/dashboard", {}, token),
+          apiRequest<ApiEnvelope<AdminUser[]>>(
+            "/admin/users?limit=500",
+            {},
+            token,
+          ),
+          apiRequest<ApiEnvelope<Listing[]>>(
+            "/admin/listings?limit=500",
+            {},
+            token,
+          ),
+          apiRequest<ApiEnvelope<Offer[]>>(
+            "/admin/offers?limit=500",
+            {},
+            token,
+          ),
+          apiRequest<ApiEnvelope<Deal[]>>(
+            "/admin/deals?limit=500",
+            {},
+            token,
+          ),
+          apiRequest<ApiEnvelope<MarketPrice[]>>("/admin/prices", {}, token),
+          apiRequest<ApiEnvelope<GoodsPayload>>("/admin/goods", {}, token),
+          apiRequest<ApiEnvelope<InventoryItem[]>>(
+            "/admin/inventory?limit=500",
+            {},
+            token,
+          ),
+        ])
+
+      setData({
+        dashboard: dashboard.data,
+        users: users.data,
+        listings: listings.data,
+        offers: offers.data,
+        deals: deals.data,
+        prices: prices.data,
+        goods: goods.data.goods,
+        categories: goods.data.categories,
+        inventory: inventory.data,
+      })
+    } catch (error) {
+      setNotice({
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not load administration data.",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
+  React.useEffect(() => {
+    if (token) void load()
+  }, [load, token])
+
+  React.useEffect(() => {
+    if (!notice) return
+    const timeout = window.setTimeout(() => setNotice(null), 5000)
+    return () => window.clearTimeout(timeout)
+  }, [notice])
+
+  async function change(path: string, body: unknown, method = "PATCH") {
+    if (!token) return false
+    try {
+      await apiRequest(path, { method, body: JSON.stringify(body) }, token)
+      setNotice({ tone: "success", message: "Changes saved successfully." })
+      await load()
+      return true
+    } catch (error) {
+      setNotice({
+        tone: "error",
+        message: error instanceof Error ? error.message : "Could not save changes.",
+      })
+      return false
+    }
+  }
+
+  function login(nextToken: string) {
+    localStorage.setItem("farmer-admin-token", nextToken)
+    setToken(nextToken)
+  }
+
+  function logout() {
+    localStorage.removeItem("farmer-admin-token")
+    setToken(null)
+    setData(emptyData)
+    setNotice(null)
+  }
+
+  if (!hydrated) {
+    return <div className="min-h-screen bg-muted/30" />
+  }
+
+  if (!token) {
+    return <AdminLogin onLogin={login} />
+  }
+
+  const counts: Partial<Record<AdminView, number>> = {
+    users: data.users.filter((user) => user.verificationStatus === "pending").length,
+    listings: data.listings.length,
+    deals: data.deals.length,
+    catalog: data.goods.length,
+    inventory: data.inventory.filter((item) => item.active).length,
+  }
+
+  return (
+    <AdminShell
+      view={view}
+      onViewChange={setView}
+      loading={loading}
+      onRefresh={() => void load()}
+      onLogout={logout}
+      counts={counts}
+      notice={notice}
+    >
+      {loading && data.dashboard === null ? (
+        <PageSkeleton />
+      ) : (
+        <>
+          {view === "overview" ? (
+            <OverviewPage data={data.dashboard} onNavigate={setView} />
+          ) : null}
+          {view === "users" ? (
+            <UsersPage users={data.users} change={change} />
+          ) : null}
+          {view === "listings" ? (
+            <ListingsPage listings={data.listings} change={change} />
+          ) : null}
+          {view === "deals" ? (
+            <DealsPage deals={data.deals} offers={data.offers} change={change} />
+          ) : null}
+          {view === "catalog" ? (
+            <CatalogPage
+              prices={data.prices}
+              goods={data.goods}
+              categories={data.categories}
+              change={change}
+            />
+          ) : null}
+          {view === "inventory" ? (
+            <InventoryPage inventory={data.inventory} change={change} />
+          ) : null}
+          {view === "reports" ? <ReportsPage data={data} /> : null}
+        </>
+      )}
+    </AdminShell>
+  )
+}

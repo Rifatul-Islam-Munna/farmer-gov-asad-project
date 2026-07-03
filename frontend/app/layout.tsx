@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Farmer Government Admin",
-  description: "Administration, marketplace reporting and platform controls",
+  title: "Farmer Government Administration",
+  description:
+    "Professional administration, marketplace reporting and platform controls for Farmer Government.",
 }
 
 export default function RootLayout({
@@ -27,7 +28,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-muted/30">{children}</body>
+      <body className="min-h-full bg-background text-foreground">{children}</body>
     </html>
   )
 }
