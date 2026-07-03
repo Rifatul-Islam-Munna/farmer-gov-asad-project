@@ -1,22 +1,49 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class NegotiationModel {
+  const NegotiationModel({
+    required this.id,
+    required this.listingId,
+    required this.buyerId,
+    required this.farmerId,
+    required this.quantity,
+    required this.unitPrice,
+    required this.status,
+    this.buyerAccepted = false,
+    this.farmerAccepted = false,
+  });
 
-part 'negotiation.model.freezed.dart';
-part 'negotiation.model.g.dart';
+  final String id;
+  final String listingId;
+  final String buyerId;
+  final String farmerId;
+  final double quantity;
+  final double unitPrice;
+  final String status;
+  final bool buyerAccepted;
+  final bool farmerAccepted;
 
-@freezed
-abstract class NegotiationModel with _$NegotiationModel {
-  const factory NegotiationModel({
-    @JsonKey(name: '_id') required String id,
-    required String listingId,
-    required String buyerId,
-    required String farmerId,
-    required double quantity,
-    required double unitPrice,
-    required String status,
-    @Default(false) bool buyerAccepted,
-    @Default(false) bool farmerAccepted,
-  }) = _NegotiationModel;
+  factory NegotiationModel.fromJson(Map<String, dynamic> json) {
+    return NegotiationModel(
+      id: (json['_id'] ?? json['id'] ?? '').toString(),
+      listingId: json['listingId'] as String? ?? '',
+      buyerId: json['buyerId'] as String? ?? '',
+      farmerId: json['farmerId'] as String? ?? '',
+      quantity: (json['quantity'] as num?)?.toDouble() ?? 0,
+      unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
+      status: json['status'] as String? ?? '',
+      buyerAccepted: json['buyerAccepted'] as bool? ?? false,
+      farmerAccepted: json['farmerAccepted'] as bool? ?? false,
+    );
+  }
 
-  factory NegotiationModel.fromJson(Map<String, dynamic> json) =>
-      _$NegotiationModelFromJson(json);
+  Map<String, dynamic> toJson() => {
+        '_id': id,
+        'listingId': listingId,
+        'buyerId': buyerId,
+        'farmerId': farmerId,
+        'quantity': quantity,
+        'unitPrice': unitPrice,
+        'status': status,
+        'buyerAccepted': buyerAccepted,
+        'farmerAccepted': farmerAccepted,
+      };
 }

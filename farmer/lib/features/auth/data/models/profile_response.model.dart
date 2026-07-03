@@ -1,15 +1,20 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
 import 'user.model.dart';
 
-part 'profile_response.model.freezed.dart';
-part 'profile_response.model.g.dart';
+class ProfileResponseModel {
+  const ProfileResponseModel({required this.data});
 
-@freezed
-abstract class ProfileResponseModel with _$ProfileResponseModel {
-  const factory ProfileResponseModel({required UserModel data}) =
-      _ProfileResponseModel;
+  final UserModel data;
 
-  factory ProfileResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$ProfileResponseModelFromJson(json);
+  factory ProfileResponseModel.fromJson(Map<String, dynamic> json) {
+    final dataJson = json['data'];
+    return ProfileResponseModel(
+      data: UserModel.fromJson(
+        dataJson is Map<String, dynamic>
+            ? dataJson
+            : const <String, dynamic>{},
+      ),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'data': data.toJson()};
 }

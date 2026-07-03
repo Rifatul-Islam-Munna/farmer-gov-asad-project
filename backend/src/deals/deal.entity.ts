@@ -14,6 +14,13 @@ export enum OfferStatus {
   EXPIRED = 'expired',
 }
 
+export interface OfferHistoryEntry {
+  byUserId: string;
+  quantity: number;
+  unitPrice: number;
+  createdAt: Date;
+}
+
 export interface Offer {
   listingId: string;
   buyerId: string;
@@ -23,12 +30,7 @@ export interface Offer {
   status: OfferStatus;
   buyerAccepted: boolean;
   farmerAccepted: boolean;
-  history: Array<{
-    byUserId: string;
-    quantity: number;
-    unitPrice: number;
-    createdAt: Date;
-  }>;
+  history: OfferHistoryEntry[];
   expiresAt?: Date;
   confirmedAt?: Date;
 }
@@ -48,7 +50,17 @@ export interface Deal {
 export type OfferDocument = HydratedDocument<Offer>;
 export type DealDocument = HydratedDocument<Deal>;
 
-export const OfferSchema = new mongoose.Schema<Offer>(
+const OfferHistorySchema = new mongoose.Schema<OfferHistoryEntry>(
+  {
+    byUserId: { type: String, required: true },
+    quantity: { type: Number, required: true, min: 0.01 },
+    unitPrice: { type: Number, required: true, min: 0 },
+    createdAt: { type: Date, required: true, default: Date.now },
+  },
+  { _id: false },
+);
+
+export const OfferSchema: mongoose.Schema<Offer> = new mongoose.Schema<Offer>(
   {
     listingId: { type: String, required: true, index: true },
     buyerId: { type: String, required: true, index: true },
@@ -63,14 +75,14 @@ export const OfferSchema = new mongoose.Schema<Offer>(
     },
     buyerAccepted: { type: Boolean, default: true },
     farmerAccepted: { type: Boolean, default: false },
-    history: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    history: { type: [OfferHistorySchema], default: [] },
     expiresAt: Date,
     confirmedAt: Date,
   },
   { timestamps: true, autoIndex: true },
 );
 
-export const DealSchema = new mongoose.Schema<Deal>(
+export const DealSchema: mongoose.Schema<Deal> = new mongoose.Schema<Deal>(
   {
     offerId: { type: String, required: true, unique: true, index: true },
     listingId: { type: String, required: true, index: true },
