@@ -1,15 +1,21 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+class LoginRequestModel {
+  const LoginRequestModel({
+    required this.phoneNumber,
+    required this.password,
+  });
 
-part 'login_request.model.freezed.dart';
-part 'login_request.model.g.dart';
+  final String phoneNumber;
+  final String password;
 
-@freezed
-abstract class LoginRequestModel with _$LoginRequestModel {
-  const factory LoginRequestModel({
-    required String phoneNumber,
-    required String password,
-  }) = _LoginRequestModel;
+  factory LoginRequestModel.fromJson(Map<String, dynamic> json) {
+    return LoginRequestModel(
+      phoneNumber: json['phoneNumber'] as String? ?? '',
+      password: json['password'] as String? ?? '',
+    );
+  }
 
-  factory LoginRequestModel.fromJson(Map<String, dynamic> json) =>
-      _$LoginRequestModelFromJson(json);
+  Map<String, dynamic> toJson() => {
+        'phoneNumber': phoneNumber,
+        'password': password,
+      };
 }

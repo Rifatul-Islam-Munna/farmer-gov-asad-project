@@ -8,10 +8,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  AccessTokenGuard,
-  AuthenticatedRequest,
-} from '../auth/access-token.guard';
+import { AccessTokenGuard } from '../auth/access-token.guard';
+import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';

@@ -31,7 +31,10 @@ export class DealService {
   ) {}
 
   async createOffer(buyerId: string, dto: CreateNegotiationDto) {
-    const listing = (await this.listingService.findOne(dto.listingId)).data;
+    const listing = (await this.listingService.findOne(dto.listingId)).data as {
+      ownerId: string;
+      availableQuantity: number;
+    };
     if (listing.ownerId === buyerId) {
       throw new BadRequestException('You cannot offer on your own listing');
     }

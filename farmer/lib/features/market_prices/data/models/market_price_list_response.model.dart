@@ -1,17 +1,27 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
 import 'market_price.model.dart';
 
-part 'market_price_list_response.model.freezed.dart';
-part 'market_price_list_response.model.g.dart';
+class MarketPriceListResponseModel {
+  const MarketPriceListResponseModel({required this.data});
 
-@freezed
-abstract class MarketPriceListResponseModel
-    with _$MarketPriceListResponseModel {
-  const factory MarketPriceListResponseModel({
-    required List<MarketPriceModel> data,
-  }) = _MarketPriceListResponseModel;
+  final List<MarketPriceModel> data;
 
-  factory MarketPriceListResponseModel.fromJson(Map<String, dynamic> json) =>
-      _$MarketPriceListResponseModelFromJson(json);
+  factory MarketPriceListResponseModel.fromJson(Map<String, dynamic> json) {
+    final rawData = json['data'];
+    return MarketPriceListResponseModel(
+      data: rawData is List
+          ? rawData
+              .whereType<Map>()
+              .map(
+                (item) => MarketPriceModel.fromJson(
+                  Map<String, dynamic>.from(item),
+                ),
+              )
+              .toList(growable: false)
+          : const <MarketPriceModel>[],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'data': data.map((item) => item.toJson()).toList(growable: false),
+      };
 }

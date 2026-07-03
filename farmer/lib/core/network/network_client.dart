@@ -66,7 +66,7 @@ class DioHelper {
           final token = await GetIt.I<SessionStorage>().getToken();
           if (token != null && token.isNotEmpty) {
             options.headers['access_token'] = token;
-            options.headers[Headers.authorizationHeader] = 'Bearer $token';
+            options.headers['Authorization'] = 'Bearer $token';
           }
           handler.next(options);
         },

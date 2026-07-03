@@ -7,6 +7,8 @@ import {
 import { Request } from 'express';
 import { AccessPayload, UserService } from '../user/user.service';
 
+export const AuthenticatedRequest = Symbol('AuthenticatedRequest');
+
 export interface AuthenticatedRequest extends Request {
   user: AccessPayload;
 }

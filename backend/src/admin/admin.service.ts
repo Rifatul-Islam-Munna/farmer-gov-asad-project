@@ -50,10 +50,24 @@ export class AdminService {
   }
 
   async guidance(role: string) {
+    const allowedRoles: Guidance['targetRole'][] = [
+      'farmer',
+      'buyer',
+      'agent',
+      'medicineSeller',
+      'all',
+    ];
+    const normalizedRole: Guidance['targetRole'] = allowedRoles.includes(
+      role as Guidance['targetRole'],
+    )
+      ? (role as Guidance['targetRole'])
+      : 'farmer';
+    const targetRoles: Guidance['targetRole'][] = ['all', normalizedRole];
+
     const data = await this.guidanceModel
       .find({
         active: true,
-        targetRole: { $in: ['all', role] },
+        targetRole: { $in: targetRoles },
       })
       .sort({ publishedAt: -1 })
       .limit(50)

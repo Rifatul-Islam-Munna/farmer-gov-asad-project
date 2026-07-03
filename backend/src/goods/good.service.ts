@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import {
   CreateGoodDto,
   CreateGoodsCategoryDto,
@@ -115,7 +115,7 @@ export class GoodService implements OnModuleInit {
   }
 
   async searchGoods(query: SearchGoodsDto) {
-    const filter: FilterQuery<Good> = { active: true };
+    const filter: Record<string, unknown> = { active: true };
     if (query.categoryCode?.trim()) {
       filter.categoryCode = query.categoryCode.trim().toLowerCase();
     }
