@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { USER_MODEL, User, UserType } from '../user/user.entity';
 import {
   MEDICINE_MODEL,
@@ -13,6 +13,7 @@ import {
   SellerInventory,
 } from './medicine.entity';
 import {
+  NearbySellerFilterDto,
   NearbySellerQueryDto,
   UpdateSellerLocationDto,
   UpsertInventoryDto,
@@ -39,11 +40,12 @@ export class SellerService {
           location: {
             latitude: dto.latitude,
             longitude: dto.longitude,
+            updatedAt: new Date(),
           },
         },
         { returnDocument: 'after' },
       )
-      .select('-credentialHash')
+      .select('-credentialHash -otpNumber')
       .lean();
     if (!data) {
       throw new NotFoundException('Medicine seller not found');
@@ -106,8 +108,31 @@ export class SellerService {
     };
   }
 
+  async nearbyForUser(userId: string, query: NearbySellerFilterDto) {
+    const user = await this.userModel
+      .findById(userId)
+      .select('location')
+      .lean();
+    const latitude = user?.location?.latitude;
+    const longitude = user?.location?.longitude;
+    if (latitude == null || longitude == null) {
+      throw new BadRequestException(
+        'Location is not saved yet. Allow location access and try again.',
+      );
+    }
+    return this.findNearby(latitude, longitude, query);
+  }
+
   async nearby(query: NearbySellerQueryDto) {
-    const filter: FilterQuery<SellerInventory> = {
+    return this.findNearby(query.latitude, query.longitude, query);
+  }
+
+  private async findNearby(
+    latitude: number,
+    longitude: number,
+    query: NearbySellerFilterDto,
+  ) {
+    const filter: Record<string, any> = {
       active: true,
       stockQuantity: { $gt: 0 },
     };
@@ -125,22 +150,77 @@ export class SellerService {
 
     const radiusKm = query.radiusKm ?? 25;
     const records = await this.inventoryModel.find(filter).lean();
-    const data = records
+    const nearbyRecords = records
       .map((record) => ({
         ...record,
         distanceKm: Number(
           this.distance(
-            query.latitude,
-            query.longitude,
+            latitude,
+            longitude,
             record.latitude,
             record.longitude,
           ).toFixed(2),
         ),
       }))
-      .filter((record) => record.distanceKm <= radiusKm)
-      .sort((a, b) => a.distanceKm - b.distanceKm);
+      .filter((record) => record.distanceKm <= radiusKm);
 
-    return { data };
+    const sellerIds = [...new Set(nearbyRecords.map((item) => item.sellerId))];
+    const sellers = sellerIds.length
+      ? await this.userModel
+          .find({ _id: { $in: sellerIds } })
+          .select('phoneNumber')
+          .lean()
+      : [];
+    const phoneBySeller = new Map(
+      sellers.map((seller) => [String(seller._id), seller.phoneNumber]),
+    );
+
+    const grouped = new Map<string, Record<string, any>>();
+    for (const record of nearbyRecords) {
+      const current = grouped.get(record.sellerId) ?? {
+        sellerId: record.sellerId,
+        shopName: record.shopName,
+        address: record.address,
+        phoneNumber: phoneBySeller.get(record.sellerId) ?? '',
+        latitude: record.latitude,
+        longitude: record.longitude,
+        distanceKm: record.distanceKm,
+        medicines: [],
+      };
+      current.distanceKm = Math.min(current.distanceKm, record.distanceKm);
+      current.medicines.push({
+        medicineCode: record.medicineCode,
+        medicineName: record.medicineName,
+        type: record.type,
+        stockQuantity: record.stockQuantity,
+        unit: record.unit,
+        price: record.price,
+      });
+      grouped.set(record.sellerId, current);
+    }
+
+    const data = ([...grouped.values()] as Array<Record<string, any>>)
+      .map((shop): Record<string, any> => ({
+        ...shop,
+        medicines: shop.medicines.sort(
+          (a: Record<string, any>, b: Record<string, any>) =>
+            String(a.medicineName).localeCompare(String(b.medicineName)),
+        ),
+      }))
+      .sort((a: Record<string, any>, b: Record<string, any>) =>
+        Number(a.distanceKm) - Number(b.distanceKm),
+      );
+
+    return {
+      data,
+      meta: {
+        latitude,
+        longitude,
+        radiusKm,
+        shopCount: data.length,
+        productCount: nearbyRecords.length,
+      },
+    };
   }
 
   private distance(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -157,6 +237,9 @@ export class SellerService {
   }
 
   private escape(value: string) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const special = new Set(['.', '*', '+', '?', '^', '$', '{', '}', '(', ')', '|', '[', ']', '\\']);
+    return [...value].map((character) =>
+      special.has(character) ? `\\${character}` : character,
+    ).join('');
   }
 }

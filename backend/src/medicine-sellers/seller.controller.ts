@@ -9,15 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  AccessTokenGuard,
-  AuthenticatedRequest,
-} from '../auth/access-token.guard';
+import { AccessTokenGuard } from '../auth/access-token.guard';
+import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
 import { UserType } from '../user/user.entity';
 import {
+  NearbySellerFilterDto,
   NearbySellerQueryDto,
   UpdateSellerLocationDto,
   UpsertInventoryDto,
@@ -28,6 +27,20 @@ import { SellerService } from './seller.service';
 @Controller('medicine-sellers')
 export class SellerController {
   constructor(private readonly sellerService: SellerService) {}
+
+  @Get('nearby/mine')
+  @ApiBearerAuth()
+  @Roles(UserType.FARMER, UserType.BUYER, UserType.AGENT, UserType.ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  @ApiOperation({
+    summary: 'Find nearby sellers using the saved location of the current user',
+  })
+  nearbyForCurrentUser(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: NearbySellerFilterDto,
+  ) {
+    return this.sellerService.nearbyForUser(request.user.id, query);
+  }
 
   @Get('nearby')
   @ApiOperation({ summary: 'Find nearby sellers with matching stock' })

@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import '../../../../core/storage/session_storage.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../diagnosis/presentation/crop_diagnosis_panel.dart';
+import '../../../medicine_sellers/presentation/nearby_sellers_panel.dart';
 import '../role_home_content.dart';
 
 @RoutePage()
@@ -92,6 +93,25 @@ class HomePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          if (session.role == 'farmer')
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ServiceCard(
+                icon: Icons.local_pharmacy_rounded,
+                title: 'Find nearby sellers',
+                description:
+                    'Use your phone location to find shops and available medicine.',
+                onTap: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  builder: (_) => const FractionallySizedBox(
+                    heightFactor: 0.96,
+                    child: NearbySellersPanel(),
+                  ),
+                ),
+              ),
+            ),
           ...content.actions.map(
             (action) => Padding(
               padding: const EdgeInsets.only(bottom: 12),

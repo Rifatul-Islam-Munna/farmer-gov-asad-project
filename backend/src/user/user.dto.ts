@@ -1,8 +1,11 @@
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
   IsEmail,
   IsEnum,
+  IsLatitude,
+  IsLongitude,
   IsNumber,
   IsOptional,
   IsString,
@@ -68,6 +71,65 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(300)
   address?: string;
+}
+
+export class UpdateMyProfileDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  phoneNumber?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  gender?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  landAmount?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsString({ each: true })
+  documents?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  businessName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  shopName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  address?: string;
+}
+
+export class UpdateMyLocationDto {
+  @Type(() => Number)
+  @IsLatitude()
+  latitude: number;
+
+  @Type(() => Number)
+  @IsLongitude()
+  longitude: number;
 }
 
 export class LoginDto {
