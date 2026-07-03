@@ -15,7 +15,30 @@ class ProfileApi {
     final response = await _client.get<Map<String, dynamic>>(
       '/user/get-my-profile',
     );
-    final model = ProfileResponseModel.fromJson(response.data ?? const {});
+    return _readAndSave(response.data);
+  }
+
+  Future<UserModel> updateProfile(Map<String, dynamic> data) async {
+    final response = await _client.patch<Map<String, dynamic>>(
+      '/user/profile',
+      data: data,
+    );
+    return _readAndSave(response.data);
+  }
+
+  Future<UserModel> updateLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    final response = await _client.patch<Map<String, dynamic>>(
+      '/user/location',
+      data: {'latitude': latitude, 'longitude': longitude},
+    );
+    return _readAndSave(response.data);
+  }
+
+  Future<UserModel> _readAndSave(Map<String, dynamic>? responseData) async {
+    final model = ProfileResponseModel.fromJson(responseData ?? const {});
     await GetIt.I<SessionStorage>().saveProfile(
       role: model.data.role.name,
       name: model.data.name,

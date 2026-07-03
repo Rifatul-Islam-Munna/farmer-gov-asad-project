@@ -25,6 +25,7 @@ export interface User {
   location?: {
     latitude?: number;
     longitude?: number;
+    updatedAt?: Date;
   };
   verificationStatus: 'pending' | 'approved' | 'rejected';
   isOtpVerified: boolean;
@@ -60,6 +61,7 @@ export const UserSchema = new mongoose.Schema<User>(
     location: {
       latitude: Number,
       longitude: Number,
+      updatedAt: Date,
     },
     verificationStatus: {
       type: String,

@@ -1,6 +1,8 @@
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsLatitude,
+  IsLongitude,
   IsNumber,
   IsOptional,
   IsString,
@@ -17,10 +19,12 @@ export class UpdateSellerLocationDto {
   @MaxLength(300)
   address: string;
 
-  @IsNumber()
+  @Type(() => Number)
+  @IsLatitude()
   latitude: number;
 
-  @IsNumber()
+  @Type(() => Number)
+  @IsLongitude()
   longitude: number;
 }
 
@@ -45,15 +49,7 @@ export class UpsertInventoryDto {
   active?: boolean;
 }
 
-export class NearbySellerQueryDto {
-  @Type(() => Number)
-  @IsNumber()
-  latitude: number;
-
-  @Type(() => Number)
-  @IsNumber()
-  longitude: number;
-
+export class NearbySellerFilterDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -67,4 +63,14 @@ export class NearbySellerQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+}
+
+export class NearbySellerQueryDto extends NearbySellerFilterDto {
+  @Type(() => Number)
+  @IsLatitude()
+  latitude: number;
+
+  @Type(() => Number)
+  @IsLongitude()
+  longitude: number;
 }

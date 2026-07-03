@@ -1,9 +1,21 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import {
-  AccessTokenGuard,
-  AuthenticatedRequest,
-} from '../auth/access-token.guard';
-import { CreateUserDto, LoginDto, OtpStringDto } from './user.dto';
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AccessTokenGuard } from '../auth/access-token.guard';
+import type { AuthenticatedRequest } from '../auth/access-token.guard';
+import {
+  CreateUserDto,
+  LoginDto,
+  OtpStringDto,
+  UpdateMyLocationDto,
+  UpdateMyProfileDto,
+} from './user.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -38,5 +50,23 @@ export class UserController {
   @UseGuards(AccessTokenGuard)
   getMyProfile(@Req() request: AuthenticatedRequest) {
     return this.userService.findProfile(request.user.id);
+  }
+
+  @Patch('profile')
+  @UseGuards(AccessTokenGuard)
+  updateMyProfile(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: UpdateMyProfileDto,
+  ) {
+    return this.userService.updateProfile(request.user.id, dto);
+  }
+
+  @Patch('location')
+  @UseGuards(AccessTokenGuard)
+  updateMyLocation(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: UpdateMyLocationDto,
+  ) {
+    return this.userService.updateLocation(request.user.id, dto);
   }
 }

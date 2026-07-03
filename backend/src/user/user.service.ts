@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   HttpException,
   HttpStatus,
@@ -11,7 +12,12 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
-import { CreateUserDto, LoginDto } from './user.dto';
+import {
+  CreateUserDto,
+  LoginDto,
+  UpdateMyLocationDto,
+  UpdateMyProfileDto,
+} from './user.dto';
 import { USER_MODEL, User, UserType } from './user.entity';
 
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
@@ -174,7 +180,7 @@ export class UserService implements OnModuleInit {
     const monthKey = new Date().toISOString().slice(0, 7);
     const userRecord = await this.userModel
       .findById(id)
-      .select('-credentialHash');
+      .select('-credentialHash -otpNumber');
 
     if (userRecord && userRecord.monthlyUsageKey !== monthKey) {
       userRecord.monthlyUsageKey = monthKey;
@@ -188,6 +194,74 @@ export class UserService implements OnModuleInit {
     }
 
     return { data: user };
+  }
+
+  async updateProfile(id: string, dto: UpdateMyProfileDto) {
+    const phoneNumber = dto.phoneNumber?.trim();
+    const email = dto.email?.trim().toLowerCase();
+    const duplicateFilters: Record<string, string>[] = [];
+    if (phoneNumber) duplicateFilters.push({ phoneNumber });
+    if (email) duplicateFilters.push({ email });
+
+    if (duplicateFilters.length > 0) {
+      const duplicate = await this.userModel
+        .findOne({ _id: { $ne: id }, $or: duplicateFilters })
+        .lean();
+      if (duplicate) {
+        throw new ConflictException('Phone number or email is already in use');
+      }
+    }
+
+    const set: Record<string, unknown> = {};
+    if (dto.name != null) set.name = dto.name.trim();
+    if (phoneNumber != null) set.phoneNumber = phoneNumber;
+    if (email != null) set.email = email;
+    if (dto.gender != null) set.gender = dto.gender.trim();
+    if (dto.landAmount != null) set.landAmount = dto.landAmount;
+    if (dto.documents != null) set.documents = dto.documents;
+    if (dto.businessName != null) set.businessName = dto.businessName.trim();
+    if (dto.shopName != null) set.shopName = dto.shopName.trim();
+    if (dto.address != null) set.address = dto.address.trim();
+
+    const data = await this.userModel
+      .findByIdAndUpdate(
+        id,
+        { $set: set },
+        { returnDocument: 'after', runValidators: true },
+      )
+      .select('-credentialHash -otpNumber')
+      .lean();
+
+    if (!data) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    return { message: 'Profile updated successfully', data };
+  }
+
+  async updateLocation(id: string, dto: UpdateMyLocationDto) {
+    const data = await this.userModel
+      .findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            location: {
+              latitude: dto.latitude,
+              longitude: dto.longitude,
+              updatedAt: new Date(),
+            },
+          },
+        },
+        { returnDocument: 'after', runValidators: true },
+      )
+      .select('-credentialHash -otpNumber')
+      .lean();
+
+    if (!data) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+
+    return { message: 'Location saved successfully', data };
   }
 
   async verifyAccessToken(token: string) {
