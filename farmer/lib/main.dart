@@ -3,6 +3,7 @@ import 'package:cached_query_flutter/cached_query_flutter.dart';
 import 'package:cached_storage/cached_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -17,6 +18,7 @@ import 'core/network/typed_failure_interceptor.dart';
 import 'core/storage/session_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/app_toast.dart';
+import 'core/widgets/glass_card.dart';
 
 // Build release APK:
 // flutter build apk --no-tree-shake-icons --release
@@ -40,10 +42,7 @@ Future<void> setupLocator() async {
   getIt.registerSingleton<SharedPreferences>(preferences);
   getIt.registerSingleton<FlutterSecureStorage>(secureStorage);
   getIt.registerSingleton<SessionStorage>(
-    SessionStorage(
-      preferences: preferences,
-      secureStorage: secureStorage,
-    ),
+    SessionStorage(preferences: preferences, secureStorage: secureStorage),
   );
 
   if (kDebugMode) {
@@ -70,7 +69,9 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
 
@@ -90,12 +91,39 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      scaffoldMessengerKey: AppToast.messengerKey,
-      routerConfig: appRouter.config(),
-      title: 'Farmer Government',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+    return GlassMorphismThemeProvider(
+      data: const GlassMorphismThemeData(
+        defaultGlassColor: Color(0x6638CFA5),
+        lightGlassColor: Color(0x6648DDB5),
+        darkGlassColor: Color(0x66205D50),
+        defaultBlurIntensity: 24,
+        defaultOpacity: .20,
+        defaultBorderRadius: BorderRadius.all(Radius.circular(24)),
+        enableSpecularHighlights: true,
+        adaptiveColoring: true,
+        buttonTheme: GlassMorphismButtonThemeData(
+          height: 54,
+          borderRadius: BorderRadius.all(Radius.circular(18)),
+          blurIntensity: 18,
+          opacity: .22,
+        ),
+        cardTheme: GlassMorphismCardThemeData(
+          margin: EdgeInsets.zero,
+          padding: EdgeInsets.all(16),
+          borderRadius: BorderRadius.all(Radius.circular(24)),
+          blurIntensity: 24,
+          opacity: .20,
+        ),
+      ),
+      child: MaterialApp.router(
+        scaffoldMessengerKey: AppToast.messengerKey,
+        routerConfig: appRouter.config(),
+        title: 'Farmer Government',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        builder: (context, child) =>
+            GlassBackground(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

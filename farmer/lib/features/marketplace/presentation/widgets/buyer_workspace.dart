@@ -16,7 +16,10 @@ class BuyerWorkspace extends StatelessWidget {
             child: TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.storefront_rounded), text: 'Marketplace'),
-                Tab(icon: Icon(Icons.handshake_rounded), text: 'Offers & deals'),
+                Tab(
+                  icon: Icon(Icons.handshake_rounded),
+                  text: 'Offers & deals',
+                ),
               ],
             ),
           ),

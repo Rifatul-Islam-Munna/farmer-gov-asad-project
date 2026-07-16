@@ -15,8 +15,8 @@ class AuthResponseModel {
     final userJson = json['user'];
     return AuthResponseModel(
       message: json['message'] as String? ?? '',
-      accessToken:
-          (json['access_token'] ?? json['accessToken'] ?? '').toString(),
+      accessToken: (json['access_token'] ?? json['accessToken'] ?? '')
+          .toString(),
       user: UserModel.fromJson(
         userJson is Map<String, dynamic> ? userJson : const <String, dynamic>{},
       ),
@@ -24,8 +24,8 @@ class AuthResponseModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'message': message,
-        'access_token': accessToken,
-        'user': user.toJson(),
-      };
+    'message': message,
+    'access_token': accessToken,
+    'user': user.toJson(),
+  };
 }

@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -37,9 +38,9 @@ class _AdminWorkspaceState extends State<AdminWorkspace> {
     _title.clear();
     _message.clear();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notice published.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Notice published.')));
     }
   }
 
@@ -58,7 +59,11 @@ class _AdminWorkspaceState extends State<AdminWorkspace> {
           ),
           child: const Row(
             children: [
-              Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 46),
+              Icon(
+                Icons.admin_panel_settings_rounded,
+                color: Colors.white,
+                size: 46,
+              ),
               SizedBox(width: 14),
               Expanded(
                 child: Text(
@@ -70,7 +75,10 @@ class _AdminWorkspaceState extends State<AdminWorkspace> {
           ),
         ),
         const SizedBox(height: 20),
-        const Text('Pending account reviews', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        const Text(
+          'Pending account reviews',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
         FutureBuilder<List<Map<String, dynamic>>>(
           future: _pending,
           builder: (context, snapshot) {
@@ -79,55 +87,121 @@ class _AdminWorkspaceState extends State<AdminWorkspace> {
             }
             final items = snapshot.data ?? const <Map<String, dynamic>>[];
             if (items.isEmpty) {
-              return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No pending users.')));
+              return const GlassCard(
+                child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: Text('No pending users.'),
+                ),
+              );
             }
             return Column(
-              children: items.map((item) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const CircleAvatar(
-                        backgroundColor: Color(0xFFEAF4E6),
-                        foregroundColor: AppColors.primary,
-                        child: Icon(Icons.badge_outlined),
+              children: items
+                  .map(
+                    (item) => GlassCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const CircleAvatar(
+                                backgroundColor: Color(0xFFEAF4E6),
+                                foregroundColor: AppColors.primary,
+                                child: Icon(Icons.badge_outlined),
+                              ),
+                              title: Text(item['name']?.toString() ?? 'User'),
+                              subtitle: Text(
+                                '${item['role']} â€¢ ${item['phoneNumber']}',
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () => _review(
+                                      item['_id'].toString(),
+                                      'rejected',
+                                    ),
+                                    child: const Text('Reject'),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: FilledButton(
+                                    onPressed: () => _review(
+                                      item['_id'].toString(),
+                                      'approved',
+                                    ),
+                                    child: const Text('Approve'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      title: Text(item['name']?.toString() ?? 'User'),
-                      subtitle: Text('${item['role']} • ${item['phoneNumber']}'),
                     ),
-                    Row(children: [
-                      Expanded(child: OutlinedButton(onPressed: () => _review(item['_id'].toString(), 'rejected'), child: const Text('Reject'))),
-                      const SizedBox(width: 10),
-                      Expanded(child: FilledButton(onPressed: () => _review(item['_id'].toString(), 'approved'), child: const Text('Approve'))),
-                    ]),
-                  ]),
-                ),
-              )).toList(growable: false),
+                  )
+                  .toList(growable: false),
             );
           },
         ),
         const SizedBox(height: 20),
-        const Text('Publish notice', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
-        Card(
+        const Text(
+          'Publish notice',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
+        GlassCard(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(children: [
-              TextField(controller: _title, decoration: const InputDecoration(labelText: 'Title', prefixIcon: Icon(Icons.title_rounded))),
-              const SizedBox(height: 10),
-              TextField(controller: _message, maxLines: 3, decoration: const InputDecoration(labelText: 'Message', prefixIcon: Icon(Icons.campaign_outlined))),
-              const SizedBox(height: 10),
-              DropdownButtonFormField<String>(
-                value: _targetRole,
-                decoration: const InputDecoration(labelText: 'Target role'),
-                items: const ['all', 'farmer', 'buyer', 'agent', 'medicineSeller']
-                    .map((role) => DropdownMenuItem(value: role, child: Text(role)))
-                    .toList(),
-                onChanged: (value) => setState(() => _targetRole = value ?? 'farmer'),
-              ),
-              const SizedBox(height: 14),
-              FilledButton.icon(onPressed: _publish, icon: const Icon(Icons.send_rounded), label: const Text('Publish notice')),
-            ]),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _title,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    prefixIcon: Icon(Icons.title_rounded),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _message,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Message',
+                    prefixIcon: Icon(Icons.campaign_outlined),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<String>(
+                  value: _targetRole,
+                  decoration: const InputDecoration(labelText: 'Target role'),
+                  items:
+                      const [
+                            'all',
+                            'farmer',
+                            'buyer',
+                            'agent',
+                            'medicineSeller',
+                          ]
+                          .map(
+                            (role) => DropdownMenuItem(
+                              value: role,
+                              child: Text(role),
+                            ),
+                          )
+                          .toList(),
+                  onChanged: (value) =>
+                      setState(() => _targetRole = value ?? 'farmer'),
+                ),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: _publish,
+                  icon: const Icon(Icons.send_rounded),
+                  label: const Text('Publish notice'),
+                ),
+              ],
+            ),
           ),
         ),
       ],

@@ -10,18 +10,18 @@ class MarketPriceListResponseModel {
     return MarketPriceListResponseModel(
       data: rawData is List
           ? rawData
-              .whereType<Map>()
-              .map(
-                (item) => MarketPriceModel.fromJson(
-                  Map<String, dynamic>.from(item),
-                ),
-              )
-              .toList(growable: false)
+                .whereType<Map>()
+                .map(
+                  (item) => MarketPriceModel.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList(growable: false)
           : const <MarketPriceModel>[],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'data': data.map((item) => item.toJson()).toList(growable: false),
-      };
+    'data': data.map((item) => item.toJson()).toList(growable: false),
+  };
 }

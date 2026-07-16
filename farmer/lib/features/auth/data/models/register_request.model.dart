@@ -48,15 +48,15 @@ class RegisterRequestModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'phoneNumber': phoneNumber,
-        'password': password,
-        'role': role.name,
-        if (email != null) 'email': email,
-        if (landAmount != null) 'landAmount': landAmount,
-        'documents': documents,
-        if (businessName != null) 'businessName': businessName,
-        if (shopName != null) 'shopName': shopName,
-        if (address != null) 'address': address,
-      };
+    'name': name,
+    'phoneNumber': phoneNumber,
+    'password': password,
+    'role': role.name,
+    if (email != null) 'email': email,
+    if (landAmount != null) 'landAmount': landAmount,
+    'documents': documents,
+    if (businessName != null) 'businessName': businessName,
+    if (shopName != null) 'shopName': shopName,
+    if (address != null) 'address': address,
+  };
 }

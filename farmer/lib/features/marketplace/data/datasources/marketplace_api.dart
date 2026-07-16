@@ -95,10 +95,7 @@ class MarketplaceApi {
     );
   }
 
-  List<T> _list<T>(
-    Object? raw,
-    T Function(Map<String, dynamic>) fromJson,
-  ) {
+  List<T> _list<T>(Object? raw, T Function(Map<String, dynamic>) fromJson) {
     final items = raw as List<dynamic>? ?? const [];
     return items
         .map((item) => fromJson(Map<String, dynamic>.from(item as Map)))

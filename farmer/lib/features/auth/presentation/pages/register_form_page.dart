@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -88,15 +89,17 @@ class _RegisterPageState extends State<RegisterPage> {
           phoneNumber: _phone.text.trim(),
           password: _password.text,
           role: _role,
-          landAmount:
-              _role == UserRole.farmer ? double.tryParse(_land.text) : null,
+          landAmount: _role == UserRole.farmer
+              ? double.tryParse(_land.text)
+              : null,
           documents: List.unmodifiable(_documents),
-          businessName:
-              _role == UserRole.buyer ? _optional(_business.text) : null,
-          shopName:
-              _role == UserRole.medicineSeller ? _optional(_shop.text) : null,
-          address: _role == UserRole.agent ||
-                  _role == UserRole.medicineSeller
+          businessName: _role == UserRole.buyer
+              ? _optional(_business.text)
+              : null,
+          shopName: _role == UserRole.medicineSeller
+              ? _optional(_shop.text)
+              : null,
+          address: _role == UserRole.agent || _role == UserRole.medicineSeller
               ? _optional(_address.text)
               : null,
         ),
@@ -220,7 +223,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ],
             if (_needsDocuments) ...[
               const SizedBox(height: 18),
-              Card(
+              GlassCard(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -232,25 +235,24 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(height: 8),
                       ..._documents.asMap().entries.map(
-                            (entry) => ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: const Icon(
-                                Icons.verified_outlined,
-                                color: AppColors.primary,
-                              ),
-                              title: Text(
-                                entry.value,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              trailing: IconButton(
-                                onPressed: () => setState(
-                                  () => _documents.removeAt(entry.key),
-                                ),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            ),
+                        (entry) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(
+                            Icons.verified_outlined,
+                            color: AppColors.primary,
                           ),
+                          title: Text(
+                            entry.value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: IconButton(
+                            onPressed: () =>
+                                setState(() => _documents.removeAt(entry.key)),
+                            icon: const Icon(Icons.delete_outline),
+                          ),
+                        ),
+                      ),
                       OutlinedButton.icon(
                         onPressed: _uploading ? null : _addDocument,
                         icon: _uploading
@@ -309,18 +311,18 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   String _roleLabel(UserRole role) => switch (role) {
-        UserRole.farmer => 'Farmer',
-        UserRole.buyer => 'Buyer',
-        UserRole.agent => 'Agent',
-        UserRole.medicineSeller => 'Medicine seller',
-        UserRole.admin => 'Admin',
-      };
+    UserRole.farmer => 'Farmer',
+    UserRole.buyer => 'Buyer',
+    UserRole.agent => 'Agent',
+    UserRole.medicineSeller => 'Medicine seller',
+    UserRole.admin => 'Admin',
+  };
 
   IconData _roleIcon(UserRole role) => switch (role) {
-        UserRole.farmer => Icons.agriculture_outlined,
-        UserRole.buyer => Icons.shopping_basket_outlined,
-        UserRole.agent => Icons.support_agent_outlined,
-        UserRole.medicineSeller => Icons.medical_services_outlined,
-        UserRole.admin => Icons.admin_panel_settings_outlined,
-      };
+    UserRole.farmer => Icons.agriculture_outlined,
+    UserRole.buyer => Icons.shopping_basket_outlined,
+    UserRole.agent => Icons.support_agent_outlined,
+    UserRole.medicineSeller => Icons.medical_services_outlined,
+    UserRole.admin => Icons.admin_panel_settings_outlined,
+  };
 }

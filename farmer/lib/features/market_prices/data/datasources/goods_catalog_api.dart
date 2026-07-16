@@ -38,9 +38,7 @@ class GoodsCatalogApi {
     final items = response.data?['data'] as List<dynamic>? ?? const [];
     return items
         .map(
-          (item) => GoodModel.fromJson(
-            Map<String, dynamic>.from(item as Map),
-          ),
+          (item) => GoodModel.fromJson(Map<String, dynamic>.from(item as Map)),
         )
         .toList(growable: false);
   }

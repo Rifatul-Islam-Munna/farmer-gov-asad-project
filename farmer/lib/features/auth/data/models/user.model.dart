@@ -1,10 +1,4 @@
-enum UserRole {
-  admin,
-  agent,
-  farmer,
-  buyer,
-  medicineSeller,
-}
+enum UserRole { admin, agent, farmer, buyer, medicineSeller }
 
 UserRole _userRoleFromJson(Object? value) {
   final role = value?.toString();
@@ -71,32 +65,32 @@ class UserModel {
       address: json['address'] as String?,
       latitude: (locationMap['latitude'] as num?)?.toDouble(),
       longitude: (locationMap['longitude'] as num?)?.toDouble(),
-      locationUpdatedAt:
-          DateTime.tryParse(locationMap['updatedAt']?.toString() ?? ''),
-      verificationStatus:
-          json['verificationStatus'] as String? ?? 'approved',
+      locationUpdatedAt: DateTime.tryParse(
+        locationMap['updatedAt']?.toString() ?? '',
+      ),
+      verificationStatus: json['verificationStatus'] as String? ?? 'approved',
     );
   }
 
   Map<String, dynamic> toJson() => {
-        '_id': id,
-        'name': name,
-        'phoneNumber': phoneNumber,
-        'role': role.name,
-        if (email != null) 'email': email,
-        if (gender != null) 'gender': gender,
-        if (landAmount != null) 'landAmount': landAmount,
-        'documents': documents,
-        if (businessName != null) 'businessName': businessName,
-        if (shopName != null) 'shopName': shopName,
-        if (address != null) 'address': address,
-        if (latitude != null && longitude != null)
-          'location': {
-            'latitude': latitude,
-            'longitude': longitude,
-            if (locationUpdatedAt != null)
-              'updatedAt': locationUpdatedAt!.toIso8601String(),
-          },
-        'verificationStatus': verificationStatus,
-      };
+    '_id': id,
+    'name': name,
+    'phoneNumber': phoneNumber,
+    'role': role.name,
+    if (email != null) 'email': email,
+    if (gender != null) 'gender': gender,
+    if (landAmount != null) 'landAmount': landAmount,
+    'documents': documents,
+    if (businessName != null) 'businessName': businessName,
+    if (shopName != null) 'shopName': shopName,
+    if (address != null) 'address': address,
+    if (latitude != null && longitude != null)
+      'location': {
+        'latitude': latitude,
+        'longitude': longitude,
+        if (locationUpdatedAt != null)
+          'updatedAt': locationUpdatedAt!.toIso8601String(),
+      },
+    'verificationStatus': verificationStatus,
+  };
 }

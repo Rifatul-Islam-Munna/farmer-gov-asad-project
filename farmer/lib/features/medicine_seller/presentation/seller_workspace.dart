@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -29,21 +30,25 @@ class _SellerWorkspaceState extends State<SellerWorkspace> {
   }
 
   Future<void> _saveLocation() async {
-    await _run(() => SellerInventoryApi().updateLocation(
-          shopName: _shop.text.trim(),
-          address: _address.text.trim(),
-          latitude: double.parse(_lat.text),
-          longitude: double.parse(_lng.text),
-        ));
+    await _run(
+      () => SellerInventoryApi().updateLocation(
+        shopName: _shop.text.trim(),
+        address: _address.text.trim(),
+        latitude: double.parse(_lat.text),
+        longitude: double.parse(_lng.text),
+      ),
+    );
   }
 
   Future<void> _saveStock() async {
-    await _run(() => SellerInventoryApi().saveItem(
-          medicineCode: _code.text.trim(),
-          stockQuantity: double.parse(_stock.text),
-          unit: _unit.text.trim(),
-          price: double.parse(_price.text),
-        ));
+    await _run(
+      () => SellerInventoryApi().saveItem(
+        medicineCode: _code.text.trim(),
+        stockQuantity: double.parse(_stock.text),
+        unit: _unit.text.trim(),
+        price: double.parse(_price.text),
+      ),
+    );
     setState(() => _inventory = SellerInventoryApi().mine());
   }
 
@@ -52,15 +57,15 @@ class _SellerWorkspaceState extends State<SellerWorkspace> {
     try {
       await action();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Saved successfully.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Saved successfully.')));
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -98,7 +103,10 @@ class _SellerWorkspaceState extends State<SellerWorkspace> {
           ),
         ]),
         const SizedBox(height: 18),
-        const Text('Current inventory', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        const Text(
+          'Current inventory',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
         FutureBuilder<List<Map<String, dynamic>>>(
           future: _inventory,
           builder: (context, snapshot) {
@@ -107,21 +115,34 @@ class _SellerWorkspaceState extends State<SellerWorkspace> {
               return const LinearProgressIndicator();
             }
             if (items.isEmpty) {
-              return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No inventory items yet.')));
+              return const GlassCard(
+                child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: Text('No inventory items yet.'),
+                ),
+              );
             }
             return Column(
-              children: items.map((item) => Card(
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFEAF4E6),
-                    foregroundColor: AppColors.primary,
-                    child: Icon(Icons.medication_outlined),
-                  ),
-                  title: Text(item['medicineName']?.toString() ?? 'Product'),
-                  subtitle: Text('${item['stockQuantity']} ${item['unit']}'),
-                  trailing: Text('BDT ${item['price']}'),
-                ),
-              )).toList(growable: false),
+              children: items
+                  .map(
+                    (item) => GlassCard(
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Color(0xFFEAF4E6),
+                          foregroundColor: AppColors.primary,
+                          child: Icon(Icons.medication_outlined),
+                        ),
+                        title: Text(
+                          item['medicineName']?.toString() ?? 'Product',
+                        ),
+                        subtitle: Text(
+                          '${item['stockQuantity']} ${item['unit']}',
+                        ),
+                        trailing: Text('BDT ${item['price']}'),
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
             );
           },
         ),
@@ -130,19 +151,39 @@ class _SellerWorkspaceState extends State<SellerWorkspace> {
   }
 
   Widget _section(String title, IconData icon, List<Widget> children) {
-    return Card(
+    return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          Row(children: [Icon(icon, color: AppColors.primary), const SizedBox(width: 8), Text(title, style: const TextStyle(fontWeight: FontWeight.w800))]),
-          const SizedBox(height: 12),
-          ...children.map((child) => Padding(padding: const EdgeInsets.only(bottom: 10), child: child)),
-        ]),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...children.map(
+              (child) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: child,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  TextField _field(TextEditingController controller, String label, {bool number = false}) {
+  TextField _field(
+    TextEditingController controller,
+    String label, {
+    bool number = false,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: number ? TextInputType.number : TextInputType.text,
@@ -159,14 +200,23 @@ class _Header extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primaryDark, AppColors.primary]),
+        gradient: const LinearGradient(
+          colors: [AppColors.primaryDark, AppColors.primary],
+        ),
         borderRadius: BorderRadius.circular(24),
       ),
-      child: const Row(children: [
-        Icon(Icons.medical_services_rounded, color: Colors.white, size: 46),
-        SizedBox(width: 14),
-        Expanded(child: Text('Maintain verified shop location, stock and prices.', style: TextStyle(color: Colors.white, fontSize: 17))),
-      ]),
+      child: const Row(
+        children: [
+          Icon(Icons.medical_services_rounded, color: Colors.white, size: 46),
+          SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              'Maintain verified shop location, stock and prices.',
+              style: TextStyle(color: Colors.white, fontSize: 17),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

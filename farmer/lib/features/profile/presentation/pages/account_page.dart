@@ -5,6 +5,7 @@ import '../../../../core/location/device_location_service.dart';
 import '../../../../core/navigation/app_router_instance.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/app_toast.dart';
 import '../../../auth/data/datasources/auth_api.dart';
 import '../../../auth/data/datasources/profile_api.dart';
@@ -151,23 +152,23 @@ class _AccountPageState extends State<AccountPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 14),
-                        FilledButton(
-                          onPressed: _load,
-                          child: const Text('Try again'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 14),
+                    FilledButton(
+                      onPressed: _load,
+                      child: const Text('Try again'),
                     ),
-                  ),
-                )
-              : _profileForm(),
+                  ],
+                ),
+              ),
+            )
+          : _profileForm(),
     );
   }
 
@@ -210,12 +211,7 @@ class _AccountPageState extends State<AccountPage> {
             Icons.person_outline_rounded,
             required: true,
           ),
-          _field(
-            _phone,
-            'Phone number',
-            Icons.phone_outlined,
-            required: true,
-          ),
+          _field(_phone, 'Phone number', Icons.phone_outlined, required: true),
           _field(
             _email,
             'Email',
@@ -234,55 +230,46 @@ class _AccountPageState extends State<AccountPage> {
             _field(_business, 'Business name', Icons.business_outlined),
           if (user.role == UserRole.medicineSeller)
             _field(_shop, 'Shop name', Icons.store_outlined),
-          _field(
-            _address,
-            'Address',
-            Icons.location_on_outlined,
-            maxLines: 2,
-          ),
+          _field(_address, 'Address', Icons.location_on_outlined, maxLines: 2),
           const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    backgroundColor: Color(0xFFEAF4E6),
-                    foregroundColor: AppColors.primary,
-                    child: Icon(Icons.my_location_rounded),
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.white.withValues(alpha: .12),
+                  foregroundColor: AppColors.primary,
+                  child: Icon(Icons.my_location_rounded),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Saved location',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      Text(
+                        user.latitude == null
+                            ? 'No location saved yet'
+                            : '${user.latitude!.toStringAsFixed(5)}, ${user.longitude!.toStringAsFixed(5)}',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Saved location',
-                          style: TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        Text(
-                          user.latitude == null
-                              ? 'No location saved yet'
-                              : '${user.latitude!.toStringAsFixed(5)}, ${user.longitude!.toStringAsFixed(5)}',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton.filledTonal(
-                    onPressed: _savingLocation ? null : _refreshLocation,
-                    icon: _savingLocation
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh_rounded),
-                  ),
-                ],
-              ),
+                ),
+                IconButton.filledTonal(
+                  onPressed: _savingLocation ? null : _refreshLocation,
+                  icon: _savingLocation
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.refresh_rounded),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 18),
@@ -324,8 +311,8 @@ class _AccountPageState extends State<AccountPage> {
         maxLines: maxLines,
         validator: required
             ? (value) => value == null || value.trim().isEmpty
-                ? '$label is required'
-                : null
+                  ? '$label is required'
+                  : null
             : null,
         decoration: InputDecoration(
           labelText: label,

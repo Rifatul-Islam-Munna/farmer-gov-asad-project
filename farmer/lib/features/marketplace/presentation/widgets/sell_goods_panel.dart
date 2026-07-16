@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -52,9 +53,9 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -99,7 +100,7 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
         const SizedBox(height: 10),
         Form(
           key: _formKey,
-          child: Card(
+          child: GlassCard(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -148,7 +149,7 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
             }
             final items = snapshot.data ?? const <ListingModel>[];
             if (items.isEmpty) {
-              return const Card(
+              return const GlassCard(
                 child: Padding(
                   padding: EdgeInsets.all(20),
                   child: Text('No listings yet.'),
@@ -158,7 +159,7 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
             return Column(
               children: items
                   .map(
-                    (item) => Card(
+                    (item) => GlassCard(
                       child: ListTile(
                         leading: const CircleAvatar(
                           backgroundColor: Color(0xFFEAF4E6),
@@ -167,7 +168,7 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
                         ),
                         title: Text(item.goodName),
                         subtitle: Text(
-                          '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} • ${item.status}',
+                          '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} â€¢ ${item.status}',
                         ),
                         trailing: Text(
                           'BDT ${item.minimumPrice.toStringAsFixed(0)}',
@@ -201,9 +202,8 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
       controller: controller,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(labelText: label),
-      validator: (value) => double.tryParse(value ?? '') == null
-          ? 'Enter a valid number'
-          : null,
+      validator: (value) =>
+          double.tryParse(value ?? '') == null ? 'Enter a valid number' : null,
     );
   }
 }

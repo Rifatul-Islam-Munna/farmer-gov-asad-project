@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -16,7 +17,7 @@ class DiagnosisResultCard extends StatelessWidget {
 
     return Column(
       children: [
-        Card(
+        GlassCard(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -51,7 +52,7 @@ class DiagnosisResultCard extends StatelessWidget {
             ),
           ),
         ),
-        Card(
+        GlassCard(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -91,7 +92,7 @@ class DiagnosisResultCard extends StatelessWidget {
         ...items.map(
           (item) => Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text('• $item'),
+            child: Text('â€¢ $item'),
           ),
         ),
       ],

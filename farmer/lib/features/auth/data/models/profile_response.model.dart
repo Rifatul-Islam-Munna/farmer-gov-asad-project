@@ -9,9 +9,7 @@ class ProfileResponseModel {
     final dataJson = json['data'];
     return ProfileResponseModel(
       data: UserModel.fromJson(
-        dataJson is Map<String, dynamic>
-            ? dataJson
-            : const <String, dynamic>{},
+        dataJson is Map<String, dynamic> ? dataJson : const <String, dynamic>{},
       ),
     );
   }

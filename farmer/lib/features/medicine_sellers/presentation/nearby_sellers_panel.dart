@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -161,7 +162,7 @@ class _ShopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -187,7 +188,7 @@ class _ShopCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${shop.distanceKm.toStringAsFixed(1)} km away • ${shop.address}',
+                        '${shop.distanceKm.toStringAsFixed(1)} km away â€¢ ${shop.address}',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],

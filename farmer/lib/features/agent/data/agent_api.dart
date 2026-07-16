@@ -41,9 +41,7 @@ class AgentApi {
   Future<List<Map<String, dynamic>>> searchFarmers(String search) async {
     final response = await _client.get<Map<String, dynamic>>(
       '/agents/farmers',
-      queryParameters: {
-        if (search.trim().isNotEmpty) 'search': search.trim(),
-      },
+      queryParameters: {if (search.trim().isNotEmpty) 'search': search.trim()},
     );
     return _list(response.data?['data']);
   }

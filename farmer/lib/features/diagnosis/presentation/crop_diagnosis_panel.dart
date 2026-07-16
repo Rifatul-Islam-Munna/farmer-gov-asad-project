@@ -9,7 +9,9 @@ import '../data/detection_api.dart';
 import 'diagnosis_result_card.dart';
 
 class CropDiagnosisPanel extends StatefulWidget {
-  const CropDiagnosisPanel({super.key});
+  const CropDiagnosisPanel({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   State<CropDiagnosisPanel> createState() => _CropDiagnosisPanelState();
@@ -46,9 +48,9 @@ class _CropDiagnosisPanelState extends State<CropDiagnosisPanel> {
       setState(() => _result = result);
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -81,10 +83,11 @@ class _CropDiagnosisPanelState extends State<CropDiagnosisPanel> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
+                  if (!widget.embedded)
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
                 ],
               ),
               const SizedBox(height: 14),

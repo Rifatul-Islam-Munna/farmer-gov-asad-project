@@ -16,17 +16,15 @@ class FarmerWorkspace extends StatelessWidget {
             child: TabBar(
               tabs: [
                 Tab(icon: Icon(Icons.add_business_rounded), text: 'Sell goods'),
-                Tab(icon: Icon(Icons.handshake_rounded), text: 'Offers & deals'),
+                Tab(
+                  icon: Icon(Icons.handshake_rounded),
+                  text: 'Offers & deals',
+                ),
               ],
             ),
           ),
           Expanded(
-            child: TabBarView(
-              children: [
-                SellGoodsPanel(),
-                BuyerDealsPanel(),
-              ],
-            ),
+            child: TabBarView(children: [SellGoodsPanel(), BuyerDealsPanel()]),
           ),
         ],
       ),

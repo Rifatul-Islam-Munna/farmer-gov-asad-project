@@ -2,7 +2,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/glass_card.dart';
 import '../../../market_prices/data/datasources/market_price_api.dart';
 import '../../../market_prices/data/models/market_price.model.dart';
 
@@ -72,6 +74,13 @@ class _MarketplacePageState extends State<MarketplacePage> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               children: [
                 const _MarketBanner(),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: () =>
+                      context.router.push(const SellProductRoute()),
+                  icon: const Icon(Icons.add_business_rounded),
+                  label: const Text('Sell a product'),
+                ),
                 const SizedBox(height: 18),
                 TextField(
                   onChanged: (value) => setState(() => _search = value.trim()),
@@ -198,9 +207,9 @@ class _PriceCard extends StatelessWidget {
     final isUp = price.trend == 'up';
     final isDown = price.trend == 'down';
     final trendColor = isUp
-        ? const Color(0xFF19763B)
+        ? AppColors.primary
         : isDown
-        ? const Color(0xFFB03A2E)
+        ? AppColors.danger
         : AppColors.textSecondary;
     final trendIcon = isUp
         ? Icons.trending_up_rounded
@@ -208,81 +217,79 @@ class _PriceCard extends StatelessWidget {
         ? Icons.trending_down_rounded
         : Icons.trending_flat_rounded;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 27,
-                  backgroundColor: const Color(0xFFEAF4E6),
-                  foregroundColor: AppColors.primary,
-                  child: Icon(_goodIcon(price.goodCode), size: 29),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        price.goodName,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        price.marketName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Row(
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 27,
+                backgroundColor: Colors.white.withValues(alpha: .12),
+                foregroundColor: AppColors.primary,
+                child: Icon(_goodIcon(price.goodCode), size: 29),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(trendIcon, color: trendColor, size: 18),
-                    const SizedBox(width: 4),
                     Text(
-                      '${price.percentageChange >= 0 ? '+' : ''}${price.percentageChange.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        color: trendColor,
+                      price.goodName,
+                      style: const TextStyle(
+                        fontSize: 17,
                         fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      price.marketName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _ValueBox(
-                    label: 'Market price',
-                    value:
-                        'BDT ${price.marketPrice.toStringAsFixed(0)}/${price.unit}',
-                    primary: true,
+              ),
+              Row(
+                children: [
+                  Icon(trendIcon, color: trendColor, size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${price.percentageChange >= 0 ? '+' : ''}${price.percentageChange.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      color: trendColor,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _ValueBox(
+                  label: 'Market price',
+                  value:
+                      'BDT ${price.marketPrice.toStringAsFixed(0)}/${price.unit}',
+                  primary: true,
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _ValueBox(
-                    label: 'Government rate',
-                    value:
-                        'BDT ${price.governmentPrice.toStringAsFixed(0)}/${price.unit}',
-                  ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ValueBox(
+                  label: 'Government rate',
+                  value:
+                      'BDT ${price.governmentPrice.toStringAsFixed(0)}/${price.unit}',
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -298,7 +305,11 @@ class _PriceCard extends StatelessWidget {
 }
 
 class _ValueBox extends StatelessWidget {
-  const _ValueBox({required this.label, required this.value, this.primary = false});
+  const _ValueBox({
+    required this.label,
+    required this.value,
+    this.primary = false,
+  });
 
   final String label;
   final String value;
@@ -309,8 +320,11 @@ class _ValueBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(11),
       decoration: BoxDecoration(
-        color: primary ? const Color(0xFFEAF4E6) : const Color(0xFFF2F5F1),
+        color: primary
+            ? AppColors.primary.withValues(alpha: .12)
+            : Colors.white.withValues(alpha: .07),
         borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: Colors.white.withValues(alpha: .10)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,20 +352,18 @@ class _MessageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(17),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFFEAF4E6),
-              foregroundColor: AppColors.primary,
-              child: Icon(icon),
-            ),
-            const SizedBox(width: 13),
-            Expanded(child: Text(text)),
-          ],
-        ),
+    return GlassCard(
+      padding: const EdgeInsets.all(17),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.white.withValues(alpha: .12),
+            foregroundColor: AppColors.primary,
+            child: Icon(icon),
+          ),
+          const SizedBox(width: 13),
+          Expanded(child: Text(text)),
+        ],
       ),
     );
   }

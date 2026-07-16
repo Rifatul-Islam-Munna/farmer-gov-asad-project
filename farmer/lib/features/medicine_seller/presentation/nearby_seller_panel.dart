@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -37,7 +38,7 @@ class _NearbySellerPanelState extends State<NearbySellerPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -94,7 +95,9 @@ class _NearbySellerPanelState extends State<NearbySellerPanel> {
                   }
                   final items = snapshot.data ?? const <Map<String, dynamic>>[];
                   if (items.isEmpty) {
-                    return const Text('No nearby seller currently has this product in stock.');
+                    return const Text(
+                      'No nearby seller currently has this product in stock.',
+                    );
                   }
                   return Column(
                     children: items
@@ -106,9 +109,11 @@ class _NearbySellerPanelState extends State<NearbySellerPanel> {
                               foregroundColor: AppColors.primary,
                               child: Icon(Icons.local_pharmacy_outlined),
                             ),
-                            title: Text(item['shopName']?.toString() ?? 'Medicine shop'),
+                            title: Text(
+                              item['shopName']?.toString() ?? 'Medicine shop',
+                            ),
                             subtitle: Text(
-                              '${item['address']} • ${item['distanceKm']} km\n${item['stockQuantity']} ${item['unit']} available',
+                              '${item['address']} â€¢ ${item['distanceKm']} km\n${item['stockQuantity']} ${item['unit']} available',
                             ),
                             isThreeLine: true,
                             trailing: Text('BDT ${item['price']}'),

@@ -36,14 +36,14 @@ class NegotiationModel {
   }
 
   Map<String, dynamic> toJson() => {
-        '_id': id,
-        'listingId': listingId,
-        'buyerId': buyerId,
-        'farmerId': farmerId,
-        'quantity': quantity,
-        'unitPrice': unitPrice,
-        'status': status,
-        'buyerAccepted': buyerAccepted,
-        'farmerAccepted': farmerAccepted,
-      };
+    '_id': id,
+    'listingId': listingId,
+    'buyerId': buyerId,
+    'farmerId': farmerId,
+    'quantity': quantity,
+    'unitPrice': unitPrice,
+    'status': status,
+    'buyerAccepted': buyerAccepted,
+    'farmerAccepted': farmerAccepted,
+  };
 }

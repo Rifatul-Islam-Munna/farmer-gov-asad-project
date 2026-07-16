@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -83,7 +84,9 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
 
   void _show(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -115,8 +118,16 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
         const SizedBox(height: 16),
         SegmentedButton<bool>(
           segments: const [
-            ButtonSegment(value: true, label: Text('Create farmer'), icon: Icon(Icons.person_add_alt_1_rounded)),
-            ButtonSegment(value: false, label: Text('Post for farmer'), icon: Icon(Icons.add_business_rounded)),
+            ButtonSegment(
+              value: true,
+              label: Text('Create farmer'),
+              icon: Icon(Icons.person_add_alt_1_rounded),
+            ),
+            ButtonSegment(
+              value: false,
+              label: Text('Post for farmer'),
+              icon: Icon(Icons.add_business_rounded),
+            ),
           ],
           selected: {_farmerMode},
           onSelectionChanged: (value) => setState(() {
@@ -125,7 +136,7 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
           }),
         ),
         const SizedBox(height: 14),
-        Card(
+        GlassCard(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -135,16 +146,35 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
                   const SizedBox(height: 10),
                   _field(_name, 'Farmer name', Icons.person_rounded),
                   const SizedBox(height: 10),
-                  _field(_password, 'Temporary password', Icons.lock_outline_rounded),
+                  _field(
+                    _password,
+                    'Temporary password',
+                    Icons.lock_outline_rounded,
+                  ),
                   const SizedBox(height: 10),
-                  _field(_land, 'Land amount', Icons.landscape_rounded, number: true),
+                  _field(
+                    _land,
+                    'Land amount',
+                    Icons.landscape_rounded,
+                    number: true,
+                  ),
                 ] else ...[
                   const SizedBox(height: 10),
                   _field(_good, 'Goods name', Icons.eco_rounded),
                   const SizedBox(height: 10),
-                  _field(_quantity, 'Quantity in kg', Icons.scale_rounded, number: true),
+                  _field(
+                    _quantity,
+                    'Quantity in kg',
+                    Icons.scale_rounded,
+                    number: true,
+                  ),
                   const SizedBox(height: 10),
-                  _field(_price, 'Minimum price', Icons.payments_outlined, number: true),
+                  _field(
+                    _price,
+                    'Minimum price',
+                    Icons.payments_outlined,
+                    number: true,
+                  ),
                 ],
                 const SizedBox(height: 14),
                 FilledButton.icon(
@@ -159,7 +189,9 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: 'Farmer OTP',
-                      helperText: _demoOtp == null ? null : 'Demo OTP: $_demoOtp',
+                      helperText: _demoOtp == null
+                          ? null
+                          : 'Demo OTP: $_demoOtp',
                       prefixIcon: const Icon(Icons.password_rounded),
                     ),
                   ),
@@ -175,7 +207,10 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
           ),
         ),
         const SizedBox(height: 20),
-        const Text('Activity history', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        const Text(
+          'Activity history',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
         FutureBuilder<List<Map<String, dynamic>>>(
           future: _history,
           builder: (context, snapshot) {
@@ -184,20 +219,31 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
               return const LinearProgressIndicator();
             }
             if (items.isEmpty) {
-              return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No assisted actions yet.')));
+              return const GlassCard(
+                child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: Text('No assisted actions yet.'),
+                ),
+              );
             }
             return Column(
-              children: items.map((item) => Card(
-                child: ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0xFFEAF4E6),
-                    foregroundColor: AppColors.primary,
-                    child: Icon(Icons.history_rounded),
-                  ),
-                  title: Text(item['type']?.toString() ?? 'Agent action'),
-                  subtitle: Text('${item['farmerPhone']} • ${item['status']}'),
-                ),
-              )).toList(growable: false),
+              children: items
+                  .map(
+                    (item) => GlassCard(
+                      child: ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Color(0xFFEAF4E6),
+                          foregroundColor: AppColors.primary,
+                          child: Icon(Icons.history_rounded),
+                        ),
+                        title: Text(item['type']?.toString() ?? 'Agent action'),
+                        subtitle: Text(
+                          '${item['farmerPhone']} â€¢ ${item['status']}',
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(growable: false),
             );
           },
         ),

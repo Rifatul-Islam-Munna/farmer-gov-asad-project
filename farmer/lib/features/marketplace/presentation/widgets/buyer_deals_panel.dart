@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -132,7 +133,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
               }
               final items = snapshot.data ?? const <NegotiationModel>[];
               if (items.isEmpty) {
-                return const Card(
+                return const GlassCard(
                   child: Padding(
                     padding: EdgeInsets.all(18),
                     child: Text('No offers yet. Browse listings from Market.'),
@@ -142,7 +143,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
               return Column(
                 children: items
                     .map(
-                      (item) => Card(
+                      (item) => GlassCard(
                         child: Padding(
                           padding: const EdgeInsets.all(14),
                           child: Column(
@@ -155,7 +156,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
                                   child: Icon(Icons.request_quote_rounded),
                                 ),
                                 title: Text(
-                                  '${item.quantity.toStringAsFixed(0)} units • BDT ${item.unitPrice.toStringAsFixed(0)}',
+                                  '${item.quantity.toStringAsFixed(0)} units â€¢ BDT ${item.unitPrice.toStringAsFixed(0)}',
                                 ),
                                 subtitle: Text(item.status),
                               ),
@@ -207,7 +208,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
                 return const LinearProgressIndicator();
               }
               if (items.isEmpty) {
-                return const Card(
+                return const GlassCard(
                   child: Padding(
                     padding: EdgeInsets.all(18),
                     child: Text('No confirmed deals yet.'),
@@ -217,7 +218,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
               return Column(
                 children: items
                     .map(
-                      (item) => Card(
+                      (item) => GlassCard(
                         child: ListTile(
                           leading: const CircleAvatar(
                             backgroundColor: Color(0xFFEAF4E6),
@@ -226,7 +227,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
                           ),
                           title: Text('BDT ${item['totalPrice']}'),
                           subtitle: Text(
-                            '${item['quantity']} units • ${item['status']}',
+                            '${item['quantity']} units â€¢ ${item['status']}',
                           ),
                         ),
                       ),

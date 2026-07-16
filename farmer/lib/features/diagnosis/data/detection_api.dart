@@ -12,10 +12,7 @@ class DetectionApi {
     final response = await _client.post<Map<String, dynamic>>(
       '/diagnosis/analyze',
       data: FormData.fromMap({
-        'image': await MultipartFile.fromFile(
-          image.path,
-          filename: image.name,
-        ),
+        'image': await MultipartFile.fromFile(image.path, filename: image.name),
       }),
     );
     return Map<String, dynamic>.from(response.data?['data'] as Map);
@@ -25,10 +22,7 @@ class DetectionApi {
     final response = await _client.post<Map<String, dynamic>>(
       '/goods/detect',
       data: FormData.fromMap({
-        'image': await MultipartFile.fromFile(
-          image.path,
-          filename: image.name,
-        ),
+        'image': await MultipartFile.fromFile(image.path, filename: image.name),
       }),
     );
     return Map<String, dynamic>.from(response.data?['data'] as Map);

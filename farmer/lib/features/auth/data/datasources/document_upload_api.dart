@@ -12,10 +12,7 @@ class DocumentUploadApi {
     final response = await _client.post<Map<String, dynamic>>(
       '/documents/upload',
       data: FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          file.path,
-          filename: file.name,
-        ),
+        'file': await MultipartFile.fromFile(file.path, filename: file.name),
       }),
     );
     final data = Map<String, dynamic>.from(response.data?['data'] as Map);

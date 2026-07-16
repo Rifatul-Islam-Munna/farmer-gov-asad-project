@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -29,7 +30,9 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
 
   Future<void> _offer(ListingModel listing) async {
     final quantity = TextEditingController();
-    final price = TextEditingController(text: listing.minimumPrice.toStringAsFixed(0));
+    final price = TextEditingController(
+      text: listing.minimumPrice.toStringAsFixed(0),
+    );
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -57,8 +60,14 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Submit offer')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Submit offer'),
+          ),
         ],
       ),
     );
@@ -77,9 +86,9 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.toString())));
       }
     }
   }
@@ -89,7 +98,10 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Farmer marketplace', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+        const Text(
+          'Farmer marketplace',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+        ),
         const SizedBox(height: 10),
         TextField(
           controller: _search,
@@ -97,7 +109,10 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
           decoration: InputDecoration(
             hintText: 'Search farmer listings',
             prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: IconButton(onPressed: _reload, icon: const Icon(Icons.arrow_forward_rounded)),
+            suffixIcon: IconButton(
+              onPressed: _reload,
+              icon: const Icon(Icons.arrow_forward_rounded),
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -108,35 +123,68 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
               return const LinearProgressIndicator();
             }
             if (snapshot.hasError) {
-              return Card(child: Padding(padding: const EdgeInsets.all(18), child: Text(snapshot.error.toString())));
+              return GlassCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Text(snapshot.error.toString()),
+                ),
+              );
             }
             final items = snapshot.data ?? const <ListingModel>[];
             if (items.isEmpty) {
-              return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('No available farmer listings.')));
+              return const GlassCard(
+                child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: Text('No available farmer listings.'),
+                ),
+              );
             }
             return Column(
-              children: items.map((item) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(children: [
-                    const CircleAvatar(
-                      backgroundColor: Color(0xFFEAF4E6),
-                      foregroundColor: AppColors.primary,
-                      child: Icon(Icons.agriculture_rounded),
+              children: items
+                  .map(
+                    (item) => GlassCard(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              backgroundColor: Color(0xFFEAF4E6),
+                              foregroundColor: AppColors.primary,
+                              child: Icon(Icons.agriculture_rounded),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.goodName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} â€¢ ${item.address ?? 'Location not set'}',
+                                  ),
+                                  Text(
+                                    'Minimum BDT ${item.minimumPrice.toStringAsFixed(0)}',
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            FilledButton(
+                              onPressed: () => _offer(item),
+                              child: const Text('Offer'),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(item.goodName, style: const TextStyle(fontWeight: FontWeight.w800)),
-                        Text('${item.availableQuantity.toStringAsFixed(0)} ${item.unit} • ${item.address ?? 'Location not set'}'),
-                        Text('Minimum BDT ${item.minimumPrice.toStringAsFixed(0)}', style: const TextStyle(color: AppColors.primary)),
-                      ],
-                    )),
-                    FilledButton(onPressed: () => _offer(item), child: const Text('Offer')),
-                  ]),
-                ),
-              )).toList(growable: false),
+                  )
+                  .toList(growable: false),
             );
           },
         ),

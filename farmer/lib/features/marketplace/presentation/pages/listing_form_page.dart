@@ -31,6 +31,9 @@ class ListingFormPage extends StatelessWidget {
       _ => const FarmerWorkspace(),
     };
 
-    return Scaffold(appBar: AppBar(title: Text(title)), body: body);
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: body,
+    );
   }
 }

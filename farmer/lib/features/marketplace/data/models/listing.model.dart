@@ -50,7 +50,8 @@ class ListingModel {
           : const <String>[],
       quantity: quantity,
       reservedQuantity: reserved,
-      availableQuantity: (json['availableQuantity'] as num?)?.toDouble() ??
+      availableQuantity:
+          (json['availableQuantity'] as num?)?.toDouble() ??
           (quantity - reserved).clamp(0, double.infinity).toDouble(),
       unit: json['unit'] as String? ?? 'kg',
       grade: json['grade'] as String?,
@@ -63,21 +64,21 @@ class ListingModel {
   }
 
   Map<String, dynamic> toJson() => {
-        '_id': id,
-        'ownerId': ownerId,
-        if (assistingAgentId != null) 'assistingAgentId': assistingAgentId,
-        'goodCode': goodCode,
-        'goodName': goodName,
-        'imageUrls': imageUrls,
-        'quantity': quantity,
-        'reservedQuantity': reservedQuantity,
-        'availableQuantity': availableQuantity,
-        'unit': unit,
-        if (grade != null) 'grade': grade,
-        if (address != null) 'address': address,
-        'governmentPrice': governmentPrice,
-        'marketPrice': marketPrice,
-        'minimumPrice': minimumPrice,
-        'status': status,
-      };
+    '_id': id,
+    'ownerId': ownerId,
+    if (assistingAgentId != null) 'assistingAgentId': assistingAgentId,
+    'goodCode': goodCode,
+    'goodName': goodName,
+    'imageUrls': imageUrls,
+    'quantity': quantity,
+    'reservedQuantity': reservedQuantity,
+    'availableQuantity': availableQuantity,
+    'unit': unit,
+    if (grade != null) 'grade': grade,
+    if (address != null) 'address': address,
+    'governmentPrice': governmentPrice,
+    'marketPrice': marketPrice,
+    'minimumPrice': minimumPrice,
+    'status': status,
+  };
 }

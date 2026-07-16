@@ -60,13 +60,13 @@ class NearbyShopModel {
       distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0,
       medicines: medicines is List
           ? medicines
-              .whereType<Map>()
-              .map(
-                (item) => NearbyMedicineModel.fromJson(
-                  Map<String, dynamic>.from(item),
-                ),
-              )
-              .toList(growable: false)
+                .whereType<Map>()
+                .map(
+                  (item) => NearbyMedicineModel.fromJson(
+                    Map<String, dynamic>.from(item),
+                  ),
+                )
+                .toList(growable: false)
           : const <NearbyMedicineModel>[],
     );
   }

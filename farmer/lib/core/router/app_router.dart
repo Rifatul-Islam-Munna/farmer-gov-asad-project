@@ -5,18 +5,24 @@ import 'package:flutter/material.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
+import '../../features/auth/presentation/pages/verification_pending_page.dart';
+import '../../features/diagnosis/presentation/scanner_page.dart';
+import '../../features/home/presentation/pages/alerts_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/marketplace/presentation/pages/listing_form_page.dart';
 import '../../features/marketplace/presentation/pages/marketplace_page.dart';
+import '../../features/marketplace/presentation/pages/sell_product_page.dart';
+import '../../features/plants/presentation/plants_page.dart';
 import '../../features/profile/presentation/pages/account_page.dart';
 import '../../pages/main_shell.dart';
 
 part 'app_router.gr.dart';
 
 const homeTab = EmptyShellRoute('HomeTab');
-const marketplaceTab = EmptyShellRoute('MarketplaceTab');
-const listingTab = EmptyShellRoute('ListingTab');
-const profileTab = EmptyShellRoute('ProfileTab');
+const scannerTab = EmptyShellRoute('ScannerTab');
+const plantsTab = EmptyShellRoute('PlantsTab');
+const alertsTab = EmptyShellRoute('AlertsTab');
+const shopTab = EmptyShellRoute('ShopTab');
 
 @AutoRouterConfig(replaceInRouteName: 'Screen|Page,Route')
 class AppRouter extends RootStackRouter {
@@ -33,6 +39,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: SplashRoute.page, path: '/', initial: true),
     AutoRoute(page: LoginRoute.page, path: '/login'),
     AutoRoute(page: RegisterRoute.page, path: '/register'),
+    AutoRoute(page: ProfileRoute.page, path: '/profile'),
     AutoRoute(
       page: MainShellRoute.page,
       path: '/main',
@@ -41,29 +48,35 @@ class AppRouter extends RootStackRouter {
           page: homeTab.page,
           path: 'home',
           initial: true,
+          children: [AutoRoute(page: HomeRoute.page, path: '', initial: true)],
+        ),
+        AutoRoute(
+          page: scannerTab.page,
+          path: 'scanner',
           children: [
-            AutoRoute(page: HomeRoute.page, path: '', initial: true),
+            AutoRoute(page: ScannerRoute.page, path: '', initial: true),
           ],
         ),
         AutoRoute(
-          page: marketplaceTab.page,
-          path: 'marketplace',
+          page: plantsTab.page,
+          path: 'plants',
+          children: [
+            AutoRoute(page: PlantsRoute.page, path: '', initial: true),
+          ],
+        ),
+        AutoRoute(
+          page: alertsTab.page,
+          path: 'alerts',
+          children: [
+            AutoRoute(page: AlertsRoute.page, path: '', initial: true),
+          ],
+        ),
+        AutoRoute(
+          page: shopTab.page,
+          path: 'shop',
           children: [
             AutoRoute(page: MarketplaceRoute.page, path: '', initial: true),
-          ],
-        ),
-        AutoRoute(
-          page: listingTab.page,
-          path: 'listing',
-          children: [
-            AutoRoute(page: ListingFormRoute.page, path: '', initial: true),
-          ],
-        ),
-        AutoRoute(
-          page: profileTab.page,
-          path: 'profile',
-          children: [
-            AutoRoute(page: ProfileRoute.page, path: '', initial: true),
+            AutoRoute(page: SellProductRoute.page, path: 'sell'),
           ],
         ),
       ],

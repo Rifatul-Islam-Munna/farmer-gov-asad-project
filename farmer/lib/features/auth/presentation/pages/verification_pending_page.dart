@@ -1,3 +1,4 @@
+import 'package:farmer/core/widgets/glass_card.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -268,7 +269,7 @@ class _StatusStep extends StatelessWidget {
         ? AppColors.primary
         : AppColors.textSecondary;
 
-    return Card(
+    return GlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(

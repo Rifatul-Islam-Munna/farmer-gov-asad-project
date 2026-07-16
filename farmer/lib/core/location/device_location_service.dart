@@ -14,7 +14,9 @@ class DeviceLocationService {
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.denied) {
-      throw StateError('Location permission is required to find nearby sellers.');
+      throw StateError(
+        'Location permission is required to find nearby sellers.',
+      );
     }
     if (permission == LocationPermission.deniedForever) {
       throw StateError(

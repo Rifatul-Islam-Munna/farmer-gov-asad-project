@@ -41,7 +41,8 @@ class MarketPriceModel {
       region: json['region'] as String? ?? '',
       marketName: json['marketName'] as String? ?? '',
       imageUrl: json['imageUrl'] as String?,
-      priceDate: DateTime.tryParse(json['priceDate']?.toString() ?? '') ??
+      priceDate:
+          DateTime.tryParse(json['priceDate']?.toString() ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
       difference: (json['difference'] as num?)?.toDouble() ?? 0,
       percentageChange: (json['percentageChange'] as num?)?.toDouble() ?? 0,
@@ -50,18 +51,18 @@ class MarketPriceModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'goodCode': goodCode,
-        'goodName': goodName,
-        'unit': unit,
-        'governmentPrice': governmentPrice,
-        'marketPrice': marketPrice,
-        'previousMarketPrice': previousMarketPrice,
-        'region': region,
-        'marketName': marketName,
-        if (imageUrl != null) 'imageUrl': imageUrl,
-        'priceDate': priceDate.toIso8601String(),
-        'difference': difference,
-        'percentageChange': percentageChange,
-        'trend': trend,
-      };
+    'goodCode': goodCode,
+    'goodName': goodName,
+    'unit': unit,
+    'governmentPrice': governmentPrice,
+    'marketPrice': marketPrice,
+    'previousMarketPrice': previousMarketPrice,
+    'region': region,
+    'marketName': marketName,
+    if (imageUrl != null) 'imageUrl': imageUrl,
+    'priceDate': priceDate.toIso8601String(),
+    'difference': difference,
+    'percentageChange': percentageChange,
+    'trend': trend,
+  };
 }

@@ -13,7 +13,11 @@ import {
   GOODS_CATEGORY_MODEL,
   GoodsCategory,
 } from '../goods/good.entity';
-import { LISTING_MODEL, Listing } from '../listings/listing.entity';
+import {
+  LISTING_MODEL,
+  Listing,
+  ListingStatus,
+} from '../listings/listing.entity';
 import { CreateMarketPriceDto } from '../market-price/market-price.dto';
 import {
   MARKET_PRICE_MODEL,
@@ -78,7 +82,7 @@ export class AdminService {
       this.userModel.countDocuments({ verificationStatus: 'pending' }),
       this.listingModel.countDocuments(),
       this.listingModel.countDocuments({
-        status: { $in: ['published', 'reserved'] },
+        status: { $in: [ListingStatus.PUBLISHED, ListingStatus.RESERVED] },
       }),
       this.dealModel.countDocuments(),
       this.inventoryModel.countDocuments({

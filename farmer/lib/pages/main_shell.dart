@@ -1,4 +1,3 @@
-import 'package:animations/animations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import '../core/router/app_router.dart';
 import '../core/storage/session_storage.dart';
 import '../core/theme/app_theme.dart';
+import '../core/widgets/glass_card.dart';
 import '../features/auth/presentation/pages/verification_pending_page.dart';
 
 @RoutePage()
@@ -16,89 +16,125 @@ class MainShellPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final session = GetIt.I<SessionStorage>();
-    if (!session.isApproved) {
-      return const VerificationPendingPage();
-    }
+    if (!session.isApproved) return const VerificationPendingPage();
 
     return AutoTabsScaffold(
       homeIndex: 0,
-      animationDuration: const Duration(milliseconds: 240),
+      animationDuration: const Duration(milliseconds: 220),
       animationCurve: Curves.easeOutCubic,
-      transitionBuilder: (context, child, animation) {
-        return FadeThroughTransition(
-          animation: animation,
-          secondaryAnimation: kAlwaysDismissedAnimation,
-          child: child,
-        );
-      },
-      routes: [homeTab(), marketplaceTab(), listingTab(), profileTab()],
-      bottomNavigationBuilder: (_, tabsRouter) {
-        return _BottomNavigation(
-          tabsRouter: tabsRouter,
-          role: session.role,
-        );
-      },
+      routes: [homeTab(), scannerTab(), plantsTab(), alertsTab(), shopTab()],
+      bottomNavigationBuilder: (_, tabsRouter) =>
+          _BottomNavigation(tabsRouter: tabsRouter),
     );
   }
 }
 
 class _BottomNavigation extends StatelessWidget {
-  const _BottomNavigation({required this.tabsRouter, required this.role});
+  const _BottomNavigation({required this.tabsRouter});
 
   final TabsRouter tabsRouter;
-  final String role;
 
-  void _changeTab(int index, int count) {
-    HapticFeedback.selectionClick();
-    for (var tabIndex = 0; tabIndex < count; tabIndex++) {
-      tabsRouter.stackRouterOfIndex(tabIndex)?.popUntilRoot();
-    }
-    tabsRouter.setActiveIndex(index);
-  }
+  static const items = [
+    _NavigationItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
+    _NavigationItem(
+      Icons.center_focus_strong_outlined,
+      Icons.center_focus_strong_rounded,
+      'Scanner',
+    ),
+    _NavigationItem(Icons.eco_outlined, Icons.eco_rounded, 'Plants'),
+    _NavigationItem(
+      Icons.notifications_none_rounded,
+      Icons.notifications_rounded,
+      'Alerts',
+    ),
+    _NavigationItem(
+      Icons.shopping_cart_outlined,
+      Icons.shopping_cart_rounded,
+      'Shop',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final tabs = _tabsForRole(role);
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.border)),
-      ),
+    return GlassCard(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      borderRadius: 29,
+      blur: 32,
+      opacity: .16,
+      glow: true,
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 66,
+          height: 74,
           child: Row(
-            children: List.generate(tabs.length, (index) {
-              final tab = tabs[index];
+            children: List.generate(items.length, (index) {
+              final item = items[index];
               final active = tabsRouter.activeIndex == index;
-
               return Expanded(
                 child: InkWell(
-                  onTap: () => _changeTab(index, tabs.length),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        active ? tab.activeIcon : tab.icon,
-                        color: active
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        tab.label,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight:
-                              active ? FontWeight.w700 : FontWeight.w500,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    tabsRouter.setActiveIndex(index);
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 2,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(19),
+                      gradient: active
+                          ? LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.white.withValues(alpha: .14),
+                                AppColors.primary.withValues(alpha: .17),
+                              ],
+                            )
+                          : null,
+                      border: active
+                          ? Border.all(
+                              color: AppColors.primary.withValues(alpha: .38),
+                            )
+                          : null,
+                      boxShadow: active
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: .30),
+                                blurRadius: 20,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          active ? item.activeIcon : item.icon,
+                          size: 23,
                           color: active
                               ? AppColors.primary
                               : AppColors.textSecondary,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: active
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            color: active
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -110,54 +146,8 @@ class _BottomNavigation extends StatelessWidget {
   }
 }
 
-List<_NavigationTab> _tabsForRole(String role) {
-  final third = switch (role) {
-    'agent' => const _NavigationTab(
-        Icons.support_agent_outlined,
-        Icons.support_agent_rounded,
-        'Assist',
-      ),
-    'buyer' => const _NavigationTab(
-        Icons.handshake_outlined,
-        Icons.handshake_rounded,
-        'Deals',
-      ),
-    'medicineSeller' => const _NavigationTab(
-        Icons.inventory_2_outlined,
-        Icons.inventory_2_rounded,
-        'Inventory',
-      ),
-    'admin' => const _NavigationTab(
-        Icons.admin_panel_settings_outlined,
-        Icons.admin_panel_settings_rounded,
-        'Admin',
-      ),
-    _ => const _NavigationTab(
-        Icons.add_box_outlined,
-        Icons.add_box_rounded,
-        'Sell',
-      ),
-  };
-
-  return [
-    const _NavigationTab(Icons.home_outlined, Icons.home_rounded, 'Home'),
-    const _NavigationTab(
-      Icons.storefront_outlined,
-      Icons.storefront_rounded,
-      'Market',
-    ),
-    third,
-    const _NavigationTab(
-      Icons.person_outline_rounded,
-      Icons.person_rounded,
-      'Profile',
-    ),
-  ];
-}
-
-class _NavigationTab {
-  const _NavigationTab(this.icon, this.activeIcon, this.label);
-
+class _NavigationItem {
+  const _NavigationItem(this.icon, this.activeIcon, this.label);
   final IconData icon;
   final IconData activeIcon;
   final String label;
