@@ -144,7 +144,7 @@ class _NearbySellersPanelState extends State<NearbySellersPanel> {
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
         itemCount: _shops.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (_, index) => _ShopCard(
           shop: _shops[index],
           onCall: () => _call(_shops[index].phoneNumber),

@@ -376,8 +376,8 @@ class _ScanPlantCard extends StatelessWidget {
     return GlassCard(
       onTap: onTap,
       borderRadius: 26,
-      blur: 28,
-      opacity: .16,
+      blur: 10,
+      opacity: .11,
       padding: const EdgeInsets.all(14),
       child: Row(
         children: [

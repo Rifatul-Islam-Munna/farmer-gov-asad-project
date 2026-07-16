@@ -1,4 +1,3 @@
-import 'package:cached_query/cached_query.dart';
 import 'package:cached_query_flutter/cached_query_flutter.dart';
 import 'package:cached_storage/cached_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -35,9 +34,7 @@ final getIt = GetIt.instance;
 
 Future<void> setupLocator() async {
   final preferences = await SharedPreferences.getInstance();
-  const secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  const secureStorage = FlutterSecureStorage(aOptions: AndroidOptions());
 
   getIt.registerSingleton<SharedPreferences>(preferences);
   getIt.registerSingleton<FlutterSecureStorage>(secureStorage);
@@ -59,10 +56,7 @@ Future<void> main() async {
   DioHelper.dio.interceptors.add(TypedFailureInterceptor());
 
   CachedQuery.instance.configFlutter(
-    config: GlobalQueryConfigFlutter(
-      refetchOnConnection: true,
-      refetchOnResume: true,
-    ),
+    config: GlobalQueryConfig(refetchOnConnection: true, refetchOnResume: true),
     storage: await CachedStorage.ensureInitialized(),
   );
 
@@ -70,7 +64,7 @@ Future<void> main() async {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: AppColors.background,
+      systemNavigationBarColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -93,26 +87,26 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassMorphismThemeProvider(
       data: const GlassMorphismThemeData(
-        defaultGlassColor: Color(0x6638CFA5),
-        lightGlassColor: Color(0x6648DDB5),
-        darkGlassColor: Color(0x66205D50),
-        defaultBlurIntensity: 24,
-        defaultOpacity: .20,
+        defaultGlassColor: Color(0x332D806E),
+        lightGlassColor: Color(0x335FE8C2),
+        darkGlassColor: Color(0x331D443B),
+        defaultBlurIntensity: 9,
+        defaultOpacity: .12,
         defaultBorderRadius: BorderRadius.all(Radius.circular(24)),
         enableSpecularHighlights: true,
         adaptiveColoring: true,
         buttonTheme: GlassMorphismButtonThemeData(
           height: 54,
           borderRadius: BorderRadius.all(Radius.circular(18)),
-          blurIntensity: 18,
-          opacity: .22,
+          blurIntensity: 9,
+          opacity: .14,
         ),
         cardTheme: GlassMorphismCardThemeData(
           margin: EdgeInsets.zero,
           padding: EdgeInsets.all(16),
           borderRadius: BorderRadius.all(Radius.circular(24)),
-          blurIntensity: 24,
-          opacity: .20,
+          blurIntensity: 9,
+          opacity: .13,
         ),
       ),
       child: MaterialApp.router(

@@ -32,7 +32,7 @@ class SellProductPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 24),
               child: GlassCard(
                 borderRadius: 26,
-                blur: 30,
+                blur: 10,
                 opacity: .14,
                 child: const FarmerWorkspace(),
               ),

@@ -8,6 +8,7 @@ import '../../../../core/navigation/app_router_instance.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/storage/session_storage.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/glass_card.dart';
 
 @RoutePage()
 class SplashPage extends StatefulWidget {
@@ -47,35 +48,19 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SizedBox(
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.primaryDark,
-              AppColors.primary,
-              AppColors.secondary,
-            ],
-          ),
-        ),
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 116,
-                height: 116,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    width: 2,
-                  ),
-                ),
-                child: const Icon(
+              const GlassCard(
+                padding: EdgeInsets.all(24),
+                borderRadius: 42,
+                blur: 10,
+                opacity: .13,
+                color: AppColors.primary,
+                child: Icon(
                   Icons.agriculture_rounded,
                   color: Colors.white,
                   size: 64,

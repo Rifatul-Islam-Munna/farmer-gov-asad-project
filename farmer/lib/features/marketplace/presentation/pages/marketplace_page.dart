@@ -141,7 +141,7 @@ class _MarketBanner extends StatelessWidget {
             CachedNetworkImage(
               imageUrl: 'https://picsum.photos/seed/farmer-market/900/500',
               fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => const ColoredBox(
+              errorWidget: (context, error, stackTrace) => const ColoredBox(
                 color: AppColors.primaryDark,
                 child: Icon(
                   Icons.agriculture_rounded,

@@ -21,7 +21,7 @@ class ScannerPage extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xA6082B24), Color(0xE9061A16)],
+                colors: [Color(0x61082B24), Color(0xB8061A16)],
               ),
             ),
           ),
@@ -30,8 +30,8 @@ class ScannerPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
               child: GlassCard(
                 borderRadius: 28,
-                blur: 30,
-                opacity: .14,
+                blur: 9,
+                opacity: .10,
                 child: const CropDiagnosisPanel(embedded: true),
               ),
             ),

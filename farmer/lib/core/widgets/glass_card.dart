@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_glass_morphism/flutter_glass_morphism.dart';
 
 import '../theme/app_theme.dart';
 
@@ -12,8 +11,8 @@ class GlassCard extends StatelessWidget {
     this.padding = EdgeInsets.zero,
     this.margin = EdgeInsets.zero,
     this.borderRadius = 24,
-    this.blur = 24,
-    this.opacity = .20,
+    this.blur = 9,
+    this.opacity = .12,
     this.onTap,
     this.color,
     this.elevation,
@@ -42,59 +41,88 @@ class GlassCard extends StatelessWidget {
             Directionality.of(context),
           )
         : BorderRadius.circular(borderRadius);
+    final tint = color ?? AppColors.glassTint;
 
     Widget panel = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: .30),
-            blurRadius: elevation == null ? 30 : 16 + elevation! * 2,
-            offset: const Offset(0, 14),
+            color: Colors.black.withValues(alpha: .20),
+            blurRadius: elevation == null ? 18 : 10 + elevation! * 1.4,
+            offset: const Offset(0, 10),
           ),
           if (glow)
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: .12),
-              blurRadius: 30,
-              spreadRadius: -8,
+              color: AppColors.primary.withValues(alpha: .16),
+              blurRadius: 22,
+              spreadRadius: -12,
             ),
         ],
       ),
-      child: GlassMorphismMaterial(
-        blurIntensity: blur,
-        opacity: opacity,
-        backgroundOpacity: .58,
-        glassThickness: 1.8,
-        tintColor: color ?? const Color(0xFF2D806E),
+      child: ClipRRect(
         borderRadius: radius,
-        adaptToBackground: true,
-        enableBackgroundDistortion: true,
-        enableGlassBorder: true,
-        shadows: const [],
-        child: Stack(
-          fit: StackFit.passthrough,
-          children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: radius,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: .12),
-                        Colors.transparent,
-                        AppColors.primary.withValues(alpha: .045),
-                      ],
-                      stops: const [0, .42, 1],
+        clipBehavior: clipBehavior,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              color: tint.withValues(alpha: opacity),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: .22),
+                width: 1,
+              ),
+            ),
+            child: Stack(
+              fit: StackFit.passthrough,
+              children: [
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: radius,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: .21),
+                            Colors.white.withValues(alpha: .055),
+                            AppColors.primaryDark.withValues(alpha: .08),
+                          ],
+                          stops: const [0, .38, 1],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: radius,
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.white.withValues(alpha: .34),
+                          ),
+                          left: BorderSide(
+                            color: Colors.white.withValues(alpha: .16),
+                          ),
+                          bottom: BorderSide(
+                            color: AppColors.primary.withValues(alpha: .22),
+                          ),
+                          right: BorderSide(
+                            color: AppColors.primary.withValues(alpha: .12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(padding: padding, child: child),
+              ],
             ),
-            Padding(padding: padding, child: child),
-          ],
+          ),
         ),
       ),
     );
@@ -117,99 +145,78 @@ class GlassBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF123E34), Color(0xFF071E19), Color(0xFF020D0B)],
-          stops: [0, .48, 1],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          'assets/images/plant_leaf.jpg',
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
         ),
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const CustomPaint(painter: _OrganicBackgroundPainter()),
-          const Positioned(
-            top: -120,
-            right: -80,
-            child: _Glow(size: 320, color: Color(0x3848F1C2)),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0x87051613), Color(0xB3061713), Color(0xE3020D0B)],
+              stops: [0, .48, 1],
+            ),
           ),
-          const Positioned(
-            top: 300,
-            left: -130,
-            child: _Glow(size: 290, color: Color(0x1F25C38F)),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(.70, -.88),
+              radius: 1.05,
+              colors: [
+                AppColors.primary.withValues(alpha: .24),
+                Colors.transparent,
+              ],
+            ),
           ),
-          const Positioned(
-            bottom: -140,
-            right: -80,
-            child: _Glow(size: 350, color: Color(0x2520B77D)),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(-.90, .30),
+              radius: .85,
+              colors: [
+                AppColors.secondary.withValues(alpha: .16),
+                Colors.transparent,
+              ],
+            ),
           ),
-          child,
-        ],
-      ),
+        ),
+        const CustomPaint(painter: _ScanTexturePainter()),
+        child,
+      ],
     );
   }
 }
 
-class _OrganicBackgroundPainter extends CustomPainter {
-  const _OrganicBackgroundPainter();
+class _ScanTexturePainter extends CustomPainter {
+  const _ScanTexturePainter();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final leafPaint = Paint()
+    final dotPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = const Color(0xFF63E7B8).withValues(alpha: .04);
-    final veinPaint = Paint()
+      ..color = Colors.white.withValues(alpha: .022);
+    for (double y = 18; y < size.height; y += 28) {
+      for (double x = 18; x < size.width; x += 28) {
+        canvas.drawCircle(Offset(x, y), .75, dotPaint);
+      }
+    }
+
+    final linePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = const Color(0xFF76F4CC).withValues(alpha: .055);
-
-    final leaves = <Rect>[
-      Rect.fromLTWH(size.width * .67, size.height * .08, 120, 52),
-      Rect.fromLTWH(-28, size.height * .30, 135, 56),
-      Rect.fromLTWH(size.width * .73, size.height * .58, 150, 62),
-      Rect.fromLTWH(size.width * .08, size.height * .82, 125, 52),
-    ];
-
-    for (final rect in leaves) {
-      canvas.save();
-      canvas.translate(rect.center.dx, rect.center.dy);
-      canvas.rotate(-.42);
-      final local = Rect.fromCenter(
-        center: Offset.zero,
-        width: rect.width,
-        height: rect.height,
-      );
-      canvas.drawOval(local, leafPaint);
-      canvas.drawLine(
-        Offset(-rect.width * .38, 0),
-        Offset(rect.width * .38, 0),
-        veinPaint,
-      );
-      canvas.restore();
+      ..strokeWidth = .7
+      ..color = AppColors.primary.withValues(alpha: .045);
+    for (double y = 0; y < size.height; y += 86) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y + 24), linePaint);
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _Glow extends StatelessWidget {
-  const _Glow({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: 65, sigmaY: 65),
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-      ),
-    );
-  }
 }

@@ -174,7 +174,7 @@ class _AdminWorkspaceState extends State<AdminWorkspace> {
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: _targetRole,
+                  initialValue: _targetRole,
                   decoration: const InputDecoration(labelText: 'Target role'),
                   items:
                       const [

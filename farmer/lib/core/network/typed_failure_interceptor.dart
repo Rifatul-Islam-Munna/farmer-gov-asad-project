@@ -4,8 +4,8 @@ import '../errors/dio_failure_mapper.dart';
 
 class TypedFailureInterceptor extends Interceptor {
   @override
-  void onError(DioException error, ErrorInterceptorHandler handler) {
-    final failure = DioFailureMapper.fromException(error);
-    handler.next(error.copyWith(error: failure));
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final failure = DioFailureMapper.fromException(err);
+    handler.next(err.copyWith(error: failure));
   }
 }

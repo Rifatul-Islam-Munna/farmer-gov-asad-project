@@ -59,8 +59,8 @@ class _BottomNavigation extends StatelessWidget {
     return GlassCard(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
       borderRadius: 29,
-      blur: 32,
-      opacity: .16,
+      blur: 9,
+      opacity: .10,
       glow: true,
       child: SafeArea(
         top: false,
@@ -92,7 +92,7 @@ class _BottomNavigation extends StatelessWidget {
                               end: Alignment.bottomRight,
                               colors: [
                                 Colors.white.withValues(alpha: .14),
-                                AppColors.primary.withValues(alpha: .17),
+                                AppColors.primary.withValues(alpha: .14),
                               ],
                             )
                           : null,
@@ -104,7 +104,7 @@ class _BottomNavigation extends StatelessWidget {
                       boxShadow: active
                           ? [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: .30),
+                                color: AppColors.primary.withValues(alpha: .22),
                                 blurRadius: 20,
                               ),
                             ]

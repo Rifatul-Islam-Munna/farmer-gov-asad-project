@@ -8,6 +8,9 @@ abstract final class AppColors {
   static const backgroundTop = Color(0xFF0D332B);
   static const surface = Color(0xFF17362F);
   static const surfaceStrong = Color(0xFF1D443B);
+  static const glassTint = Color(0xFF2D806E);
+  static const glassSurface = Color(0x331D443B);
+  static const glassBorder = Color(0x4D5FE8C2);
   static const textPrimary = Color(0xFFF4FFFB);
   static const textSecondary = Color(0xFFA9C7BE);
   static const border = Color(0x335FE8C2);
@@ -40,7 +43,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: Colors.transparent,
       canvasColor: AppColors.background,
       dialogTheme: const DialogThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.glassSurface,
         surfaceTintColor: Colors.transparent,
       ),
       fontFamily: 'Roboto',
@@ -104,7 +107,7 @@ abstract final class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(17),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.glassBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(17),
@@ -131,7 +134,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
           foregroundColor: AppColors.secondary,
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: AppColors.glassBorder),
           shape: rounded16,
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
@@ -144,15 +147,15 @@ abstract final class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.surface.withValues(alpha: .92),
+        color: AppColors.glassSurface,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(22),
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: AppColors.glassBorder),
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: Colors.white.withValues(alpha: .07),
+        backgroundColor: Colors.white.withValues(alpha: .075),
         selectedColor: AppColors.primary.withValues(alpha: .20),
         labelStyle: const TextStyle(color: AppColors.textPrimary),
         side: const BorderSide(color: AppColors.border),
@@ -160,20 +163,20 @@ abstract final class AppTheme {
       ),
       dividerTheme: const DividerThemeData(color: AppColors.border),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: AppColors.background,
-        modalBackgroundColor: AppColors.background,
+        backgroundColor: AppColors.glassSurface,
+        modalBackgroundColor: AppColors.glassSurface,
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
         dragHandleColor: AppColors.textSecondary,
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.surfaceStrong,
+        backgroundColor: AppColors.glassSurface,
         contentTextStyle: const TextStyle(color: AppColors.textPrimary),
         behavior: SnackBarBehavior.floating,
         shape: rounded16,
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface.withValues(alpha: .96),
+        backgroundColor: AppColors.glassSurface,
         indicatorColor: AppColors.primary.withValues(alpha: .18),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           return IconThemeData(
@@ -206,7 +209,7 @@ abstract final class AppTheme {
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? AppColors.primary.withValues(alpha: .32)
-              : AppColors.surfaceStrong,
+              : AppColors.glassSurface,
         ),
       ),
     );
