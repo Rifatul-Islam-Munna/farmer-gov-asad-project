@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Get,
@@ -6,16 +6,18 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard';
+import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { CreateGoodDto } from '../goods/good.dto';
-import { CreateMarketPriceDto } from '../market-price/market-price.dto';
-import { UserType } from '../user/user.entity';
+import { CreateGoodDto } from '../goods/dto/good.dto';
+import { CreateMarketPriceDto } from '../market-price/dto/market-price.dto';
+import { UserType } from '../user/entities/user.entity';
 import {
   AdminSearchDto,
   AdminUpdateDealDto,
@@ -25,13 +27,18 @@ import {
   AdminUserSearchDto,
   CreateGuidanceDto,
   UpdateVerificationDto,
-} from './admin.dto';
+} from './dto/admin.dto';
 import { AdminService } from './admin.service';
+import { UpdateIntegrationSettingsDto } from './dto/integration-setting.dto';
+import { IntegrationSettingsService } from './integration-settings.service';
 
 @ApiTags('Administration')
 @Controller()
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly integrationSettingsService: IntegrationSettingsService,
+  ) {}
 
   @Get('guidance')
   @ApiOperation({ summary: 'List active suggestions and notices for a role' })
@@ -102,10 +109,7 @@ export class AdminController {
   @ApiBearerAuth()
   @Roles(UserType.ADMIN)
   @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
-  updateListing(
-    @Param('id') id: string,
-    @Body() dto: AdminUpdateListingDto,
-  ) {
+  updateListing(@Param('id') id: string, @Body() dto: AdminUpdateListingDto) {
     return this.adminService.updateListing(id, dto);
   }
 
@@ -182,5 +186,28 @@ export class AdminController {
     @Body() dto: AdminUpdateInventoryDto,
   ) {
     return this.adminService.updateInventory(id, dto);
+  }
+
+  @Get('admin/integrations')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get masked AI, weather and notification settings' })
+  @Roles(UserType.ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  integrations() {
+    return this.integrationSettingsService.getMasked();
+  }
+
+  @Patch('admin/integrations')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update encrypted AI, Windy and OneSignal settings',
+  })
+  @Roles(UserType.ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  updateIntegrations(
+    @Body() dto: UpdateIntegrationSettingsDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.integrationSettingsService.update(request.user.id, dto);
   }
 }

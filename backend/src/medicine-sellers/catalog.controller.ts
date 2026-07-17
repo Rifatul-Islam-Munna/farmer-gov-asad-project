@@ -1,12 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+﻿import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
+import { UserType } from '../user/entities/user.entity';
 import { CatalogService } from './catalog.service';
-import { UpsertMedicineDto } from './medicine-catalog.dto';
+import { UpsertMedicineDto } from './dto/medicine-catalog.dto';
 
 @ApiTags('Medicine Catalog')
 @Controller('medicines')

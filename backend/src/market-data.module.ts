@@ -1,22 +1,14 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { MarketPriceController } from './market-price/market-price.controller';
+﻿import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { MarketDataService } from './market-price/market-data.service';
-import {
-  MARKET_PRICE_MODEL,
-  MarketPriceSchema,
-} from './market-price/market-price.entity';
+import { MarketPriceController } from './market-price/market-price.controller';
+import { MarketPrice } from './market-price/entities/market-price.entity';
 import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: MARKET_PRICE_MODEL, schema: MarketPriceSchema },
-    ]),
-    UserModule,
-  ],
+  imports: [TypeOrmModule.forFeature([MarketPrice]), UserModule],
   controllers: [MarketPriceController],
   providers: [MarketDataService],
-  exports: [MarketDataService],
+  exports: [MarketDataService, TypeOrmModule],
 })
 export class MarketDataModule {}

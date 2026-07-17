@@ -31,7 +31,7 @@ export default tseslint.config(
       [tsRule('no-explicit-any')]: 'warn',
       [tsRule('no-floating-promises')]: 'warn',
       [tsRule('no-' + 'unsafe-argument')]: 'off',
-      'prettier/prettier': ['error', { endOfLine: 'off' }],
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
       [tsRule('no-unused-vars')]: 'off',
       [tsRule('no-' + 'unsafe-return')]: 'off',
     },

@@ -1,25 +1,14 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+﻿import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../user/user.module';
 import { GoodController } from './good.controller';
-import {
-  GOOD_MODEL,
-  GOODS_CATEGORY_MODEL,
-  GoodSchema,
-  GoodsCategorySchema,
-} from './good.entity';
+import { Good, GoodsCategory } from './entities/good.entity';
 import { GoodService } from './good.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: GOODS_CATEGORY_MODEL, schema: GoodsCategorySchema },
-      { name: GOOD_MODEL, schema: GoodSchema },
-    ]),
-    UserModule,
-  ],
+  imports: [TypeOrmModule.forFeature([GoodsCategory, Good]), UserModule],
   controllers: [GoodController],
   providers: [GoodService],
-  exports: [GoodService],
+  exports: [GoodService, TypeOrmModule],
 })
 export class GoodModule {}

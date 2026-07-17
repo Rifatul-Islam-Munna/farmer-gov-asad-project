@@ -1,13 +1,16 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AdminModule } from './admin/admin.module';
 import { AgentModule } from './agents/agent.module';
+import { AlertModule } from './alerts/alert.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DealModule } from './deals/deal.module';
 import { GoodModule } from './goods/good.module';
+import { DatabaseModule } from './lib/database/database.module';
+import { StorageModule } from './lib/storage/storage.module';
+import { InfrastructureModule } from './lib/infrastructure/infrastructure.module';
 import { ListingModule } from './listings/listing.module';
 import { MarketDataModule } from './market-data.module';
 import { MedicineSellerModule } from './medicine-sellers/medicine-seller.module';
@@ -17,6 +20,7 @@ import { UserModule } from './user/user.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],
@@ -25,15 +29,9 @@ import { UserModule } from './user/user.module';
         signOptions: { expiresIn: '10d' },
       }),
     }),
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri:
-          configService.get<string>('MONGODB_URL') ??
-          'mongodb://127.0.0.1:27017/farmer-gov-asad-project',
-        autoIndex: true,
-      }),
-    }),
+    StorageModule,
+    InfrastructureModule,
+    AlertModule,
     UserModule,
     AdminModule,
     SupportModule,

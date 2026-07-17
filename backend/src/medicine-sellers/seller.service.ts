@@ -1,85 +1,73 @@
-import {
+﻿import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { USER_MODEL, User, UserType } from '../user/user.entity';
-import {
-  MEDICINE_MODEL,
-  Medicine,
-  SELLER_INVENTORY_MODEL,
-  SellerInventory,
-} from './medicine.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { toApiEntity } from '../lib/database/base.entity';
+import { User, UserType } from '../user/entities/user.entity';
+import { Medicine, SellerInventory } from './entities/medicine.entity';
 import {
   NearbySellerFilterDto,
   NearbySellerQueryDto,
   UpdateSellerLocationDto,
   UpsertInventoryDto,
-} from './seller-inventory.dto';
+} from './dto/seller-inventory.dto';
 
 @Injectable()
 export class SellerService {
   constructor(
-    @InjectModel(MEDICINE_MODEL)
-    private readonly medicineModel: Model<Medicine>,
-    @InjectModel(SELLER_INVENTORY_MODEL)
-    private readonly inventoryModel: Model<SellerInventory>,
-    @InjectModel(USER_MODEL)
-    private readonly userModel: Model<User>,
+    @InjectRepository(Medicine)
+    private readonly medicineRepository: Repository<Medicine>,
+    @InjectRepository(SellerInventory)
+    private readonly inventoryRepository: Repository<SellerInventory>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async updateLocation(sellerId: string, dto: UpdateSellerLocationDto) {
-    const data = await this.userModel
-      .findOneAndUpdate(
-        { _id: sellerId, role: UserType.MEDICINE_SELLER },
-        {
-          shopName: dto.shopName.trim(),
-          address: dto.address.trim(),
-          location: {
-            latitude: dto.latitude,
-            longitude: dto.longitude,
-            updatedAt: new Date(),
-          },
-        },
-        { returnDocument: 'after' },
-      )
-      .select('-credentialHash -otpNumber')
-      .lean();
-    if (!data) {
-      throw new NotFoundException('Medicine seller not found');
-    }
-    return { data };
+    const seller = await this.userRepository.findOne({
+      where: { id: sellerId, role: UserType.MEDICINE_SELLER },
+    });
+    if (!seller) throw new NotFoundException('Medicine seller not found');
+    seller.shopName = dto.shopName.trim();
+    seller.address = dto.address.trim();
+    seller.location = {
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      updatedAt: new Date().toISOString(),
+    };
+    await this.userRepository.save(seller);
+    return { data: toApiEntity(seller) };
   }
 
   async upsertInventory(sellerId: string, dto: UpsertInventoryDto) {
     const medicineCode = dto.medicineCode.trim().toLowerCase();
     const [medicine, seller] = await Promise.all([
-      this.medicineModel.findOne({ code: medicineCode, active: true }).lean(),
-      this.userModel
-        .findOne({ _id: sellerId, role: UserType.MEDICINE_SELLER })
-        .lean(),
+      this.medicineRepository.findOne({
+        where: { code: medicineCode, active: true },
+      }),
+      this.userRepository.findOne({
+        where: { id: sellerId, role: UserType.MEDICINE_SELLER },
+      }),
     ]);
-
-    if (!medicine) {
+    if (!medicine)
       throw new NotFoundException('Medicine catalog item not found');
-    }
-    if (!seller) {
-      throw new NotFoundException('Medicine seller not found');
-    }
-    const location = seller.location;
+    if (!seller) throw new NotFoundException('Medicine seller not found');
+
+    const latitude = seller.location?.latitude;
+    const longitude = seller.location?.longitude;
     if (
-      location?.latitude == null ||
-      location.longitude == null ||
+      latitude == null ||
+      longitude == null ||
       !seller.shopName ||
       !seller.address
     ) {
       throw new BadRequestException('Set shop name and location first');
     }
 
-    const data = await this.inventoryModel.findOneAndUpdate(
-      { sellerId, medicineCode },
+    await this.inventoryRepository.upsert(
       {
         sellerId,
         medicineCode,
@@ -90,29 +78,29 @@ export class SellerService {
         price: dto.price,
         shopName: seller.shopName,
         address: seller.address,
-        latitude: location.latitude,
-        longitude: location.longitude,
+        latitude,
+        longitude,
         active: dto.active ?? true,
       },
-      { upsert: true, returnDocument: 'after' },
+      ['sellerId', 'medicineCode'],
     );
-    return { data };
+    const data = await this.inventoryRepository.findOneByOrFail({
+      sellerId,
+      medicineCode,
+    });
+    return { data: toApiEntity(data) };
   }
 
   async mine(sellerId: string) {
-    return {
-      data: await this.inventoryModel
-        .find({ sellerId })
-        .sort({ medicineName: 1 })
-        .lean(),
-    };
+    const data = await this.inventoryRepository.find({
+      where: { sellerId },
+      order: { medicineName: 'ASC' },
+    });
+    return { data: data.map(toApiEntity) };
   }
 
   async nearbyForUser(userId: string, query: NearbySellerFilterDto) {
-    const user = await this.userModel
-      .findById(userId)
-      .select('location')
-      .lean();
+    const user = await this.userRepository.findOne({ where: { id: userId } });
     const latitude = user?.location?.latitude;
     const longitude = user?.location?.longitude;
     if (latitude == null || longitude == null) {
@@ -132,25 +120,24 @@ export class SellerService {
     longitude: number,
     query: NearbySellerFilterDto,
   ) {
-    const filter: Record<string, any> = {
-      active: true,
-      stockQuantity: { $gt: 0 },
-    };
+    const qb = this.inventoryRepository
+      .createQueryBuilder('inventory')
+      .where('inventory.active = true')
+      .andWhere('inventory.stockQuantity > 0');
     if (query.medicineCode?.trim()) {
-      filter.medicineCode = query.medicineCode.trim().toLowerCase();
+      qb.andWhere('inventory.medicineCode = :medicineCode', {
+        medicineCode: query.medicineCode.trim().toLowerCase(),
+      });
     }
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [
-        { medicineName: pattern },
-        { shopName: pattern },
-        { address: pattern },
-      ];
+      qb.andWhere(
+        '(inventory.medicineName ILIKE :search OR inventory.shopName ILIKE :search OR inventory.address ILIKE :search)',
+        { search: `%${query.search.trim()}%` },
+      );
     }
 
     const radiusKm = query.radiusKm ?? 25;
-    const records = await this.inventoryModel.find(filter).lean();
-    const nearbyRecords = records
+    const records = (await qb.getMany())
       .map((record) => ({
         ...record,
         distanceKm: Number(
@@ -164,19 +151,36 @@ export class SellerService {
       }))
       .filter((record) => record.distanceKm <= radiusKm);
 
-    const sellerIds = [...new Set(nearbyRecords.map((item) => item.sellerId))];
+    const sellerIds = [...new Set(records.map((item) => item.sellerId))];
     const sellers = sellerIds.length
-      ? await this.userModel
-          .find({ _id: { $in: sellerIds } })
-          .select('phoneNumber')
-          .lean()
+      ? await this.userRepository
+          .createQueryBuilder('user')
+          .where('user.id IN (:...sellerIds)', { sellerIds })
+          .getMany()
       : [];
     const phoneBySeller = new Map(
-      sellers.map((seller) => [String(seller._id), seller.phoneNumber]),
+      sellers.map((seller) => [seller.id, seller.phoneNumber]),
     );
 
-    const grouped = new Map<string, Record<string, any>>();
-    for (const record of nearbyRecords) {
+    type NearbySellerResult = {
+      sellerId: string;
+      shopName: string;
+      address: string;
+      phoneNumber: string;
+      latitude: number;
+      longitude: number;
+      distanceKm: number;
+      medicines: Array<{
+        medicineCode: string;
+        medicineName: string;
+        type: string;
+        stockQuantity: number;
+        unit: string;
+        price: number;
+      }>;
+    };
+    const grouped = new Map<string, NearbySellerResult>();
+    for (const record of records) {
       const current = grouped.get(record.sellerId) ?? {
         sellerId: record.sellerId,
         shopName: record.shopName,
@@ -187,8 +191,11 @@ export class SellerService {
         distanceKm: record.distanceKm,
         medicines: [],
       };
-      current.distanceKm = Math.min(current.distanceKm, record.distanceKm);
-      current.medicines.push({
+      current.distanceKm = Math.min(
+        Number(current.distanceKm),
+        record.distanceKm,
+      );
+      (current.medicines as Array<Record<string, unknown>>).push({
         medicineCode: record.medicineCode,
         medicineName: record.medicineName,
         type: record.type,
@@ -199,18 +206,9 @@ export class SellerService {
       grouped.set(record.sellerId, current);
     }
 
-    const data = ([...grouped.values()] as Array<Record<string, any>>)
-      .map((shop): Record<string, any> => ({
-        ...shop,
-        medicines: shop.medicines.sort(
-          (a: Record<string, any>, b: Record<string, any>) =>
-            String(a.medicineName).localeCompare(String(b.medicineName)),
-        ),
-      }))
-      .sort((a: Record<string, any>, b: Record<string, any>) =>
-        Number(a.distanceKm) - Number(b.distanceKm),
-      );
-
+    const data = [...grouped.values()].sort(
+      (a, b) => Number(a.distanceKm) - Number(b.distanceKm),
+    );
     return {
       data,
       meta: {
@@ -218,7 +216,7 @@ export class SellerService {
         longitude,
         radiusKm,
         shopCount: data.length,
-        productCount: nearbyRecords.length,
+        productCount: records.length,
       },
     };
   }
@@ -234,12 +232,5 @@ export class SellerService {
         Math.cos(toRadians(lat2)) *
         Math.sin(dLng / 2) ** 2;
     return radius * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
-  }
-
-  private escape(value: string) {
-    const special = new Set(['.', '*', '+', '?', '^', '$', '{', '}', '(', ')', '|', '[', ']', '\\']);
-    return [...value].map((character) =>
-      special.has(character) ? `\\${character}` : character,
-    ).join('');
   }
 }

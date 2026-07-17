@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Boxes, Handshake, LayoutDashboard, LogOut, RefreshCcw, Search, ShieldCheck, ShoppingBasket, Users } from "lucide-react"
+import { Boxes, Handshake, KeyRound, LayoutDashboard, LogOut, RefreshCcw, Search, ShieldCheck, ShoppingBasket, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,12 +10,14 @@ import { API_URL, apiRequest, type AdminUser, type ApiEnvelope, type DashboardDa
 import { AdminOverview } from "./admin-overview"
 import { AdminMarketControls } from "./admin-market-controls"
 import { DealsPanel, InventoryPanel, ListingsPanel, UsersPanel } from "./admin-resource-panels"
+import { IntegrationSettingsPanel } from "./integration-settings-panel"
 
-type View = "overview" | "users" | "listings" | "deals" | "prices" | "inventory"
+type View = "overview" | "users" | "listings" | "deals" | "prices" | "inventory" | "integrations"
 const views: Array<[View, string, React.ComponentType<{ className?: string }>]> = [
   ["overview", "Overview", LayoutDashboard], ["users", "Users", Users],
   ["listings", "Listings", ShoppingBasket], ["deals", "Deals", Handshake],
   ["prices", "Prices & goods", Search], ["inventory", "Inventory", Boxes],
+  ["integrations", "AI & providers", KeyRound],
 ]
 
 export function AdminDashboard() {
@@ -88,6 +90,7 @@ export function AdminDashboard() {
         {view==="deals" && <DealsPanel items={filteredDeals} change={change}/>} 
         {view==="prices" && <AdminMarketControls prices={prices} goods={goods} save={change}/>} 
         {view==="inventory" && <InventoryPanel items={filteredInventory} change={change}/>} 
+        {view==="integrations" && <IntegrationSettingsPanel token={token}/>} 
       </div>
     </main>
   </div>

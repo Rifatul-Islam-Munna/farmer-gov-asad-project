@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Get,
@@ -14,13 +14,13 @@ import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
+import { UserType } from '../user/entities/user.entity';
 import {
   NearbySellerFilterDto,
   NearbySellerQueryDto,
   UpdateSellerLocationDto,
   UpsertInventoryDto,
-} from './seller-inventory.dto';
+} from './dto/seller-inventory.dto';
 import { SellerService } from './seller.service';
 
 @ApiTags('Medicine Sellers')

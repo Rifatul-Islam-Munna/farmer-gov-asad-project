@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Get,
@@ -13,13 +13,13 @@ import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
+import { UserType } from '../user/entities/user.entity';
 import {
   AgentCreateFarmerDto,
   AgentListingRequestDto,
   SearchFarmersDto,
   VerifyAgentActionDto,
-} from './agent.dto';
+} from './dto/agent.dto';
 import { AgentService } from './agent.service';
 
 @ApiTags('Agent Workflows')

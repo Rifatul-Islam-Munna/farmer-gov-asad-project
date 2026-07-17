@@ -2089,3 +2089,366 @@ Only after a real feature is completed may the developer or AI agent append a de
 - links to the related `done.md` items.
 
 If a feature exists only in planning, design, mockup, or partial UI form, `features.md` must not be updated for it.
+
+
+---
+
+# 19. Dashboard Routing, Resilient Infrastructure, Unlimited Gemini Keys, and Marketplace Actor Plan
+
+## 19.1 Next.js dashboard route convention
+
+Every authenticated web workspace must start with `/dashboard`.
+
+Canonical routes:
+
+```text
+/dashboard/admin
+/dashboard/farmer
+/dashboard/buyer
+/dashboard/wholesale-buyer
+/dashboard/seller
+/dashboard/machinery-seller
+/dashboard/medicine-seller
+/dashboard/agent
+/dashboard/agriculture-specialist
+/dashboard/veterinary-doctor
+/dashboard/government-officer
+/dashboard/support
+```
+
+Rules:
+
+- `/` redirects to `/dashboard/admin` during the current admin-first development stage.
+- `/dashboard` redirects to `/dashboard/admin` until role-aware post-login routing is implemented.
+- After login, the server/client must route the user to the correct role workspace.
+- A user with multiple approved roles may switch workspaces without signing into another account.
+- Admin pages must remain under `/dashboard/admin/...`.
+- Seller pages must remain under `/dashboard/seller/...` or the specialized seller workspace.
+- No feature page should be placed at an unrelated root route.
+- Each workspace will use nested route groups for overview, inventory, listings, orders, messages, analytics, settings, and role-specific workflows.
+
+Recommended nested routes:
+
+```text
+/dashboard/admin/
+├─ overview
+├─ users
+├─ roles
+├─ marketplace
+├─ orders
+├─ content
+├─ integrations
+├─ alerts
+├─ reports
+└─ settings
+
+/dashboard/farmer/
+├─ overview
+├─ farms
+├─ crops
+├─ livestock
+├─ poultry
+├─ fisheries
+├─ diagnoses
+├─ sell
+├─ listings
+├─ orders
+├─ consultations
+└─ settings
+
+/dashboard/buyer/
+├─ overview
+├─ marketplace
+├─ saved-searches
+├─ offers
+├─ orders
+├─ deliveries
+├─ messages
+└─ settings
+
+/dashboard/seller/
+├─ overview
+├─ products
+├─ inventory
+├─ orders
+├─ deliveries
+├─ messages
+├─ analytics
+└─ settings
+
+/dashboard/machinery-seller/
+├─ overview
+├─ machinery
+├─ parts
+├─ rentals
+├─ service-areas
+├─ orders
+├─ deliveries
+└─ settings
+```
+
+## 19.2 Unlimited Gemini API-key pool
+
+The admin dashboard may store more than one Gemini API key and must not impose an arbitrary product-level maximum.
+
+Operational safeguards still apply:
+
+- reject empty/invalid-looking entries;
+- deduplicate identical keys before encryption;
+- never return full keys after save;
+- assign an internal key ID/alias;
+- track health, cooldown, quota failure, latency, and last successful use;
+- allow admin disable/enable without deleting the key;
+- use least-recently-used or weighted round-robin routing;
+- rotate to another healthy key on quota/rate-limit errors;
+- do not rotate across all keys for permanent request-validation errors;
+- cap request-level retries even when many keys exist;
+- never expose keys to Flutter or the Next.js browser runtime after submission.
+
+The same Gemini key pool may serve text and image/vision requests. Model names remain separately configurable because text and image requests may use different Gemini model IDs. Qdrant image embeddings remain a separate provider/model decision because vector generation is not the same output as Gemini image analysis.
+
+## 19.3 Redis and Qdrant are optional startup dependencies
+
+Redis and Qdrant failures must never stop the NestJS application from starting.
+
+Startup behavior:
+
+```text
+PostgreSQL unavailable -> backend startup fails (primary system of record)
+Redis unavailable      -> log error, disable distributed cache/queue-dependent paths, continue
+Qdrant unavailable     -> log error, disable vector match, use AI fallback where available, continue
+MinIO unavailable      -> log warning/error, disable upload-dependent paths, continue
+Gemini unavailable     -> non-AI features continue; AI jobs fail gracefully or queue for retry
+Windy unavailable      -> show cached/last-known weather and provider-unavailable state
+OneSignal unavailable  -> store notification event and retry without crashing the API
+```
+
+Rules:
+
+- Redis client uses short startup timeout and no infinite retry loop.
+- Qdrant health check uses short timeout.
+- Each optional service exposes availability status to internal services.
+- Feature services must check dependency availability before use.
+- Redis cache misses/unavailability fall back to PostgreSQL/direct provider calls where safe.
+- Qdrant unavailability routes supported diagnosis requests to Gemini fallback.
+- Error logs must be actionable but must not leak credentials.
+- Health/readiness endpoints should report degraded state separately from fatal PostgreSQL failure.
+
+## 19.4 Marketplace actors and catalogs
+
+The marketplace is not only farmer-to-buyer crop sales. It supports multiple commercial directions.
+
+### Actor A — Farmer as crop/farm-output seller
+
+May sell:
+
+- rice, wheat, corn and other grains;
+- vegetables;
+- fruits;
+- fish;
+- cattle, goat, buffalo, sheep;
+- chicken, duck, eggs;
+- milk, honey and other farm outputs.
+
+Required workflow:
+
+```text
+Farmer creates listing
+-> photos and crop/product details
+-> quantity/unit/grade/harvest date
+-> location and delivery/pickup options
+-> market-price comparison
+-> moderation/verification when required
+-> publish
+-> buyer search/offer/order
+-> stock reservation
+-> payment/delivery
+-> invoice/review
+```
+
+Farmer filters and management:
+
+- status;
+- product/category;
+- date range;
+- available/reserved/sold quantity;
+- active/expired listings;
+- buyer offers;
+- delivery state;
+- payment state;
+- district/upazila;
+- price range.
+
+### Actor B — Buyer/wholesale buyer purchasing crops
+
+Buyer marketplace filters:
+
+- category and commodity;
+- crop variety;
+- district/upazila and radius;
+- quantity range;
+- unit;
+- grade/quality;
+- harvest date/freshness;
+- minimum/maximum price;
+- government-price comparison;
+- available delivery/pickup;
+- verified farmer;
+- listing status;
+- seller rating;
+- wholesale/bulk availability.
+
+Buyer features:
+
+- saved searches;
+- favorite listings;
+- compare listings;
+- make/counter offers;
+- bulk purchase request;
+- order and delivery tracking;
+- invoices;
+- farmer chat;
+- review/rating;
+- repeat order.
+
+### Actor C — External seller selling machinery and agricultural inputs
+
+This seller may be an individual business, dealer, manufacturer, distributor, or approved shop.
+
+May sell or rent:
+
+- tractor;
+- power tiller;
+- sprayer;
+- irrigation equipment;
+- pumps;
+- greenhouse equipment;
+- harvesting equipment;
+- tools and spare parts;
+- seeds;
+- fertilizers;
+- pesticides;
+- fish/poultry/cattle feed;
+- approved veterinary/agricultural medicine.
+
+Machinery/input product fields:
+
+- seller/business ID;
+- product category and subcategory;
+- brand;
+- model;
+- condition: new/used/refurbished;
+- sale/rental/service type;
+- price or rental rate;
+- negotiable status;
+- stock quantity;
+- warranty;
+- specifications JSONB;
+- compatible crop/farm type;
+- service/delivery regions;
+- installation support;
+- photos/videos/documents;
+- approval/moderation state;
+- rating/reviews.
+
+Farmer-facing machinery filters:
+
+- category;
+- brand/model;
+- new/used;
+- buy/rent;
+- price/rental range;
+- horsepower/capacity/specifications;
+- delivery area;
+- warranty;
+- verified seller;
+- in-stock status;
+- rating;
+- nearest seller/service center.
+
+### Catalog separation
+
+Use a shared marketplace foundation but distinct product types:
+
+```text
+AGRICULTURAL_OUTPUT
+LIVESTOCK
+POULTRY
+FISHERIES
+MACHINERY
+MACHINERY_PART
+SEED
+FERTILIZER
+PESTICIDE
+FEED
+MEDICINE
+EQUIPMENT_RENTAL
+SERVICE
+```
+
+Do not force machinery specifications into crop-listing columns. Use type-specific detail tables/entities or validated JSONB specifications with indexed common fields.
+
+### Marketplace data flow
+
+```text
+Next.js/Flutter filter state
+-> validated query DTO
+-> NestJS marketplace search service
+-> PostgreSQL indexed filters/full-text search
+-> Redis cache for popular public searches when available
+-> paginated response
+-> client skeleton/cached result
+```
+
+Required pagination:
+
+- cursor-based pagination for large listing feeds;
+- stable sort by created date/id, price, distance, popularity, or relevance;
+- filter state encoded in URL on Next.js;
+- filter state preserved in Flutter route/state;
+- no unbounded `take(100)` production list endpoints.
+
+### Marketplace service boundaries
+
+Recommended modules:
+
+- marketplace catalog;
+- agricultural listings;
+- machinery/input products;
+- inventory;
+- search/filter;
+- offers/negotiation;
+- cart;
+- orders;
+- payments;
+- delivery/logistics;
+- invoices;
+- reviews;
+- moderation;
+- seller analytics.
+
+## 19.5 Current implementation status versus plan
+
+Already implemented foundation:
+
+- farmer crop listing creation/search;
+- buyer/farmer offers and deals;
+- medicine seller inventory and nearby search;
+- role dashboard route foundation;
+- PostgreSQL entities and transactions;
+- React Query/Axios foundation;
+- Flutter Dio foundation.
+
+Still required:
+
+- generalized marketplace product model;
+- machinery seller onboarding and verification;
+- machinery/input product CRUD;
+- advanced filters and cursor pagination;
+- carts, orders, delivery, payment and invoices;
+- saved searches and favorites;
+- seller analytics;
+- moderation workflows;
+- full role-aware dashboard pages;
+- Redis-backed popular-query caching;
+- search ranking and optional PostgreSQL full-text search.

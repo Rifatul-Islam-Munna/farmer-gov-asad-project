@@ -1,13 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ALERT_MODEL, Alert } from './alert.entity';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { toApiEntity } from '../lib/database/base.entity';
+import { Alert } from './entities/alert.entity';
 
 @Injectable()
 export class AlertService {
   constructor(
-    @InjectModel(ALERT_MODEL)
-    private readonly alertModel: Model<Alert>,
+    @InjectRepository(Alert)
+    private readonly alertRepository: Repository<Alert>,
   ) {}
 
   async create(
@@ -17,7 +18,10 @@ export class AlertService {
     message: string,
     data: Record<string, unknown> = {},
   ) {
-    return this.alertModel.create({ userId, type, title, message, data });
+    const alert = await this.alertRepository.save(
+      this.alertRepository.create({ userId, type, title, message, data }),
+    );
+    return toApiEntity(alert);
   }
 
   async createMany(
@@ -28,40 +32,37 @@ export class AlertService {
     data: Record<string, unknown> = {},
   ) {
     const uniqueIds = [...new Set(userIds.filter(Boolean))];
-    if (uniqueIds.length === 0) return [];
-    return this.alertModel.insertMany(
-      uniqueIds.map((userId) => ({ userId, type, title, message, data })),
+    if (!uniqueIds.length) return [];
+    const records = await this.alertRepository.save(
+      uniqueIds.map((userId) =>
+        this.alertRepository.create({ userId, type, title, message, data }),
+      ),
     );
+    return records.map(toApiEntity);
   }
 
   async list(userId: string) {
-    const data = await this.alertModel
-      .find({ userId })
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
-    const unreadCount = await this.alertModel.countDocuments({
-      userId,
-      readAt: { $exists: false },
-    });
-    return { data, unreadCount };
+    const [data, unreadCount] = await Promise.all([
+      this.alertRepository.find({
+        where: { userId },
+        order: { createdAt: 'DESC' },
+        take: 100,
+      }),
+      this.alertRepository.count({ where: { userId, readAt: IsNull() } }),
+    ]);
+    return { data: data.map(toApiEntity), unreadCount };
   }
 
   async markRead(userId: string, id: string) {
-    const data = await this.alertModel.findOneAndUpdate(
-      { _id: id, userId },
-      { readAt: new Date() },
-      { returnDocument: 'after' },
-    );
-    if (!data) {
-      throw new NotFoundException('Alert not found');
-    }
-    return { data };
+    const alert = await this.alertRepository.findOne({ where: { id, userId } });
+    if (!alert) throw new NotFoundException('Alert not found');
+    alert.readAt = new Date();
+    return { data: toApiEntity(await this.alertRepository.save(alert)) };
   }
 
   async markAllRead(userId: string) {
-    await this.alertModel.updateMany(
-      { userId, readAt: { $exists: false } },
+    await this.alertRepository.update(
+      { userId, readAt: IsNull() },
       { readAt: new Date() },
     );
     return { message: 'All alerts marked as read' };

@@ -1,22 +1,15 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+﻿import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
+import { UserType } from '../user/entities/user.entity';
 import {
   CreateGoodDto,
   CreateGoodsCategoryDto,
   SearchGoodsDto,
-} from './good.dto';
+} from './dto/good.dto';
 import { GoodService } from './good.service';
 
 @ApiTags('Goods')

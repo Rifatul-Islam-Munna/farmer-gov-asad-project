@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Get,
@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from '../auth/access-token.guard';
 import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import {
@@ -15,9 +16,10 @@ import {
   OtpStringDto,
   UpdateMyLocationDto,
   UpdateMyProfileDto,
-} from './user.dto';
+} from './dto/user.dto';
 import { UserService } from './user.service';
 
+@ApiTags('Users and Authentication')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

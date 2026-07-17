@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   Controller,
   Post,
@@ -26,7 +26,10 @@ export class DocumentController {
         destination: uploadDirectory,
         filename: (_request, file, callback) => {
           const suffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          callback(null, `${suffix}${extname(file.originalname).toLowerCase()}`);
+          callback(
+            null,
+            `${suffix}${extname(file.originalname).toLowerCase()}`,
+          );
         },
       }),
       limits: { fileSize: 5 * 1024 * 1024 },
@@ -41,9 +44,7 @@ export class DocumentController {
         callback(
           valid
             ? null
-            : new BadRequestException(
-                'Only PDF, JPG, PNG, or WEBP is allowed',
-              ),
+            : new BadRequestException('Only PDF, JPG, PNG, or WEBP is allowed'),
           valid,
         );
       },

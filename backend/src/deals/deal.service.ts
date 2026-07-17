@@ -1,40 +1,34 @@
-import {
+﻿import {
   BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { toApiEntity } from '../lib/database/base.entity';
+import { Listing, ListingStatus } from '../listings/entities/listing.entity';
 import { ListingService } from '../listings/listing.service';
-import { UserType } from '../user/user.entity';
-import {
-  DEAL_MODEL,
-  Deal,
-  OFFER_MODEL,
-  Offer,
-  OfferStatus,
-} from './deal.entity';
+import { UserType } from '../user/entities/user.entity';
+import { Deal, Offer, OfferStatus } from './entities/deal.entity';
 import {
   CreateNegotiationDto,
   UpdateNegotiationDto,
-} from './negotiation.dto';
+} from './dto/negotiation.dto';
 
 @Injectable()
 export class DealService {
   constructor(
-    @InjectModel(OFFER_MODEL)
-    private readonly offerModel: Model<Offer>,
-    @InjectModel(DEAL_MODEL)
-    private readonly dealModel: Model<Deal>,
+    @InjectRepository(Offer)
+    private readonly offerRepository: Repository<Offer>,
+    @InjectRepository(Deal)
+    private readonly dealRepository: Repository<Deal>,
     private readonly listingService: ListingService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createOffer(buyerId: string, dto: CreateNegotiationDto) {
-    const listing = (await this.listingService.findOne(dto.listingId)).data as {
-      ownerId: string;
-      availableQuantity: number;
-    };
+    const listing = (await this.listingService.findOne(dto.listingId)).data;
     if (listing.ownerId === buyerId) {
       throw new BadRequestException('You cannot offer on your own listing');
     }
@@ -42,27 +36,28 @@ export class DealService {
       throw new BadRequestException('Requested quantity is not available');
     }
 
-    const offer = await this.offerModel.create({
-      listingId: dto.listingId,
-      buyerId,
-      farmerId: listing.ownerId,
-      quantity: dto.quantity,
-      unitPrice: dto.unitPrice,
-      status: OfferStatus.PENDING,
-      buyerAccepted: true,
-      farmerAccepted: false,
-      history: [
-        {
-          byUserId: buyerId,
-          quantity: dto.quantity,
-          unitPrice: dto.unitPrice,
-          createdAt: new Date(),
-        },
-      ],
-      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-    });
-
-    return { data: offer.toObject() };
+    const offer = await this.offerRepository.save(
+      this.offerRepository.create({
+        listingId: dto.listingId,
+        buyerId,
+        farmerId: listing.ownerId,
+        quantity: dto.quantity,
+        unitPrice: dto.unitPrice,
+        status: OfferStatus.PENDING,
+        buyerAccepted: true,
+        farmerAccepted: false,
+        history: [
+          {
+            byUserId: buyerId,
+            quantity: dto.quantity,
+            unitPrice: dto.unitPrice,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      }),
+    );
+    return { data: toApiEntity(offer) };
   }
 
   async counter(
@@ -75,32 +70,35 @@ export class DealService {
     if (offer.status === OfferStatus.CONFIRMED) {
       throw new BadRequestException('Confirmed offers cannot be changed');
     }
-
     offer.quantity = dto.quantity;
     offer.unitPrice = dto.unitPrice;
     offer.buyerAccepted = role === UserType.BUYER;
     offer.farmerAccepted = role === UserType.FARMER;
     offer.status = OfferStatus.COUNTERED;
-    offer.history.push({
-      byUserId: userId,
-      quantity: dto.quantity,
-      unitPrice: dto.unitPrice,
-      createdAt: new Date(),
-    });
-    await offer.save();
-    return { data: offer.toObject() };
+    offer.history = [
+      ...offer.history,
+      {
+        byUserId: userId,
+        quantity: dto.quantity,
+        unitPrice: dto.unitPrice,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    return { data: toApiEntity(await this.offerRepository.save(offer)) };
   }
 
   async accept(offerId: string, userId: string, role: UserType) {
     const offer = await this.findParticipantOffer(offerId, userId, role);
     if (offer.status === OfferStatus.CONFIRMED) {
-      const deal = await this.dealModel.findOne({ offerId }).lean();
-      return { data: deal };
+      const deal = await this.dealRepository.findOne({ where: { offerId } });
+      return { data: deal ? toApiEntity(deal) : null };
     }
     if (
-      [OfferStatus.REJECTED, OfferStatus.CANCELLED, OfferStatus.EXPIRED].includes(
-        offer.status,
-      )
+      [
+        OfferStatus.REJECTED,
+        OfferStatus.CANCELLED,
+        OfferStatus.EXPIRED,
+      ].includes(offer.status)
     ) {
       throw new BadRequestException('This offer is no longer active');
     }
@@ -114,34 +112,57 @@ export class DealService {
     }
 
     if (!offer.buyerAccepted || !offer.farmerAccepted) {
-      await offer.save();
-      return { data: offer.toObject() };
+      return { data: toApiEntity(await this.offerRepository.save(offer)) };
     }
 
-    await this.listingService.reserve(offer.listingId, offer.quantity);
-    offer.status = OfferStatus.CONFIRMED;
-    offer.confirmedAt = new Date();
-    await offer.save();
+    return this.dataSource.transaction(async (manager) => {
+      const listingRepository = manager.getRepository(Listing);
+      const listing = await listingRepository
+        .createQueryBuilder('listing')
+        .setLock('pessimistic_write')
+        .where('listing.id = :id', { id: offer.listingId })
+        .getOne();
+      if (
+        !listing ||
+        ![ListingStatus.PUBLISHED, ListingStatus.RESERVED].includes(
+          listing.status,
+        ) ||
+        listing.reservedQuantity + offer.quantity > listing.quantity
+      ) {
+        throw new BadRequestException(
+          'Requested quantity is no longer available',
+        );
+      }
+      listing.reservedQuantity += offer.quantity;
+      if (listing.reservedQuantity >= listing.quantity) {
+        listing.status = ListingStatus.RESERVED;
+      }
+      await listingRepository.save(listing);
 
-    const deal = await this.dealModel.findOneAndUpdate(
-      { offerId: offer.id },
-      {
-        $setOnInsert: {
-          offerId: offer.id,
-          listingId: offer.listingId,
-          buyerId: offer.buyerId,
-          farmerId: offer.farmerId,
-          quantity: offer.quantity,
-          unitPrice: offer.unitPrice,
-          totalPrice: offer.quantity * offer.unitPrice,
-          status: 'confirmed',
-          confirmedAt: offer.confirmedAt,
-        },
-      },
-      { upsert: true, returnDocument: 'after' },
-    );
+      offer.status = OfferStatus.CONFIRMED;
+      offer.confirmedAt = new Date();
+      await manager.getRepository(Offer).save(offer);
 
-    return { data: deal };
+      let deal = await manager.getRepository(Deal).findOne({
+        where: { offerId: offer.id },
+      });
+      if (!deal) {
+        deal = await manager.getRepository(Deal).save(
+          manager.getRepository(Deal).create({
+            offerId: offer.id,
+            listingId: offer.listingId,
+            buyerId: offer.buyerId,
+            farmerId: offer.farmerId,
+            quantity: offer.quantity,
+            unitPrice: offer.unitPrice,
+            totalPrice: offer.quantity * offer.unitPrice,
+            status: 'confirmed',
+            confirmedAt: offer.confirmedAt,
+          }),
+        );
+      }
+      return { data: toApiEntity(deal) };
+    });
   }
 
   async reject(offerId: string, userId: string, role: UserType) {
@@ -150,28 +171,27 @@ export class DealService {
       throw new BadRequestException('Confirmed deals cannot be rejected');
     }
     offer.status = OfferStatus.REJECTED;
-    await offer.save();
-    return { data: offer.toObject() };
+    return { data: toApiEntity(await this.offerRepository.save(offer)) };
   }
 
   async offersForUser(userId: string, role: UserType) {
-    const filter =
+    const where =
       role === UserType.BUYER ? { buyerId: userId } : { farmerId: userId };
-    const data = await this.offerModel
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .lean();
-    return { data };
+    const data = await this.offerRepository.find({
+      where,
+      order: { createdAt: 'DESC' },
+    });
+    return { data: data.map(toApiEntity) };
   }
 
   async dealsForUser(userId: string, role: UserType) {
-    const filter =
+    const where =
       role === UserType.BUYER ? { buyerId: userId } : { farmerId: userId };
-    const data = await this.dealModel
-      .find(filter)
-      .sort({ confirmedAt: -1 })
-      .lean();
-    return { data };
+    const data = await this.dealRepository.find({
+      where,
+      order: { confirmedAt: 'DESC' },
+    });
+    return { data: data.map(toApiEntity) };
   }
 
   private async findParticipantOffer(
@@ -179,11 +199,10 @@ export class DealService {
     userId: string,
     role: UserType,
   ) {
-    const offer = await this.offerModel.findById(offerId);
-    if (!offer) {
-      throw new NotFoundException('Offer not found');
-    }
-
+    const offer = await this.offerRepository.findOne({
+      where: { id: offerId },
+    });
+    if (!offer) throw new NotFoundException('Offer not found');
     const participant =
       (role === UserType.BUYER && offer.buyerId === userId) ||
       (role === UserType.FARMER && offer.farmerId === userId) ||

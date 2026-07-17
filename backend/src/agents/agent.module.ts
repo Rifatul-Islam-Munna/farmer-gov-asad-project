@@ -1,18 +1,15 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+﻿import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ListingModule } from '../listings/listing.module';
-import { USER_MODEL, UserSchema } from '../user/user.entity';
+import { User } from '../user/entities/user.entity';
 import { UserModule } from '../user/user.module';
-import { AgentActionSchema, AGENT_ACTION_MODEL } from './agent-action.entity';
+import { AgentAction } from './entities/agent-action.entity';
 import { AgentController } from './agent.controller';
 import { AgentService } from './agent.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: AGENT_ACTION_MODEL, schema: AgentActionSchema },
-      { name: USER_MODEL, schema: UserSchema },
-    ]),
+    TypeOrmModule.forFeature([AgentAction, User]),
     UserModule,
     ListingModule,
   ],

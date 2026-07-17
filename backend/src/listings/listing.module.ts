@@ -1,20 +1,15 @@
-import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+﻿import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../user/user.module';
 import { ListingController } from './listing.controller';
-import { LISTING_MODEL, ListingSchema } from './listing.entity';
+import { Listing } from './entities/listing.entity';
 import { ListingOwnerGuard } from './listing-owner.guard';
 import { ListingService } from './listing.service';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      { name: LISTING_MODEL, schema: ListingSchema },
-    ]),
-    UserModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Listing]), UserModule],
   controllers: [ListingController],
   providers: [ListingService, ListingOwnerGuard],
-  exports: [ListingService, MongooseModule],
+  exports: [ListingService, TypeOrmModule],
 })
 export class ListingModule {}

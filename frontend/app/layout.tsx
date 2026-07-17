@@ -1,3 +1,4 @@
+import { QueryProvider } from "@/api-hooks/query-provider"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
@@ -27,7 +28,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-muted/30">{children}</body>
+      <body className="min-h-full bg-muted/30">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   )
 }

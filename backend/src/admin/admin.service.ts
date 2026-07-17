@@ -1,34 +1,20 @@
-import {
+﻿import {
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { DEAL_MODEL, Deal, OFFER_MODEL, Offer } from '../deals/deal.entity';
-import { CreateGoodDto } from '../goods/good.dto';
-import {
-  GOOD_MODEL,
-  Good,
-  GOODS_CATEGORY_MODEL,
-  GoodsCategory,
-} from '../goods/good.entity';
-import {
-  LISTING_MODEL,
-  Listing,
-  ListingStatus,
-} from '../listings/listing.entity';
-import { CreateMarketPriceDto } from '../market-price/market-price.dto';
-import {
-  MARKET_PRICE_MODEL,
-  MarketPrice,
-} from '../market-price/market-price.entity';
-import {
-  SELLER_INVENTORY_MODEL,
-  SellerInventory,
-} from '../medicine-sellers/medicine.entity';
-import { USER_MODEL, User } from '../user/user.entity';
-import { GUIDANCE_MODEL, Guidance } from './admin-content.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Brackets, Repository } from 'typeorm';
+import { Deal, Offer } from '../deals/entities/deal.entity';
+import { CreateGoodDto } from '../goods/dto/good.dto';
+import { Good, GoodsCategory } from '../goods/entities/good.entity';
+import { toApiEntity } from '../lib/database/base.entity';
+import { Listing, ListingStatus } from '../listings/entities/listing.entity';
+import { CreateMarketPriceDto } from '../market-price/dto/market-price.dto';
+import { MarketPrice } from '../market-price/entities/market-price.entity';
+import { SellerInventory } from '../medicine-sellers/entities/medicine.entity';
+import { User } from '../user/entities/user.entity';
+import { Guidance, GuidanceTargetRole } from './entities/admin-content.entity';
 import {
   AdminSearchDto,
   AdminUpdateDealDto,
@@ -38,29 +24,29 @@ import {
   AdminUserSearchDto,
   CreateGuidanceDto,
   UpdateVerificationDto,
-} from './admin.dto';
+} from './dto/admin.dto';
 
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectModel(USER_MODEL)
-    private readonly userModel: Model<User>,
-    @InjectModel(GUIDANCE_MODEL)
-    private readonly guidanceModel: Model<Guidance>,
-    @InjectModel(GOOD_MODEL)
-    private readonly goodModel: Model<Good>,
-    @InjectModel(GOODS_CATEGORY_MODEL)
-    private readonly categoryModel: Model<GoodsCategory>,
-    @InjectModel(MARKET_PRICE_MODEL)
-    private readonly priceModel: Model<MarketPrice>,
-    @InjectModel(LISTING_MODEL)
-    private readonly listingModel: Model<Listing>,
-    @InjectModel(OFFER_MODEL)
-    private readonly offerModel: Model<Offer>,
-    @InjectModel(DEAL_MODEL)
-    private readonly dealModel: Model<Deal>,
-    @InjectModel(SELLER_INVENTORY_MODEL)
-    private readonly inventoryModel: Model<SellerInventory>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Guidance)
+    private readonly guidanceRepository: Repository<Guidance>,
+    @InjectRepository(Good)
+    private readonly goodRepository: Repository<Good>,
+    @InjectRepository(GoodsCategory)
+    private readonly categoryRepository: Repository<GoodsCategory>,
+    @InjectRepository(MarketPrice)
+    private readonly priceRepository: Repository<MarketPrice>,
+    @InjectRepository(Listing)
+    private readonly listingRepository: Repository<Listing>,
+    @InjectRepository(Offer)
+    private readonly offerRepository: Repository<Offer>,
+    @InjectRepository(Deal)
+    private readonly dealRepository: Repository<Deal>,
+    @InjectRepository(SellerInventory)
+    private readonly inventoryRepository: Repository<SellerInventory>,
   ) {}
 
   async dashboard() {
@@ -71,61 +57,59 @@ export class AdminService {
       activeListings,
       totalDeals,
       inventoryItems,
-      volumeRows,
+      volumeRow,
       usersByRole,
       dealTrend,
       listingTrend,
       recentDeals,
       recentListings,
     ] = await Promise.all([
-      this.userModel.countDocuments(),
-      this.userModel.countDocuments({ verificationStatus: 'pending' }),
-      this.listingModel.countDocuments(),
-      this.listingModel.countDocuments({
-        status: { $in: [ListingStatus.PUBLISHED, ListingStatus.RESERVED] },
-      }),
-      this.dealModel.countDocuments(),
-      this.inventoryModel.countDocuments({
-        active: true,
-        stockQuantity: { $gt: 0 },
-      }),
-      this.dealModel.aggregate<{ total: number }>([
-        { $match: { status: { $ne: 'cancelled' } } },
-        { $group: { _id: null, total: { $sum: '$totalPrice' } } },
-      ]),
-      this.userModel.aggregate<{ _id: string; value: number }>([
-        { $group: { _id: '$role', value: { $sum: 1 } } },
-        { $sort: { value: -1 } },
-      ]),
-      this.dealModel.aggregate<{
-        _id: string;
-        deals: number;
-        volume: number;
-      }>([
-        { $match: { confirmedAt: { $exists: true } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m', date: '$confirmedAt' } },
-            deals: { $sum: 1 },
-            volume: { $sum: '$totalPrice' },
-          },
-        },
-        { $sort: { _id: 1 } },
-        { $limit: 12 },
-      ]),
-      this.listingModel.aggregate<{ _id: string; listings: number }>([
-        { $match: { createdAt: { $exists: true } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
-            listings: { $sum: 1 },
-          },
-        },
-        { $sort: { _id: 1 } },
-        { $limit: 12 },
-      ]),
-      this.dealModel.find().sort({ confirmedAt: -1 }).limit(6).lean(),
-      this.listingModel.find().sort({ createdAt: -1 }).limit(6).lean(),
+      this.userRepository.count(),
+      this.userRepository.count({ where: { verificationStatus: 'pending' } }),
+      this.listingRepository.count(),
+      this.listingRepository
+        .createQueryBuilder('listing')
+        .where('listing.status IN (:...statuses)', {
+          statuses: [ListingStatus.PUBLISHED, ListingStatus.RESERVED],
+        })
+        .getCount(),
+      this.dealRepository.count(),
+      this.inventoryRepository
+        .createQueryBuilder('inventory')
+        .where('inventory.active = true')
+        .andWhere('inventory.stockQuantity > 0')
+        .getCount(),
+      this.dealRepository
+        .createQueryBuilder('deal')
+        .select('COALESCE(SUM(deal.totalPrice), 0)', 'total')
+        .where('deal.status != :status', { status: 'cancelled' })
+        .getRawOne<{ total: string }>(),
+      this.userRepository
+        .createQueryBuilder('user')
+        .select('user.role', 'role')
+        .addSelect('COUNT(*)::int', 'value')
+        .groupBy('user.role')
+        .orderBy('value', 'DESC')
+        .getRawMany<{ role: string; value: number }>(),
+      this.dealRepository
+        .createQueryBuilder('deal')
+        .select("TO_CHAR(deal.confirmedAt, 'YYYY-MM')", 'month')
+        .addSelect('COUNT(*)::int', 'deals')
+        .addSelect('COALESCE(SUM(deal.totalPrice), 0)', 'volume')
+        .groupBy("TO_CHAR(deal.confirmedAt, 'YYYY-MM')")
+        .orderBy('month', 'ASC')
+        .limit(12)
+        .getRawMany<{ month: string; deals: number; volume: string }>(),
+      this.listingRepository
+        .createQueryBuilder('listing')
+        .select("TO_CHAR(listing.createdAt, 'YYYY-MM')", 'month')
+        .addSelect('COUNT(*)::int', 'listings')
+        .groupBy("TO_CHAR(listing.createdAt, 'YYYY-MM')")
+        .orderBy('month', 'ASC')
+        .limit(12)
+        .getRawMany<{ month: string; listings: number }>(),
+      this.dealRepository.find({ order: { confirmedAt: 'DESC' }, take: 6 }),
+      this.listingRepository.find({ order: { createdAt: 'DESC' }, take: 6 }),
     ]);
 
     const trendMap = new Map<
@@ -133,22 +117,22 @@ export class AdminService {
       { month: string; deals: number; listings: number; volume: number }
     >();
     for (const item of dealTrend) {
-      trendMap.set(item._id, {
-        month: item._id,
-        deals: item.deals,
+      trendMap.set(item.month, {
+        month: item.month,
+        deals: Number(item.deals),
         listings: 0,
-        volume: item.volume,
+        volume: Number(item.volume),
       });
     }
     for (const item of listingTrend) {
-      const current = trendMap.get(item._id) ?? {
-        month: item._id,
+      const current = trendMap.get(item.month) ?? {
+        month: item.month,
         deals: 0,
         listings: 0,
         volume: 0,
       };
-      current.listings = item.listings;
-      trendMap.set(item._id, current);
+      current.listings = Number(item.listings);
+      trendMap.set(item.month, current);
     }
 
     return {
@@ -159,54 +143,53 @@ export class AdminService {
           totalListings,
           activeListings,
           totalDeals,
-          dealVolume: Number(volumeRows[0]?.total ?? 0),
+          dealVolume: Number(volumeRow?.total ?? 0),
           inventoryItems,
         },
-        usersByRole: usersByRole.map((item) => ({
-          role: item._id,
-          value: item.value,
-        })),
+        usersByRole,
         activityTrend: [...trendMap.values()].sort((a, b) =>
           a.month.localeCompare(b.month),
         ),
-        recentDeals,
-        recentListings,
+        recentDeals: recentDeals.map(toApiEntity),
+        recentListings: recentListings.map(toApiEntity),
       },
     };
   }
 
   async pendingUsers() {
-    const data = await this.userModel
-      .find({ verificationStatus: 'pending' })
-      .select('-credentialHash -otpNumber')
-      .sort({ createdAt: 1 })
-      .lean();
-    return { data };
+    const data = await this.userRepository.find({
+      where: { verificationStatus: 'pending' },
+      order: { createdAt: 'ASC' },
+    });
+    return { data: data.map(toApiEntity) };
   }
 
   async users(query: AdminUserSearchDto) {
-    const filter: Record<string, any> = {};
-    if (query.role) filter.role = query.role;
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .orderBy('user.createdAt', 'DESC')
+      .take(query.limit ?? 250);
+    if (query.role) qb.andWhere('user.role = :role', { role: query.role });
     if (query.verificationStatus) {
-      filter.verificationStatus = query.verificationStatus;
+      qb.andWhere('user.verificationStatus = :status', {
+        status: query.verificationStatus,
+      });
     }
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [
-        { name: pattern },
-        { phoneNumber: pattern },
-        { email: pattern },
-        { businessName: pattern },
-        { shopName: pattern },
-      ];
+      qb.andWhere(
+        new Brackets((inner) => {
+          inner
+            .where('user.name ILIKE :search', {
+              search: `%${query.search!.trim()}%`,
+            })
+            .orWhere('user.phoneNumber ILIKE :search')
+            .orWhere('user.email ILIKE :search')
+            .orWhere('user.businessName ILIKE :search')
+            .orWhere('user.shopName ILIKE :search');
+        }),
+      );
     }
-    const data = await this.userModel
-      .find(filter)
-      .select('-credentialHash -otpNumber')
-      .sort({ createdAt: -1 })
-      .limit(query.limit ?? 250)
-      .lean();
-    return { data };
+    return { data: (await qb.getMany()).map(toApiEntity) };
   }
 
   async updateVerification(userId: string, dto: UpdateVerificationDto) {
@@ -214,258 +197,222 @@ export class AdminService {
   }
 
   async updateUser(userId: string, dto: AdminUpdateUserDto) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
     const phoneNumber = dto.phoneNumber?.trim();
     const email = dto.email?.trim().toLowerCase();
-    const duplicateFilters: Record<string, string>[] = [];
-    if (phoneNumber) duplicateFilters.push({ phoneNumber });
-    if (email) duplicateFilters.push({ email });
-    if (duplicateFilters.length) {
-      const duplicate = await this.userModel
-        .findOne({ _id: { $ne: userId }, $or: duplicateFilters })
-        .lean();
-      if (duplicate) {
+    if (phoneNumber || email) {
+      const qb = this.userRepository
+        .createQueryBuilder('user')
+        .where('user.id != :userId', { userId })
+        .andWhere(
+          new Brackets((inner) => {
+            if (phoneNumber)
+              inner.where('user.phoneNumber = :phoneNumber', { phoneNumber });
+            if (email && phoneNumber) {
+              inner.orWhere('LOWER(user.email) = :email', { email });
+            } else if (email) {
+              inner.where('LOWER(user.email) = :email', { email });
+            }
+          }),
+        );
+      if (await qb.getExists()) {
         throw new ConflictException('Phone number or email is already in use');
       }
     }
 
-    const set: Record<string, unknown> = {};
-    if (dto.name != null) set.name = dto.name.trim();
-    if (phoneNumber != null) set.phoneNumber = phoneNumber;
-    if (email != null) set.email = email;
-    if (dto.role != null) set.role = dto.role;
-    if (dto.verificationStatus != null) {
-      set.verificationStatus = dto.verificationStatus;
-    }
-    if (dto.landAmount != null) set.landAmount = dto.landAmount;
-    if (dto.address != null) set.address = dto.address.trim();
-    if (dto.businessName != null) set.businessName = dto.businessName.trim();
-    if (dto.shopName != null) set.shopName = dto.shopName.trim();
-
-    const data = await this.userModel
-      .findByIdAndUpdate(
-        userId,
-        { $set: set },
-        { returnDocument: 'after', runValidators: true },
-      )
-      .select('-credentialHash -otpNumber')
-      .lean();
-    if (!data) throw new NotFoundException('User not found');
-    return { data };
+    Object.assign(user, {
+      ...(dto.name != null ? { name: dto.name.trim() } : {}),
+      ...(phoneNumber != null ? { phoneNumber } : {}),
+      ...(email != null ? { email } : {}),
+      ...(dto.role != null ? { role: dto.role } : {}),
+      ...(dto.verificationStatus != null
+        ? { verificationStatus: dto.verificationStatus }
+        : {}),
+      ...(dto.landAmount != null ? { landAmount: dto.landAmount } : {}),
+      ...(dto.address != null ? { address: dto.address.trim() } : {}),
+      ...(dto.businessName != null
+        ? { businessName: dto.businessName.trim() }
+        : {}),
+      ...(dto.shopName != null ? { shopName: dto.shopName.trim() } : {}),
+    });
+    return { data: toApiEntity(await this.userRepository.save(user)) };
   }
 
   async createGuidance(dto: CreateGuidanceDto) {
-    const data = await this.guidanceModel.create({
-      ...dto,
-      title: dto.title.trim(),
-      message: dto.message.trim(),
-      active: dto.active ?? true,
-      publishedAt: new Date(),
-    });
-    return { data: data.toObject() };
+    const data = await this.guidanceRepository.save(
+      this.guidanceRepository.create({
+        ...dto,
+        title: dto.title.trim(),
+        message: dto.message.trim(),
+        active: dto.active ?? true,
+        publishedAt: new Date(),
+      }),
+    );
+    return { data: toApiEntity(data) };
   }
 
   async guidance(role: string) {
-    const allowedRoles: Guidance['targetRole'][] = [
+    const allowedRoles: GuidanceTargetRole[] = [
       'farmer',
       'buyer',
       'agent',
       'medicineSeller',
       'all',
     ];
-    const normalizedRole: Guidance['targetRole'] = allowedRoles.includes(
-      role as Guidance['targetRole'],
+    const normalizedRole: GuidanceTargetRole = allowedRoles.includes(
+      role as GuidanceTargetRole,
     )
-      ? (role as Guidance['targetRole'])
+      ? (role as GuidanceTargetRole)
       : 'farmer';
-    const targetRoles: Guidance['targetRole'][] = ['all', normalizedRole];
-
-    const data = await this.guidanceModel
-      .find({ active: true, targetRole: { $in: targetRoles } })
-      .sort({ publishedAt: -1 })
-      .limit(50)
-      .lean();
-    return { data };
+    const data = await this.guidanceRepository
+      .createQueryBuilder('guidance')
+      .where('guidance.active = true')
+      .andWhere('guidance.targetRole IN (:...roles)', {
+        roles: ['all', normalizedRole],
+      })
+      .orderBy('guidance.publishedAt', 'DESC')
+      .take(50)
+      .getMany();
+    return { data: data.map(toApiEntity) };
   }
 
   async listings(query: AdminSearchDto) {
-    const filter: Record<string, any> = {};
+    const qb = this.listingRepository
+      .createQueryBuilder('listing')
+      .orderBy('listing.createdAt', 'DESC')
+      .take(query.limit ?? 250);
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [
-        { goodName: pattern },
-        { goodCode: pattern },
-        { address: pattern },
-        { ownerId: pattern },
-      ];
+      qb.where(
+        '(listing.goodName ILIKE :search OR listing.goodCode ILIKE :search OR listing.address ILIKE :search OR CAST(listing.ownerId AS text) ILIKE :search)',
+        { search: `%${query.search.trim()}%` },
+      );
     }
-    const data = await this.listingModel
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .limit(query.limit ?? 250)
-      .lean();
-    return { data };
+    return { data: (await qb.getMany()).map(toApiEntity) };
   }
 
   async updateListing(id: string, dto: AdminUpdateListingDto) {
-    const data = await this.listingModel
-      .findByIdAndUpdate(
-        id,
-        { status: dto.status },
-        { returnDocument: 'after', runValidators: true },
-      )
-      .lean();
+    const data = await this.listingRepository.findOne({ where: { id } });
     if (!data) throw new NotFoundException('Listing not found');
-    return { data };
+    data.status = dto.status as ListingStatus;
+    return { data: toApiEntity(await this.listingRepository.save(data)) };
   }
 
   async deals(query: AdminSearchDto) {
-    const filter: Record<string, any> = {};
+    const qb = this.dealRepository
+      .createQueryBuilder('deal')
+      .orderBy('deal.confirmedAt', 'DESC')
+      .take(query.limit ?? 250);
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [
-        { buyerId: pattern },
-        { farmerId: pattern },
-        { listingId: pattern },
-        { status: pattern },
-      ];
+      qb.where(
+        '(CAST(deal.buyerId AS text) ILIKE :search OR CAST(deal.farmerId AS text) ILIKE :search OR CAST(deal.listingId AS text) ILIKE :search OR deal.status ILIKE :search)',
+        { search: `%${query.search.trim()}%` },
+      );
     }
-    const data = await this.dealModel
-      .find(filter)
-      .sort({ confirmedAt: -1 })
-      .limit(query.limit ?? 250)
-      .lean();
-    return { data };
+    return { data: (await qb.getMany()).map(toApiEntity) };
   }
 
   async updateDeal(id: string, dto: AdminUpdateDealDto) {
-    const data = await this.dealModel
-      .findByIdAndUpdate(
-        id,
-        { status: dto.status },
-        { returnDocument: 'after', runValidators: true },
-      )
-      .lean();
+    const data = await this.dealRepository.findOne({ where: { id } });
     if (!data) throw new NotFoundException('Deal not found');
-    return { data };
+    data.status = dto.status;
+    return { data: toApiEntity(await this.dealRepository.save(data)) };
   }
 
   async offers(query: AdminSearchDto) {
-    const filter: Record<string, any> = {};
+    const qb = this.offerRepository
+      .createQueryBuilder('offer')
+      .orderBy('offer.createdAt', 'DESC')
+      .take(query.limit ?? 250);
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [
-        { buyerId: pattern },
-        { farmerId: pattern },
-        { listingId: pattern },
-        { status: pattern },
-      ];
+      qb.where(
+        '(CAST(offer.buyerId AS text) ILIKE :search OR CAST(offer.farmerId AS text) ILIKE :search OR CAST(offer.listingId AS text) ILIKE :search OR CAST(offer.status AS text) ILIKE :search)',
+        { search: `%${query.search.trim()}%` },
+      );
     }
-    const data = await this.offerModel
-      .find(filter)
-      .sort({ createdAt: -1 })
-      .limit(query.limit ?? 250)
-      .lean();
-    return { data };
+    return { data: (await qb.getMany()).map(toApiEntity) };
   }
 
   async prices() {
-    const data = await this.priceModel
-      .find()
-      .sort({ priceDate: -1, goodName: 1 })
-      .limit(500)
-      .lean();
-    return { data };
+    const data = await this.priceRepository.find({
+      order: { priceDate: 'DESC', goodName: 'ASC' },
+      take: 500,
+    });
+    return { data: data.map(toApiEntity) };
   }
 
   async upsertPrice(dto: CreateMarketPriceDto) {
     const goodCode = dto.goodCode.trim().toLowerCase();
     const region = dto.region.trim();
     const rawDate = dto.priceDate ? new Date(dto.priceDate) : new Date();
-    const priceDate = new Date(
-      Date.UTC(
-        rawDate.getUTCFullYear(),
-        rawDate.getUTCMonth(),
-        rawDate.getUTCDate(),
-      ),
-    );
-    const data = await this.priceModel
-      .findOneAndUpdate(
-        { goodCode, region, priceDate },
-        { ...dto, goodCode, region, priceDate },
-        { upsert: true, returnDocument: 'after', runValidators: true },
-      )
-      .lean();
-    return { data };
+    const priceDate = rawDate.toISOString().slice(0, 10);
+    await this.priceRepository.upsert({ ...dto, goodCode, region, priceDate }, [
+      'goodCode',
+      'region',
+      'priceDate',
+    ]);
+    const data = await this.priceRepository.findOneByOrFail({
+      goodCode,
+      region,
+      priceDate,
+    });
+    return { data: toApiEntity(data) };
   }
 
   async goods() {
     const [goods, categories] = await Promise.all([
-      this.goodModel.find().sort({ name: 1 }).lean(),
-      this.categoryModel.find().sort({ name: 1 }).lean(),
+      this.goodRepository.find({ order: { name: 'ASC' } }),
+      this.categoryRepository.find({ order: { name: 'ASC' } }),
     ]);
-    return { data: { goods, categories } };
+    return {
+      data: {
+        goods: goods.map(toApiEntity),
+        categories: categories.map(toApiEntity),
+      },
+    };
   }
 
   async upsertGood(dto: CreateGoodDto) {
     const code = dto.code.trim().toLowerCase();
-    const data = await this.goodModel
-      .findOneAndUpdate(
-        { code },
-        {
-          ...dto,
-          code,
-          categoryCode: dto.categoryCode.trim().toLowerCase(),
-          active: dto.active ?? true,
-        },
-        { upsert: true, returnDocument: 'after', runValidators: true },
-      )
-      .lean();
-    return { data };
+    await this.goodRepository.upsert(
+      {
+        ...dto,
+        code,
+        categoryCode: dto.categoryCode.trim().toLowerCase(),
+        active: dto.active ?? true,
+      },
+      ['code'],
+    );
+    const data = await this.goodRepository.findOneByOrFail({ code });
+    return { data: toApiEntity(data) };
   }
 
   async inventory(query: AdminSearchDto) {
-    const filter: Record<string, any> = {};
+    const qb = this.inventoryRepository
+      .createQueryBuilder('inventory')
+      .orderBy('inventory.shopName', 'ASC')
+      .addOrderBy('inventory.medicineName', 'ASC')
+      .take(query.limit ?? 500);
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [
-        { medicineName: pattern },
-        { medicineCode: pattern },
-        { shopName: pattern },
-        { address: pattern },
-      ];
+      qb.where(
+        '(inventory.medicineName ILIKE :search OR inventory.medicineCode ILIKE :search OR inventory.shopName ILIKE :search OR inventory.address ILIKE :search)',
+        { search: `%${query.search.trim()}%` },
+      );
     }
-    const data = await this.inventoryModel
-      .find(filter)
-      .sort({ shopName: 1, medicineName: 1 })
-      .limit(query.limit ?? 500)
-      .lean();
-    return { data };
+    return { data: (await qb.getMany()).map(toApiEntity) };
   }
 
   async updateInventory(id: string, dto: AdminUpdateInventoryDto) {
-    const set: Record<string, unknown> = {};
-    if (dto.stockQuantity != null) set.stockQuantity = dto.stockQuantity;
-    if (dto.price != null) set.price = dto.price;
-    if (dto.active != null) set.active = dto.active;
-    const data = await this.inventoryModel
-      .findByIdAndUpdate(
-        id,
-        { $set: set },
-        { returnDocument: 'after', runValidators: true },
-      )
-      .lean();
+    const data = await this.inventoryRepository.findOne({ where: { id } });
     if (!data) throw new NotFoundException('Inventory item not found');
-    return { data };
-  }
-
-  private escape(value: string) {
-    const special = new Set([
-      '.', '*', '+', '?', '^', '$', '{', '}', '(', ')', '|', '[', ']', '\\',
-    ]);
-    return [...value]
-      .map((character) =>
-        special.has(character) ? `\\${character}` : character,
-      )
-      .join('');
+    Object.assign(data, {
+      ...(dto.stockQuantity != null
+        ? { stockQuantity: dto.stockQuantity }
+        : {}),
+      ...(dto.price != null ? { price: dto.price } : {}),
+      ...(dto.active != null ? { active: dto.active } : {}),
+    });
+    return { data: toApiEntity(await this.inventoryRepository.save(data)) };
   }
 }

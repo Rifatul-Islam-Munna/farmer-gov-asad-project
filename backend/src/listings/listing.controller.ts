@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Delete,
@@ -15,10 +15,10 @@ import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
-import { CreateListingDto } from './listing.dto';
+import { UserType } from '../user/entities/user.entity';
+import { CreateListingDto } from './dto/listing.dto';
 import { ListingOwnerGuard } from './listing-owner.guard';
-import { ListingSearchDto } from './listing-search.dto';
+import { ListingSearchDto } from './dto/listing-search.dto';
 import { ListingService } from './listing.service';
 
 @ApiTags('Listings')
@@ -49,10 +49,7 @@ export class ListingController {
   @ApiBearerAuth()
   @Roles(UserType.FARMER, UserType.ADMIN)
   @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
-  create(
-    @Req() request: AuthenticatedRequest,
-    @Body() dto: CreateListingDto,
-  ) {
+  create(@Req() request: AuthenticatedRequest, @Body() dto: CreateListingDto) {
     return this.listingService.createForOwner(request.user.id, dto);
   }
 

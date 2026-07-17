@@ -1,36 +1,36 @@
-import {
+﻿import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
-import { Model } from 'mongoose';
-import { CreateListingDto } from '../listings/listing.dto';
+import { Repository } from 'typeorm';
+import { toApiEntity } from '../lib/database/base.entity';
+import { CreateListingDto } from '../listings/dto/listing.dto';
 import { ListingService } from '../listings/listing.service';
-import { USER_MODEL, User, UserType } from '../user/user.entity';
+import { User, UserType } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import {
   AgentCreateFarmerDto,
   AgentListingRequestDto,
   SearchFarmersDto,
   VerifyAgentActionDto,
-} from './agent.dto';
+} from './dto/agent.dto';
 import {
-  AGENT_ACTION_MODEL,
   AgentAction,
   AgentActionStatus,
   AgentActionType,
-} from './agent-action.entity';
+} from './entities/agent-action.entity';
 
 @Injectable()
 export class AgentService {
   constructor(
-    @InjectModel(AGENT_ACTION_MODEL)
-    private readonly actionModel: Model<AgentAction>,
-    @InjectModel(USER_MODEL)
-    private readonly userModel: Model<User>,
+    @InjectRepository(AgentAction)
+    private readonly actionRepository: Repository<AgentAction>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly userService: UserService,
     private readonly listingService: ListingService,
     private readonly configService: ConfigService,
@@ -38,10 +38,9 @@ export class AgentService {
 
   async requestFarmerCreation(agentId: string, dto: AgentCreateFarmerDto) {
     const phoneNumber = dto.phoneNumber.trim();
-    if (await this.userModel.exists({ phoneNumber })) {
+    if (await this.userRepository.exists({ where: { phoneNumber } })) {
       throw new BadRequestException('A user already uses this phone number');
     }
-
     return this.createAction(
       AgentActionType.CREATE_FARMER,
       agentId,
@@ -50,40 +49,37 @@ export class AgentService {
     );
   }
 
-  async requestDelegatedListing(
-    agentId: string,
-    dto: AgentListingRequestDto,
-  ) {
+  async requestDelegatedListing(agentId: string, dto: AgentListingRequestDto) {
     const farmerPhone = dto.farmerPhone.trim();
-    const farmer = await this.userModel
-      .findOne({ phoneNumber: farmerPhone, role: UserType.FARMER })
-      .lean();
-    if (!farmer) {
-      throw new NotFoundException('Farmer not found');
-    }
-
+    const farmer = await this.userRepository.findOne({
+      where: { phoneNumber: farmerPhone, role: UserType.FARMER },
+    });
+    if (!farmer) throw new NotFoundException('Farmer not found');
     const { farmerPhone: _farmerPhone, ...listing } = dto;
     return this.createAction(
       AgentActionType.CREATE_LISTING,
       agentId,
       farmerPhone,
       listing,
-      farmer._id.toString(),
+      farmer.id,
     );
   }
 
   async verify(agentId: string, dto: VerifyAgentActionDto) {
-    const action = await this.actionModel.findOne({
-      _id: dto.actionId,
-      agentId,
-      status: AgentActionStatus.PENDING,
-    });
-    if (!action) {
-      throw new NotFoundException('Pending agent action not found');
-    }
+    const action = await this.actionRepository
+      .createQueryBuilder('action')
+      .addSelect('action.otpHash')
+      .where('action.id = :id', { id: dto.actionId })
+      .andWhere('action.agentId = :agentId', { agentId })
+      .andWhere('action.status = :status', {
+        status: AgentActionStatus.PENDING,
+      })
+      .getOne();
+    if (!action) throw new NotFoundException('Pending agent action not found');
+
     if (action.expiresAt.getTime() < Date.now()) {
       action.status = AgentActionStatus.EXPIRED;
-      await action.save();
+      await this.actionRepository.save(action);
       throw new BadRequestException('OTP has expired');
     }
     if (action.attempts >= 5) {
@@ -91,9 +87,8 @@ export class AgentService {
     }
 
     action.attempts += 1;
-    const valid = await bcrypt.compare(dto.otp, action.otpHash);
-    if (!valid) {
-      await action.save();
+    if (!(await bcrypt.compare(dto.otp, action.otpHash))) {
+      await this.actionRepository.save(action);
       throw new BadRequestException('Invalid OTP');
     }
 
@@ -104,35 +99,45 @@ export class AgentService {
 
     action.status = AgentActionStatus.COMPLETED;
     action.completedAt = new Date();
-    await action.save();
-
+    await this.actionRepository.save(action);
     return { message: 'Agent action completed', data: result };
   }
 
   async searchFarmers(query: SearchFarmersDto) {
-    const filter: Record<string, unknown> = { role: UserType.FARMER };
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.role = :role', { role: UserType.FARMER })
+      .orderBy('user.name', 'ASC')
+      .take(50);
     if (query.search?.trim()) {
-      const pattern = new RegExp(this.escape(query.search.trim()), 'i');
-      filter.$or = [{ name: pattern }, { phoneNumber: pattern }];
+      qb.andWhere(
+        '(user.name ILIKE :search OR user.phoneNumber ILIKE :search)',
+        {
+          search: `%${query.search.trim()}%`,
+        },
+      );
     }
-
-    const data = await this.userModel
-      .find(filter)
-      .select('name phoneNumber landAmount address verificationStatus')
-      .sort({ name: 1 })
-      .limit(50)
-      .lean();
-    return { data };
+    const data = await qb.getMany();
+    return {
+      data: data.map((user) => ({
+        id: user.id,
+        _id: user.id,
+        name: user.name,
+        phoneNumber: user.phoneNumber,
+        landAmount: user.landAmount,
+        address: user.address,
+        verificationStatus: user.verificationStatus,
+      })),
+    };
   }
 
   async history(agentId: string) {
-    const data = await this.actionModel
-      .find({ agentId })
-      .select('-otpHash')
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
-    return { data };
+    const data = await this.actionRepository.find({
+      where: { agentId },
+      order: { createdAt: 'DESC' },
+      take: 100,
+    });
+    return { data: data.map(toApiEntity) };
   }
 
   private async completeFarmerCreation(action: AgentAction) {
@@ -141,19 +146,15 @@ export class AgentService {
       ...payload,
       role: UserType.FARMER,
     });
-    action.farmerId = String(response.data._id);
+    action.farmerId = response.data.id;
     return response.data;
   }
 
   private async completeDelegatedListing(action: AgentAction) {
-    const farmer = await this.userModel.findOne({
-      phoneNumber: action.farmerPhone,
-      role: UserType.FARMER,
+    const farmer = await this.userRepository.findOne({
+      where: { phoneNumber: action.farmerPhone, role: UserType.FARMER },
     });
-    if (!farmer) {
-      throw new NotFoundException('Farmer not found');
-    }
-
+    if (!farmer) throw new NotFoundException('Farmer not found');
     action.farmerId = farmer.id;
     const result = await this.listingService.createForOwner(
       farmer.id,
@@ -172,18 +173,19 @@ export class AgentService {
   ) {
     const otp = this.generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    const action = await this.actionModel.create({
-      type,
-      status: AgentActionStatus.PENDING,
-      agentId,
-      farmerPhone,
-      farmerId,
-      payload,
-      otpHash: await bcrypt.hash(otp, 10),
-      attempts: 0,
-      expiresAt,
-    });
-
+    const action = await this.actionRepository.save(
+      this.actionRepository.create({
+        type,
+        status: AgentActionStatus.PENDING,
+        agentId,
+        farmerPhone,
+        farmerId,
+        payload: payload as Record<string, unknown>,
+        otpHash: await bcrypt.hash(otp, 10),
+        attempts: 0,
+        expiresAt,
+      }),
+    );
     const development =
       this.configService.get<string>('NODE_ENV') !== 'production';
     return {
@@ -198,9 +200,5 @@ export class AgentService {
 
   private generateOtp() {
     return String(Math.floor(100000 + Math.random() * 900000));
-  }
-
-  private escape(value: string) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }

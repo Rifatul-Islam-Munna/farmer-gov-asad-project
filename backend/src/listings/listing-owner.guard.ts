@@ -1,4 +1,4 @@
-import {
+﻿import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
@@ -14,7 +14,9 @@ export class ListingOwnerGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const rawListingId = request.params.id;
-    const listingId = Array.isArray(rawListingId) ? rawListingId[0] : rawListingId;
+    const listingId = Array.isArray(rawListingId)
+      ? rawListingId[0]
+      : rawListingId;
     if (!listingId) {
       throw new ForbiddenException('Listing id is required');
     }

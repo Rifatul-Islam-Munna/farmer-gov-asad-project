@@ -1594,3 +1594,474 @@ Hard completion rule:
 - [x] skeleton loading required in both Flutter and Next.js.
 - [x] future implementation documentation moved into required `features.md` workflow.
 - [x] Wallet and Future AI Features remain excluded.
+
+
+---
+
+# 32. Verified Implementation — PostgreSQL, Shared Backend Library, API Hooks, and Package Foundation
+
+Audit date: 2026-07-17
+
+## 32.1 PostgreSQL migration
+
+- [x] PostgreSQL selected as the primary business database.
+- [x] `@nestjs/typeorm`, `typeorm`, and `pg` installed.
+- [x] MongoDB root connection removed.
+- [x] `@nestjs/mongoose` removed.
+- [x] `mongoose` removed.
+- [x] obsolete Mongoose type augmentation removed.
+- [x] PostgreSQL database module created under `backend/src/lib/database/`.
+- [x] database connection supports `DATABASE_URL` and individual `DB_*` variables.
+- [x] connection-pool settings added.
+- [x] development-only synchronize protection added.
+- [x] migration configuration path added.
+- [x] graceful database shutdown added.
+- [x] UUID base entity created.
+- [x] compatibility `_id` field added to API entity serialization.
+- [x] user entity converted to TypeORM.
+- [x] goods/category entities converted to TypeORM.
+- [x] listing entity converted to TypeORM.
+- [x] offer/deal entities converted to TypeORM.
+- [x] market-price entity converted to TypeORM.
+- [x] medicine/inventory entities converted to TypeORM.
+- [x] agent-action entity converted to TypeORM.
+- [x] guidance entity converted to TypeORM.
+- [x] alert entity converted to TypeORM.
+- [x] corresponding NestJS modules converted to `TypeOrmModule.forFeature`.
+- [x] user service converted to TypeORM repositories/query builders.
+- [x] goods service converted to TypeORM repositories/query builders.
+- [x] listing service converted to TypeORM repositories/query builders.
+- [x] deal service converted to TypeORM repositories/query builders.
+- [x] agent service converted to TypeORM repositories/query builders.
+- [x] market-price service converted to TypeORM repositories/query builders.
+- [x] medicine catalog/seller services converted to TypeORM repositories/query builders.
+- [x] alert service converted to TypeORM repositories.
+- [x] admin service and SQL aggregations converted to TypeORM.
+- [x] listing reservation and deal confirmation share one PostgreSQL transaction and pessimistic lock.
+- [x] old MongoDB data intentionally not migrated per owner instruction.
+- [x] actual backend `.env` no longer contains `MONGODB_URL`.
+- [x] `.env.example` updated for PostgreSQL and future providers.
+
+Evidence:
+
+- `backend/src/lib/database/database.module.ts`
+- `backend/src/lib/database/base.entity.ts`
+- TypeORM entities/services listed in `features.md` FEATURE-001
+- `backend/package.json`
+- `backend/.env.example`
+
+Validation:
+
+- [x] `npm run build` passed.
+- [x] live `npm run start` connected to PostgreSQL.
+- [x] Nest application completed startup and route registration.
+- [x] `npm test -- --runInBand` passed: 1 suite, 1 test.
+
+Remaining database work:
+
+- [ ] generate and review formal production migrations.
+- [ ] add repository/integration tests for all converted modules.
+- [ ] add tenant entity and tenant-aware indexes.
+- [ ] add PostgreSQL Row-Level Security after tenancy model is finalized.
+- [ ] perform load and transaction-concurrency tests.
+
+## 32.2 Shared backend library
+
+- [x] uploaded global exception-filter concept integrated under `backend/src/lib/filters/`.
+- [x] HTTP exception normalization implemented.
+- [x] PostgreSQL unique-violation handling implemented.
+- [x] PostgreSQL foreign-key violation handling implemented.
+- [x] non-production stack output protected by environment check.
+- [x] uploaded auth-guard concept integrated under `backend/src/lib/auth/`.
+- [x] Bearer token supported.
+- [x] legacy `access_token` header retained for current clients.
+- [x] shared roles decorator created.
+- [x] shared roles guard created.
+- [x] class-level and handler-level role metadata supported.
+- [x] uploaded MinIO service concept integrated and hardened.
+- [x] private signed URL support added.
+- [x] optional public bucket mode added.
+- [x] UUID object-key generation added.
+- [x] MinIO missing-config graceful degradation verified.
+- [x] global validation uses transform, whitelist, and forbid-non-whitelisted.
+- [x] Helmet, compression, cookie parsing, body limits, and CORS allowlist added.
+- [x] existing route paths preserved for Flutter/Next.js compatibility.
+
+Remaining shared infrastructure:
+
+- [ ] request-ID middleware.
+- [ ] structured Pino logger wiring.
+- [ ] Prometheus metrics endpoint.
+- [ ] Terminus health/readiness endpoints.
+- [ ] real MinIO upload/delete integration test after credentials are configured.
+- [ ] secret-manager integration for production.
+
+## 32.3 Next.js React Query and Axios
+
+- [x] `@tanstack/react-query` installed.
+- [x] React Query devtools installed.
+- [x] Axios installed.
+- [x] Sonner installed.
+- [x] React Hook Form and Zod form stack installed.
+- [x] React Dropzone installed.
+- [x] Recharts installed.
+- [x] React Virtual installed.
+- [x] typed reusable Axios client created.
+- [x] API error normalization created.
+- [x] reusable query hook created.
+- [x] reusable mutation hook created.
+- [x] mutation invalidation support added.
+- [x] cancellation signal support added.
+- [x] global QueryClient provider added to root layout.
+- [x] transient-only default retry behavior added.
+- [x] React Query devtools restricted to development.
+- [x] toast provider included.
+
+Evidence:
+
+- `frontend/api-hooks/api-client.ts`
+- `frontend/api-hooks/query-provider.tsx`
+- `frontend/api-hooks/use-api-query.ts`
+- `frontend/api-hooks/use-api-mutation.ts`
+- `frontend/app/layout.tsx`
+- `features.md` FEATURE-003
+
+Validation:
+
+- [x] `npm run lint` passed.
+- [x] `npm run build` passed.
+- [x] Next.js TypeScript validation passed.
+- [x] production static-page generation passed.
+
+Remaining Next.js migration:
+
+- [ ] migrate existing admin screens from old `apiRequest` to new query/mutation hooks.
+- [ ] move web authentication from local storage to secure HTTP-only cookie sessions.
+- [ ] add component and Playwright tests for the query layer.
+
+## 32.4 Flutter package foundation
+
+- [x] `speech_to_text` installed.
+- [x] `flutter_tts` installed.
+- [x] `audio_session` installed.
+- [x] `just_audio` installed.
+- [x] `flutter_local_notifications` installed.
+- [x] `timezone` installed.
+- [x] `connectivity_plus` added as a direct dependency.
+- [x] `device_info_plus` installed.
+- [x] `wakelock_plus` installed.
+- [x] `workmanager` installed.
+- [x] `sentry_flutter` installed.
+- [x] `record` installed.
+- [x] `mime` added as a direct dependency.
+- [x] `file_picker` installed.
+
+Validation:
+
+- [x] Flutter dependency resolution passed.
+- [x] `flutter analyze` passed with no issues.
+- [x] `flutter test` passed.
+
+Remaining Flutter feature work:
+
+- [ ] configure native Android/iOS microphone permissions.
+- [ ] configure local-notification channels and siren resources.
+- [ ] connect OneSignal critical events to local siren handling.
+- [ ] implement voice service and UI.
+- [ ] configure WorkManager tasks only for approved use cases.
+- [ ] configure Sentry DSN and privacy rules.
+
+## 32.5 Additional backend package foundation
+
+Installed and available, but not treated as completed product features:
+
+- [x] official Gemini SDK package installed.
+- [x] Redis client installed.
+- [x] Qdrant client remains installed.
+- [x] BullMQ packages remain installed.
+- [x] S3 presigner installed.
+- [x] Zod installed.
+- [x] file-type and MIME utilities installed.
+- [x] QR and PDF packages installed.
+- [x] metrics/health/logging packages installed.
+
+Not yet complete merely because packages are installed:
+
+- [ ] Gemini multi-key gateway.
+- [ ] Redis cache integration.
+- [ ] BullMQ worker infrastructure.
+- [ ] Qdrant profile/search pipeline.
+- [ ] OneSignal provider service.
+- [ ] Windy provider service.
+- [ ] invoice PDF and QR implementation.
+- [ ] metrics and health endpoints.
+
+## 32.6 Dependency-security notes
+
+- [!] Backend npm audit currently reports 5 high-severity dependency findings. No forced audit fix was applied because it may introduce breaking dependency changes. Review `npm audit` before production.
+- [!] Frontend npm audit currently reports 2 moderate-severity dependency findings. Review before production.
+- [x] No operating-system or Windows critical files were modified.
+
+## 32.7 Feature documentation compliance
+
+- [x] `features.md` was populated only after actual implementation and validation.
+- [x] PostgreSQL migration usage and evidence documented.
+- [x] backend shared-library usage and evidence documented.
+- [x] Next.js query-layer usage and evidence documented.
+- [x] Flutter package foundation and limitations documented.
+
+
+---
+
+# 33. Verified Structure, Swagger, Provider Management, and Data Flow
+
+## 33.1 NestJS resource structure
+
+- [x] User DTOs moved to `user/dto/`.
+- [x] User entities moved to `user/entities/`.
+- [x] Goods DTOs/entities moved to dedicated folders.
+- [x] Listings DTOs/entities moved to dedicated folders.
+- [x] Deals DTOs/entities moved to dedicated folders.
+- [x] Agents DTOs/entities moved to dedicated folders.
+- [x] Market-price DTOs/entities moved to dedicated folders.
+- [x] Medicine-seller DTOs/entities moved to dedicated folders.
+- [x] Admin DTOs/entities moved to dedicated folders.
+- [x] Alerts entity moved to dedicated folder.
+- [x] All affected imports corrected.
+- [x] Backend build passes after structural refactor.
+
+## 33.2 Swagger
+
+- [x] Swagger UI available at `/docs`.
+- [x] OpenAPI JSON available at `/docs-json`.
+- [x] Swagger CLI plugin enabled.
+- [x] Class-validator DTO schema generation enabled.
+- [x] DTO suffix discovery configured.
+- [x] User/auth controller tagged.
+- [x] Existing feature controllers verified to have Swagger tags.
+- [x] Bearer authentication definition verified.
+- [x] 53 live API paths verified in OpenAPI output.
+- [x] 24 DTO schemas verified in OpenAPI output.
+- [x] Integration-settings DTO and endpoints verified in Swagger.
+
+## 33.3 Next.js provider management
+
+- [x] Integration-setting PostgreSQL entity created.
+- [x] AES-256-GCM encrypted storage implemented.
+- [x] Backend-only encryption master key configured.
+- [x] Provider keys removed from `.env.example`.
+- [x] Masked settings read endpoint implemented.
+- [x] Protected settings update endpoint implemented.
+- [x] Admin-only role guards applied.
+- [x] Next.js query hooks created.
+- [x] Next.js **AI & providers** admin page added.
+- [x] Multiple Gemini key fields supported.
+- [x] Gemini text and vision model fields supported.
+- [x] Qdrant embedding provider/model fields supported.
+- [x] Windy key field supported.
+- [x] OneSignal app ID and REST key fields supported.
+- [x] Browser receives masked secrets only.
+- [x] Encrypted save/read flow tested live.
+
+Remaining:
+
+- [ ] Gemini provider service consumes stored configuration.
+- [ ] Windy provider service consumes stored configuration.
+- [ ] OneSignal provider service consumes stored configuration.
+- [ ] Qdrant embedding service consumes stored configuration.
+- [ ] Provider-key rotation health dashboard.
+
+## 33.4 Flutter Dio helper
+
+- [x] Supplied Dio-helper pattern integrated.
+- [x] API URL validation added.
+- [x] Android emulator localhost mapping added.
+- [x] production HTTPS enforcement added.
+- [x] Bearer authorization header added.
+- [x] legacy token header retained.
+- [x] structured API exception implemented.
+- [x] backend message/details/request ID parsing added.
+- [x] unauthorized session cleanup added.
+- [x] duplicate login redirect prevented.
+- [x] debug-only Dio logging added.
+- [x] request timeouts configured.
+- [x] Flutter analyze and tests pass.
+
+## 33.5 Live endpoint and data-flow audit
+
+- [x] Root endpoint returns HTTP 200.
+- [x] Swagger UI returns HTTP 200.
+- [x] Swagger JSON returns HTTP 200.
+- [x] Goods categories return HTTP 200.
+- [x] Goods return HTTP 200.
+- [x] Latest market prices return HTTP 200.
+- [x] Public listings return HTTP 200.
+- [x] Guidance returns HTTP 200.
+- [x] Medicines return HTTP 200.
+- [x] Protected profile without token returns HTTP 401.
+- [x] Invalid registration returns structured HTTP 400.
+- [x] Farmer registration succeeds.
+- [x] Farmer login succeeds.
+- [x] Profile retrieval succeeds.
+- [x] Location update succeeds.
+- [x] Listing creation succeeds.
+- [x] Own-listing retrieval succeeds.
+- [x] Public listing search succeeds.
+- [x] Admin login succeeds.
+- [x] Admin dashboard succeeds.
+- [x] Provider-settings read succeeds.
+- [x] Provider-settings encrypted update succeeds.
+- [x] Flutter endpoint paths reviewed against live backend routes.
+- [x] Next.js admin endpoint paths reviewed against live backend routes.
+
+## 33.6 Final quality checks
+
+- [x] Backend lint passes.
+- [x] Backend build passes.
+- [x] Backend tests pass.
+- [x] Next.js lint passes.
+- [x] Next.js production build passes.
+- [x] Flutter analyze passes with no issues.
+- [x] Flutter tests pass.
+- [x] Temporary backup artifacts removed.
+- [x] Development HTTP server stopped after smoke testing.
+- [x] `DB_SYNCHRONIZE=false` set after schema creation; future changes require migrations.
+
+Remaining quality work:
+
+- [ ] Generate formal TypeORM migration files.
+- [ ] Add Supertest E2E tests for all smoke-tested flows.
+- [ ] Add Playwright tests for admin login and provider settings.
+- [ ] Add Flutter integration tests against a test backend.
+
+
+---
+
+# 34. Verified Dashboard Routes, Optional Infrastructure, Gemini Key Pool, and Marketplace Planning
+
+## 34.1 Database synchronization
+
+- [x] `DB_SYNCHRONIZE=true` set in the active backend `.env`.
+- [x] `.env.example` documents `DB_SYNCHRONIZE=true` for the current development workflow.
+- [x] PostgreSQL remains the required primary startup dependency.
+- [!] Automatic synchronization is convenient during development but remains unsafe for production schema governance; production migrations are still required before release.
+
+## 34.2 Next.js dashboard routes
+
+- [x] Root `/` redirects to `/dashboard/admin`.
+- [x] `/dashboard` redirects to `/dashboard/admin`.
+- [x] Admin dashboard moved to `/dashboard/admin`.
+- [x] Dynamic role-workspace route added under `/dashboard/[role]`.
+- [x] Farmer route supported.
+- [x] Buyer route supported.
+- [x] Wholesale-buyer route supported.
+- [x] Seller route supported.
+- [x] Machinery-seller route supported.
+- [x] Medicine-seller route supported.
+- [x] Agent route supported.
+- [x] Agriculture-specialist route supported.
+- [x] Veterinary-doctor route supported.
+- [x] Government-officer route supported.
+- [x] Support route supported.
+- [x] Next.js production build verified all dashboard routes.
+
+Remaining route work:
+
+- [ ] Role-aware login redirect.
+- [ ] Multi-role workspace switcher.
+- [ ] Per-route server-side authorization.
+- [ ] Nested pages for every dashboard workspace.
+- [ ] Seller/machinery seller CRUD and analytics pages.
+- [ ] Buyer marketplace and saved-search pages.
+
+## 34.3 Unlimited Gemini fallback keys
+
+- [x] Hard 20-key DTO limit removed.
+- [x] Next.js UI already supports repeatedly adding Gemini key fields.
+- [x] Keys remain encrypted in PostgreSQL.
+- [x] Read responses remain masked.
+- [x] One key pool may support text and image requests.
+- [x] Text and vision model IDs remain separately configurable.
+- [x] Qdrant embedding provider/model remains separately configurable.
+
+Remaining Gemini work:
+
+- [ ] Deduplicate submitted keys before persistence.
+- [ ] Add per-key IDs/aliases.
+- [ ] Add key enable/disable control.
+- [ ] Add health/cooldown/quota state.
+- [ ] Add least-recently-used/weighted routing.
+- [ ] Add bounded request retry policy.
+- [ ] Add provider usage dashboard.
+
+## 34.4 Redis and Qdrant degraded startup
+
+- [x] Optional infrastructure global module added.
+- [x] Redis uses lazy connection.
+- [x] Redis startup timeout/retry is bounded.
+- [x] Redis failure logs an error without terminating NestJS.
+- [x] Qdrant startup uses a short health-check timeout.
+- [x] Qdrant failure logs an error without terminating NestJS.
+- [x] Availability getters provided for feature services.
+- [x] Degraded startup tested with deliberately invalid Redis and Qdrant ports.
+- [x] PostgreSQL connected successfully during degraded test.
+- [x] Nest application started successfully during degraded test.
+- [x] Root endpoint returned HTTP 200 while Redis and Qdrant were unavailable.
+
+Evidence:
+
+- `backend/src/lib/infrastructure/infrastructure.module.ts`
+- `backend/src/lib/infrastructure/optional-infrastructure.service.ts`
+
+Remaining resilience work:
+
+- [ ] Add degraded health endpoint.
+- [ ] Wire Redis-aware cache fallback into feature services.
+- [ ] Wire Qdrant-unavailable path into Gemini fallback service.
+- [ ] Add reconnect/periodic health probes without startup blocking.
+- [ ] Add metrics and alerting for degraded dependencies.
+
+## 34.5 Marketplace actor coverage
+
+- [x] Plan explicitly covers farmer crop/farm-output sellers.
+- [x] Plan explicitly covers crop buyers and wholesale buyers.
+- [x] Plan explicitly covers outside machinery/input sellers.
+- [x] Plan covers machinery sale and rental.
+- [x] Plan covers seeds, fertilizer, pesticide, feed, medicine, tools, parts and irrigation equipment.
+- [x] Buyer filter requirements documented.
+- [x] Farmer listing-management filters documented.
+- [x] Machinery seller product fields documented.
+- [x] Machinery buyer/farmer filters documented.
+- [x] Catalog-type separation documented.
+- [x] Search, pagination, cache and data-flow plan documented.
+- [x] Current implementation versus future work clearly separated.
+
+Current implementation:
+
+- [x] Farmer agricultural listing creation.
+- [x] Public listing search.
+- [x] Buyer/farmer offer negotiation foundation.
+- [x] Deal confirmation and stock reservation foundation.
+- [x] Medicine seller inventory and nearby search foundation.
+
+Still required:
+
+- [ ] General marketplace product entity/model.
+- [ ] Machinery/input seller onboarding.
+- [ ] Machinery product CRUD.
+- [ ] Advanced buyer/seller filters.
+- [ ] Cursor pagination.
+- [ ] Saved searches/favorites.
+- [ ] Cart/order/payment/delivery/invoice lifecycle.
+- [ ] Seller analytics.
+- [ ] Marketplace moderation.
+- [ ] Redis popular-search caching.
+
+## 34.6 Validation
+
+- [x] Backend lint passed.
+- [x] Backend build passed.
+- [x] Backend tests passed.
+- [x] Next.js lint passed.
+- [x] Next.js production build passed.
+- [x] Degraded Redis/Qdrant live startup passed.

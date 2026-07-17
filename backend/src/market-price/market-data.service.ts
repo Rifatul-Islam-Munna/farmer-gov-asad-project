@@ -1,14 +1,15 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { CreateMarketPriceDto } from './market-price.dto';
-import { MARKET_PRICE_MODEL, MarketPrice } from './market-price.entity';
+﻿import { Injectable, OnModuleInit } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { toApiEntity } from '../lib/database/base.entity';
+import { CreateMarketPriceDto } from './dto/market-price.dto';
+import { MarketPrice } from './entities/market-price.entity';
 
 @Injectable()
 export class MarketDataService implements OnModuleInit {
   constructor(
-    @InjectModel(MARKET_PRICE_MODEL)
-    private readonly priceModel: Model<MarketPrice>,
+    @InjectRepository(MarketPrice)
+    private readonly priceRepository: Repository<MarketPrice>,
   ) {}
 
   async onModuleInit() {
@@ -19,19 +20,9 @@ export class MarketDataService implements OnModuleInit {
       this.demo('tomato', 'Tomato', 68, 72, 69),
       this.demo('onion', 'Onion', 60, 63, 63),
     ];
-
-    await Promise.all(
-      demo.map((item) =>
-        this.priceModel.updateOne(
-          {
-            goodCode: item.goodCode,
-            region: item.region,
-            priceDate,
-          },
-          { $setOnInsert: { ...item, priceDate } },
-          { upsert: true },
-        ),
-      ),
+    await this.priceRepository.upsert(
+      demo.map((item) => ({ ...item, priceDate })),
+      ['goodCode', 'region', 'priceDate'],
     );
   }
 
@@ -41,38 +32,37 @@ export class MarketDataService implements OnModuleInit {
     const priceDate = this.dateOnly(
       dto.priceDate ? new Date(dto.priceDate) : new Date(),
     );
-    const data = await this.priceModel.findOneAndUpdate(
-      { goodCode, region, priceDate },
-      { ...dto, goodCode, region, priceDate },
-      { upsert: true, returnDocument: 'after' },
-    );
-    return { data: this.view(data?.toObject() ?? {}) };
+    await this.priceRepository.upsert({ ...dto, goodCode, region, priceDate }, [
+      'goodCode',
+      'region',
+      'priceDate',
+    ]);
+    const data = await this.priceRepository.findOneByOrFail({
+      goodCode,
+      region,
+      priceDate,
+    });
+    return { data: this.view(data) };
   }
 
   async latest() {
-    const records = await this.priceModel
-      .find()
-      .sort({ priceDate: -1, goodName: 1 })
-      .lean();
-    const latest = new Map<string, Record<string, any>>();
-
-    for (const record of records) {
-      const key = `${record.goodCode}:${record.region}`;
-      if (!latest.has(key)) {
-        latest.set(key, record);
-      }
-    }
-
-    return { data: [...latest.values()].map((item) => this.view(item)) };
+    const data = await this.priceRepository
+      .createQueryBuilder('price')
+      .distinctOn(['price.goodCode', 'price.region'])
+      .orderBy('price.goodCode', 'ASC')
+      .addOrderBy('price.region', 'ASC')
+      .addOrderBy('price.priceDate', 'DESC')
+      .getMany();
+    return { data: data.map((item) => this.view(item)) };
   }
 
   async history(goodCode: string) {
-    const records = await this.priceModel
-      .find({ goodCode: goodCode.trim().toLowerCase() })
-      .sort({ priceDate: -1 })
-      .limit(30)
-      .lean();
-    return { data: records.map((item) => this.view(item)) };
+    const data = await this.priceRepository.find({
+      where: { goodCode: goodCode.trim().toLowerCase() },
+      order: { priceDate: 'DESC' },
+      take: 30,
+    });
+    return { data: data.map((item) => this.view(item)) };
   }
 
   private demo(
@@ -94,15 +84,14 @@ export class MarketDataService implements OnModuleInit {
     };
   }
 
-  private view(record: Record<string, any>) {
-    const current = Number(record.marketPrice ?? 0);
-    const previous = Number(record.previousMarketPrice ?? 0);
-    const difference = current - previous;
+  private view(record: MarketPrice) {
+    const difference = record.marketPrice - record.previousMarketPrice;
     const percentageChange =
-      previous === 0 ? 0 : (difference / previous) * 100;
-
+      record.previousMarketPrice === 0
+        ? 0
+        : (difference / record.previousMarketPrice) * 100;
     return {
-      ...record,
+      ...toApiEntity(record),
       difference: Number(difference.toFixed(2)),
       percentageChange: Number(percentageChange.toFixed(2)),
       trend: difference > 0 ? 'up' : difference < 0 ? 'down' : 'stable',
@@ -110,12 +99,6 @@ export class MarketDataService implements OnModuleInit {
   }
 
   private dateOnly(value: Date) {
-    return new Date(
-      Date.UTC(
-        value.getUTCFullYear(),
-        value.getUTCMonth(),
-        value.getUTCDate(),
-      ),
-    );
+    return value.toISOString().slice(0, 10);
   }
 }

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Get,
@@ -14,12 +14,12 @@ import type { AuthenticatedRequest } from '../auth/access-token.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
-import { UserType } from '../user/user.entity';
+import { UserType } from '../user/entities/user.entity';
 import { DealService } from './deal.service';
 import {
   CreateNegotiationDto,
   UpdateNegotiationDto,
-} from './negotiation.dto';
+} from './dto/negotiation.dto';
 
 @ApiTags('Offers and Deals')
 @ApiBearerAuth()
@@ -70,18 +70,12 @@ export class DealController {
   @Get('offers/mine')
   @Roles(UserType.BUYER, UserType.FARMER, UserType.ADMIN)
   offers(@Req() request: AuthenticatedRequest) {
-    return this.dealService.offersForUser(
-      request.user.id,
-      request.user.role,
-    );
+    return this.dealService.offersForUser(request.user.id, request.user.role);
   }
 
   @Get('deals/mine')
   @Roles(UserType.BUYER, UserType.FARMER, UserType.ADMIN)
   deals(@Req() request: AuthenticatedRequest) {
-    return this.dealService.dealsForUser(
-      request.user.id,
-      request.user.role,
-    );
+    return this.dealService.dealsForUser(request.user.id, request.user.role);
   }
 }

@@ -1,5 +1,5 @@
-import { SetMetadata } from '@nestjs/common';
-import { UserType } from '../user/user.entity';
+﻿import { SetMetadata } from '@nestjs/common';
+import { UserType } from '../user/entities/user.entity';
 
 export const ROLES_KEY = 'allowed-roles';
 

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
 import { DocumentController } from './document.controller';
 
