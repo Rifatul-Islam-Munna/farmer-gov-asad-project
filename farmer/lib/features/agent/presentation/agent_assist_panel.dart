@@ -238,7 +238,7 @@ class _AgentAssistPanelState extends State<AgentAssistPanel> {
                         ),
                         title: Text(item['type']?.toString() ?? 'Agent action'),
                         subtitle: Text(
-                          '${item['farmerPhone']} â€¢ ${item['status']}',
+                          '${item['farmerPhone']} ? ${item['status']}',
                         ),
                       ),
                     ),

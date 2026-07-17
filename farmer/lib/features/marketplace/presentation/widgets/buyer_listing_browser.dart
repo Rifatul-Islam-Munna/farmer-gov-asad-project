@@ -164,7 +164,7 @@ class _BuyerListingBrowserState extends State<BuyerListingBrowser> {
                                     ),
                                   ),
                                   Text(
-                                    '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} â€¢ ${item.address ?? 'Location not set'}',
+                                    '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} ? ${item.address ?? 'Location not set'}',
                                   ),
                                   Text(
                                     'Minimum BDT ${item.minimumPrice.toStringAsFixed(0)}',

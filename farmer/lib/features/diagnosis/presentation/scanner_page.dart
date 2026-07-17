@@ -30,7 +30,7 @@ class ScannerPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 104),
               child: GlassCard(
                 borderRadius: 28,
-                blur: 9,
+                blur: 5.5,
                 opacity: .10,
                 child: const CropDiagnosisPanel(embedded: true),
               ),

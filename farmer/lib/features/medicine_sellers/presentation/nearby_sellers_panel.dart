@@ -188,7 +188,7 @@ class _ShopCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${shop.distanceKm.toStringAsFixed(1)} km away â€¢ ${shop.address}',
+                        '${shop.distanceKm.toStringAsFixed(1)} km away ? ${shop.address}',
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],

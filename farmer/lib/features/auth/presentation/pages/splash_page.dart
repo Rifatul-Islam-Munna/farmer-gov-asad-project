@@ -57,7 +57,7 @@ class _SplashPageState extends State<SplashPage> {
               const GlassCard(
                 padding: EdgeInsets.all(24),
                 borderRadius: 42,
-                blur: 10,
+                blur: 5.5,
                 opacity: .13,
                 color: AppColors.primary,
                 child: Icon(

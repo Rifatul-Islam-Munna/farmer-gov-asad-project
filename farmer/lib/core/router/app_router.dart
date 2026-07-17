@@ -15,6 +15,7 @@ import '../../features/marketplace/presentation/pages/sell_product_page.dart';
 import '../../features/plants/presentation/plants_page.dart';
 import '../../features/profile/presentation/pages/account_page.dart';
 import '../../pages/main_shell.dart';
+import 'auth_guard.dart';
 
 part 'app_router.gr.dart';
 
@@ -28,7 +29,7 @@ const shopTab = EmptyShellRoute('ShopTab');
 class AppRouter extends RootStackRouter {
   @override
   RouteType get defaultRouteType => RouteType.custom(
-    transitionsBuilder: _pageTransition,
+    transitionsBuilder: _smoothPageTransition,
     duration: const Duration(milliseconds: 280),
     reverseDuration: const Duration(milliseconds: 240),
     enablePredictiveBackGesture: true,
@@ -39,16 +40,31 @@ class AppRouter extends RootStackRouter {
     AutoRoute(page: SplashRoute.page, path: '/', initial: true),
     AutoRoute(page: LoginRoute.page, path: '/login'),
     AutoRoute(page: RegisterRoute.page, path: '/register'),
-    AutoRoute(page: ProfileRoute.page, path: '/profile'),
+    AutoRoute(
+      page: VerificationPendingRoute.page,
+      path: '/verification-pending',
+    ),
+    RedirectRoute(path: '/home', redirectTo: '/main/home'),
+    RedirectRoute(path: '/scanner', redirectTo: '/main/scanner'),
+    RedirectRoute(path: '/plants', redirectTo: '/main/plants'),
+    RedirectRoute(path: '/alerts', redirectTo: '/main/alerts'),
+    RedirectRoute(path: '/shop', redirectTo: '/main/shop'),
+    RedirectRoute(path: '/sell', redirectTo: '/main/shop/sell'),
+    RedirectRoute(path: '/listing-form', redirectTo: '/main/shop/listing-form'),
+    RedirectRoute(path: '/profile', redirectTo: '/main/home/profile'),
     AutoRoute(
       page: MainShellRoute.page,
       path: '/main',
+      guards: [AuthGuard()],
       children: [
         AutoRoute(
           page: homeTab.page,
           path: 'home',
           initial: true,
-          children: [AutoRoute(page: HomeRoute.page, path: '', initial: true)],
+          children: [
+            AutoRoute(page: HomeRoute.page, path: '', initial: true),
+            AutoRoute(page: ProfileRoute.page, path: 'profile'),
+          ],
         ),
         AutoRoute(
           page: scannerTab.page,
@@ -77,6 +93,7 @@ class AppRouter extends RootStackRouter {
           children: [
             AutoRoute(page: MarketplaceRoute.page, path: '', initial: true),
             AutoRoute(page: SellProductRoute.page, path: 'sell'),
+            AutoRoute(page: ListingFormRoute.page, path: 'listing-form'),
           ],
         ),
       ],
@@ -84,7 +101,7 @@ class AppRouter extends RootStackRouter {
   ];
 }
 
-Widget _pageTransition(
+Widget _smoothPageTransition(
   BuildContext context,
   Animation<double> animation,
   Animation<double> secondaryAnimation,
@@ -97,4 +114,43 @@ Widget _pageTransition(
     fillColor: Theme.of(context).scaffoldBackgroundColor,
     child: child,
   );
+}
+
+class HomeBackFallback extends StatelessWidget {
+  const HomeBackFallback({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: context.router.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && context.mounted) {
+          goHome(context);
+        }
+      },
+      child: child,
+    );
+  }
+}
+
+Future<void> popOrHome(BuildContext context) async {
+  if (context.router.canPop()) {
+    final didPop = await context.router.maybePop();
+    if (didPop) return;
+  }
+  if (context.mounted) {
+    await goHome(context);
+  }
+}
+
+Future<void> goHome(BuildContext context) {
+  return context.router.root.replaceAll([
+    MainShellRoute(
+      children: [
+        homeTab(children: [const HomeRoute()]),
+      ],
+    ),
+  ]);
 }

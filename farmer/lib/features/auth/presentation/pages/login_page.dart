@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
           child: GlassCard(
             padding: const EdgeInsets.all(22),
             borderRadius: 30,
-            blur: 10,
+            blur: 5.5,
             opacity: .12,
             child: Form(
               key: _formKey,
@@ -88,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                   GlassCard(
                     padding: const EdgeInsets.all(14),
                     borderRadius: 24,
-                    blur: 9,
+                    blur: 5.5,
                     opacity: .14,
                     color: AppColors.primary,
                     child: const Icon(

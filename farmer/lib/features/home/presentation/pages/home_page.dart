@@ -55,7 +55,7 @@ class HomePage extends StatelessWidget {
                               icon: Icons.local_fire_department_rounded,
                               iconColor: Color(0xFFFF735C),
                               title: 'Heat alert',
-                              detail: '35Ãƒâ€šÃ‚Â°C this afternoon',
+                              detail: '35\u00B0C this afternoon',
                               status: 'Water before 10 AM',
                             ),
                           ),
@@ -72,9 +72,7 @@ class HomePage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 22),
-                      const _SectionTitle(
-                        'TodayÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s action plan',
-                      ),
+                      const _SectionTitle("Today's action plan"),
                       const SizedBox(height: 12),
                       const _ActionPlanCard(),
                       const SizedBox(height: 22),
@@ -376,7 +374,7 @@ class _ScanPlantCard extends StatelessWidget {
     return GlassCard(
       onTap: onTap,
       borderRadius: 26,
-      blur: 10,
+      blur: 5.5,
       opacity: .11,
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -516,7 +514,7 @@ class _WeatherHeroCard extends StatelessWidget {
                     ),
                     SizedBox(height: 7),
                     Text(
-                      '32Ãƒâ€šÃ‚Â°',
+                      '32\u00B0C',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 46,
@@ -526,7 +524,7 @@ class _WeatherHeroCard extends StatelessWidget {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      'Feels like 36\u00B0  •  Humidity 78%',
+                      'Feels like 36\u00B0  ?  Humidity 78%',
                       style: TextStyle(color: Color(0xFFB9D2CA)),
                     ),
                   ],

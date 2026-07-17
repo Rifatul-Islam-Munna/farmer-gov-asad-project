@@ -113,7 +113,7 @@ class _NearbySellerPanelState extends State<NearbySellerPanel> {
                               item['shopName']?.toString() ?? 'Medicine shop',
                             ),
                             subtitle: Text(
-                              '${item['address']} â€¢ ${item['distanceKm']} km\n${item['stockQuantity']} ${item['unit']} available',
+                              '${item['address']} ? ${item['distanceKm']} km\n${item['stockQuantity']} ${item['unit']} available',
                             ),
                             isThreeLine: true,
                             trailing: Text('BDT ${item['price']}'),

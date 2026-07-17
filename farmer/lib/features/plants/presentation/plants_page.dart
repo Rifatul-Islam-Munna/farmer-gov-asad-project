@@ -106,7 +106,7 @@ class _PlantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       borderRadius: 24,
-      blur: 10,
+      blur: 5.5,
       opacity: .14,
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -221,7 +221,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       borderRadius: 24,
-      blur: 10,
+      blur: 5.5,
       opacity: .14,
       padding: const EdgeInsets.all(18),
       child: const Row(

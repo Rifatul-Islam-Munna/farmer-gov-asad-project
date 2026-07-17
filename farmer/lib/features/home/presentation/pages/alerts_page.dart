@@ -105,7 +105,7 @@ class _AlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       borderRadius: 24,
-      blur: 10,
+      blur: 5.5,
       opacity: .14,
       padding: const EdgeInsets.all(18),
       child: Row(

@@ -156,7 +156,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
                                   child: Icon(Icons.request_quote_rounded),
                                 ),
                                 title: Text(
-                                  '${item.quantity.toStringAsFixed(0)} units â€¢ BDT ${item.unitPrice.toStringAsFixed(0)}',
+                                  '${item.quantity.toStringAsFixed(0)} units ? BDT ${item.unitPrice.toStringAsFixed(0)}',
                                 ),
                                 subtitle: Text(item.status),
                               ),
@@ -227,7 +227,7 @@ class _BuyerDealsPanelState extends State<BuyerDealsPanel> {
                           ),
                           title: Text('BDT ${item['totalPrice']}'),
                           subtitle: Text(
-                            '${item['quantity']} units â€¢ ${item['status']}',
+                            '${item['quantity']} units ? ${item['status']}',
                           ),
                         ),
                       ),

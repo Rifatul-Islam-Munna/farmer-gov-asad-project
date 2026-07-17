@@ -92,7 +92,7 @@ class DiagnosisResultCard extends StatelessWidget {
         ...items.map(
           (item) => Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text('â€¢ $item'),
+            child: Text('? $item'),
           ),
         ),
       ],

@@ -111,7 +111,7 @@ class _AdminWorkspaceState extends State<AdminWorkspace> {
                               ),
                               title: Text(item['name']?.toString() ?? 'User'),
                               subtitle: Text(
-                                '${item['role']} â€¢ ${item['phoneNumber']}',
+                                '${item['role']} ? ${item['phoneNumber']}',
                               ),
                             ),
                             Row(

@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +23,12 @@ class MainShellPage extends StatelessWidget {
       homeIndex: 0,
       animationDuration: const Duration(milliseconds: 220),
       animationCurve: Curves.easeOutCubic,
+      transitionBuilder: (context, child, animation) => FadeThroughTransition(
+        animation: animation,
+        secondaryAnimation: kAlwaysDismissedAnimation,
+        child: child,
+      ),
+      extendBody: true,
       routes: [homeTab(), scannerTab(), plantsTab(), alertsTab(), shopTab()],
       bottomNavigationBuilder: (_, tabsRouter) =>
           _BottomNavigation(tabsRouter: tabsRouter),
@@ -34,14 +41,26 @@ class _BottomNavigation extends StatelessWidget {
 
   final TabsRouter tabsRouter;
 
+  void _handleTabTap(int index) {
+    HapticFeedback.selectionClick();
+    for (var i = 0; i < items.length; i++) {
+      tabsRouter.stackRouterOfIndex(i)?.popUntilRoot();
+    }
+    tabsRouter.setActiveIndex(index);
+  }
+
   static const items = [
     _NavigationItem(Icons.home_outlined, Icons.home_rounded, 'Home'),
     _NavigationItem(
       Icons.center_focus_strong_outlined,
-      Icons.center_focus_strong_rounded,
+      Icons.camera_alt_rounded,
       'Scanner',
     ),
-    _NavigationItem(Icons.eco_outlined, Icons.eco_rounded, 'Plants'),
+    _NavigationItem(
+      Icons.local_florist_outlined,
+      Icons.local_florist_rounded,
+      'Plants',
+    ),
     _NavigationItem(
       Icons.notifications_none_rounded,
       Icons.notifications_rounded,
@@ -56,91 +75,223 @@ class _BottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      borderRadius: 29,
-      blur: 9,
-      opacity: .10,
-      glow: true,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 74,
-          child: Row(
-            children: List.generate(items.length, (index) {
-              final item = items[index];
-              final active = tabsRouter.activeIndex == index;
-              return Expanded(
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    tabsRouter.setActiveIndex(index);
-                  },
-                  borderRadius: BorderRadius.circular(20),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutCubic,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 2,
-                      vertical: 7,
+    final activeIndex = tabsRouter.activeIndex;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
+        children: [
+          GlassCard(
+            borderRadius: 46,
+            blur: 5.5,
+            opacity: .17,
+            glow: true,
+            child: SizedBox(
+              height: 86,
+              child: Row(
+                children: List.generate(items.length, (index) {
+                  final item = items[index];
+                  final active = activeIndex == index;
+                  return Expanded(
+                    child: _NavButton(
+                      item: item,
+                      active: active,
+                      prominent: index == 1 || index == 4,
+                      onTap: () => _handleTabTap(index),
                     ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(19),
-                      gradient: active
-                          ? LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Colors.white.withValues(alpha: .14),
-                                AppColors.primary.withValues(alpha: .14),
-                              ],
-                            )
-                          : null,
-                      border: active
-                          ? Border.all(
-                              color: AppColors.primary.withValues(alpha: .38),
-                            )
-                          : null,
-                      boxShadow: active
-                          ? [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: .22),
-                                blurRadius: 20,
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          active ? item.activeIcon : item.icon,
-                          size: 23,
-                          color: active
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: active
-                                ? FontWeight.w800
-                                : FontWeight.w600,
-                            color: active
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(46),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: .20),
+                    width: 1.15,
                   ),
                 ),
-              );
-            }),
+              ),
+            ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  const _NavButton({
+    required this.item,
+    required this.active,
+    required this.prominent,
+    required this.onTap,
+  });
+
+  final _NavigationItem item;
+  final bool active;
+  final bool prominent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = AppColors.primary;
+    final inactiveColor = Colors.white.withValues(alpha: .62);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            opacity: active ? 1 : 0,
+            child: Container(
+              width: prominent ? 70 : 62,
+              height: 92,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.primary.withValues(alpha: .42),
+                    AppColors.primary.withValues(alpha: .16),
+                    Colors.transparent,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: .46),
+                    blurRadius: 30,
+                    spreadRadius: -6,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (active)
+            Positioned(
+              top: 0,
+              child: Container(
+                width: prominent ? 56 : 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: .95),
+                      blurRadius: 18,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (active)
+            Positioned(
+              bottom: 0,
+              child: Container(
+                width: prominent ? 52 : 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: .95),
+                      blurRadius: 18,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                width: active && prominent ? 42 : 36,
+                height: active && prominent ? 42 : 36,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(
+                    active && prominent ? 15 : 18,
+                  ),
+                  color: active && prominent
+                      ? AppColors.primary.withValues(alpha: .22)
+                      : Colors.transparent,
+                  border: active && prominent
+                      ? Border.all(
+                          color: AppColors.primary.withValues(alpha: .65),
+                        )
+                      : null,
+                  boxShadow: active
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: .45),
+                            blurRadius: 20,
+                            spreadRadius: -4,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(
+                  active ? item.activeIcon : item.icon,
+                  size: active && prominent ? 28 : 27,
+                  color: active ? activeColor : inactiveColor,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                item.label,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w500,
+                  color: active ? activeColor : inactiveColor,
+                  shadows: active
+                      ? [
+                          Shadow(
+                            color: AppColors.primary.withValues(alpha: .72),
+                            blurRadius: 12,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          if (item.label == 'Alerts')
+            Positioned(
+              top: 24,
+              right: 21,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6070),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF6070).withValues(alpha: .85),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

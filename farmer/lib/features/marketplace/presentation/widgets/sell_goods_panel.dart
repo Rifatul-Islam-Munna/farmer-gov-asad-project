@@ -168,7 +168,7 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
                         ),
                         title: Text(item.goodName),
                         subtitle: Text(
-                          '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} â€¢ ${item.status}',
+                          '${item.availableQuantity.toStringAsFixed(0)} ${item.unit} ? ${item.status}',
                         ),
                         trailing: Text(
                           'BDT ${item.minimumPrice.toStringAsFixed(0)}',
