@@ -1,13 +1,13 @@
-﻿import {
+import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { UserType } from '../user/entities/user.entity';
 import { AuthenticatedRequest } from './access-token.guard';
 import { ROLES_KEY } from './roles.decorator';
-import { UserType } from '../user/entities/user.entity';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,18 +18,20 @@ export class RolesGuard implements CanActivate {
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-
-    if (!allowedRoles?.length) {
-      return true;
-    }
+    if (!allowedRoles?.length) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    if (!request.user || !allowedRoles.includes(request.user.role)) {
+    const userRoles = request.user?.roles?.length
+      ? request.user.roles
+      : request.user
+        ? [request.user.role]
+        : [];
+
+    if (!allowedRoles.some((role) => userRoles.includes(role))) {
       throw new ForbiddenException(
         'You do not have permission for this action',
       );
     }
-
     return true;
   }
 }

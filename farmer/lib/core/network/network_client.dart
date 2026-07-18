@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -32,7 +33,9 @@ class DioHelper {
   DioHelper._();
 
   static Dio? _dio;
+  static Dio? _refreshClient;
   static bool _isRedirecting = false;
+  static Future<bool>? _refreshInFlight;
 
   static Dio get dio {
     final client = _dio;
@@ -41,6 +44,8 @@ class DioHelper {
     }
     return client;
   }
+
+  static String get socketBaseUrl => _baseUrl;
 
   static String get _baseUrl {
     final configuredUrl = dotenv.get('API_URL', fallback: '').split('#').first.trim();
@@ -70,7 +75,8 @@ class DioHelper {
       throw StateError('Use HTTPS, or HTTP only for local development.');
     }
 
-    if (!kIsWeb && Platform.isAndroid &&
+    if (!kIsWeb &&
+        Platform.isAndroid &&
         (uri.host == 'localhost' || uri.host == '127.0.0.1')) {
       uri = uri.replace(host: '10.0.2.2');
     }
@@ -82,17 +88,17 @@ class DioHelper {
     final baseUrl = _baseUrl;
     if (kDebugMode) logger.i('API base URL: $baseUrl');
 
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: baseUrl,
-        receiveDataWhenStatusError: true,
-        connectTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 60),
-        contentType: Headers.jsonContentType,
-        headers: const {Headers.acceptHeader: Headers.jsonContentType},
-      ),
+    final options = BaseOptions(
+      baseUrl: baseUrl,
+      receiveDataWhenStatusError: true,
+      connectTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 60),
+      contentType: Headers.jsonContentType,
+      headers: const {Headers.acceptHeader: Headers.jsonContentType},
     );
+    _dio = Dio(options);
+    _refreshClient = Dio(options);
 
     _dio!.interceptors.add(
       InterceptorsWrapper(
@@ -113,16 +119,30 @@ class DioHelper {
             );
           }
 
-          if (error.response?.statusCode == 401 && !_isRedirecting) {
-            _isRedirecting = true;
-            try {
-              await GetIt.I<SessionStorage>().clear();
-              if (appRouter.current.name != LoginRoute.name) {
-                await appRouter.replaceAll([const LoginRoute()]);
+          final isUnauthorized = error.response?.statusCode == 401;
+          final alreadyRetried = error.requestOptions.extra['authRetried'] == true;
+          final isRefreshRequest =
+              error.requestOptions.path.contains('/user/refresh-token');
+
+          if (isUnauthorized && !alreadyRetried && !isRefreshRequest) {
+            final refreshed = await _refreshOnce();
+            if (refreshed) {
+              try {
+                final storage = GetIt.I<SessionStorage>();
+                final accessToken = await storage.getToken();
+                final request = error.requestOptions;
+                request.extra['authRetried'] = true;
+                request.headers['Authorization'] = 'Bearer $accessToken';
+                request.headers['access_token'] = accessToken;
+                final response = await _dio!.fetch<dynamic>(request);
+                handler.resolve(response);
+                return;
+              } on DioException catch (retryError) {
+                error = retryError;
               }
-            } finally {
-              _isRedirecting = false;
             }
+
+            await _clearSessionAndRedirect();
           }
 
           final body = error.response?.data;
@@ -154,6 +174,59 @@ class DioHelper {
           maxWidth: 90,
         ),
       );
+    }
+  }
+
+  static Future<bool> _refreshOnce() {
+    final existing = _refreshInFlight;
+    if (existing != null) return existing;
+
+    final completer = Completer<bool>();
+    _refreshInFlight = completer.future;
+    () async {
+      try {
+        final storage = GetIt.I<SessionStorage>();
+        final refreshToken = await storage.getRefreshToken();
+        if (refreshToken == null || refreshToken.isEmpty) {
+          completer.complete(false);
+          return;
+        }
+
+        final response = await _refreshClient!.post<Map<String, dynamic>>(
+          '/user/refresh-token',
+          data: {'refreshToken': refreshToken},
+        );
+        final data = response.data ?? const <String, dynamic>{};
+        final accessToken = data['access_token']?.toString() ?? '';
+        final nextRefreshToken = data['refresh_token']?.toString() ?? '';
+        if (accessToken.isEmpty || nextRefreshToken.isEmpty) {
+          completer.complete(false);
+          return;
+        }
+        await storage.updateTokens(
+          accessToken: accessToken,
+          refreshToken: nextRefreshToken,
+        );
+        completer.complete(true);
+      } on DioException {
+        completer.complete(false);
+      } finally {
+        _refreshInFlight = null;
+      }
+    }();
+    return completer.future;
+  }
+
+  static Future<void> _clearSessionAndRedirect() async {
+    if (_isRedirecting) return;
+    _isRedirecting = true;
+    try {
+      await GetIt.I<SessionStorage>().clear();
+      if (appRouter.current.name != LoginRoute.name) {
+        await appRouter.replaceAll([const LoginRoute()]);
+      }
+    } finally {
+      _isRedirecting = false;
     }
   }
 }

@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   Min,
   MinLength,
@@ -150,4 +151,25 @@ export class OtpStringDto {
 export class FindOneTokenDto {
   @IsString()
   id: string;
+}
+
+export class RefreshTokenDto {
+  @IsString()
+  @MinLength(20)
+  refreshToken: string;
+}
+
+export class ChangeActiveRoleDto {
+  @IsEnum(UserType)
+  role: UserType;
+}
+
+export class AdminAccountStatusDto {
+  @IsString()
+  status: 'active' | 'suspended' | 'deleted';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  reason?: string;
 }

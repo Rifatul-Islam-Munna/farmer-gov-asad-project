@@ -22,6 +22,11 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
   final _market = TextEditingController();
   final _minimum = TextEditingController();
   final _address = TextEditingController();
+  final _description = TextEditingController();
+  final _grade = TextEditingController();
+  String _category = 'agriculturalOutput';
+  bool _deliveryAvailable = false;
+  bool _negotiable = true;
   late Future<List<ListingModel>> _listings;
   bool _saving = false;
 
@@ -36,14 +41,20 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
     setState(() => _saving = true);
     try {
       await MarketplaceApi().createListing({
+        'category': _category,
+        'transactionType': 'sale',
         'goodCode': _code.text.trim(),
         'goodName': _name.text.trim(),
+        'description': _description.text.trim(),
         'quantity': double.parse(_quantity.text),
         'unit': 'kg',
         'governmentPrice': double.parse(_government.text),
         'marketPrice': double.parse(_market.text),
         'minimumPrice': double.parse(_minimum.text),
         'address': _address.text.trim(),
+        'grade': _grade.text.trim().isEmpty ? null : _grade.text.trim(),
+        'deliveryAvailable': _deliveryAvailable,
+        'negotiable': _negotiable,
       });
       setState(() => _listings = MarketplaceApi().myListings());
       if (mounted) {
@@ -105,9 +116,42 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: _category,
+                    decoration: const InputDecoration(
+                      labelText: 'Marketplace category',
+                      prefixIcon: Icon(Icons.category_outlined),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'agriculturalOutput', child: Text('Agricultural output')),
+                      DropdownMenuItem(value: 'livestock', child: Text('Livestock')),
+                      DropdownMenuItem(value: 'poultry', child: Text('Poultry')),
+                      DropdownMenuItem(value: 'fisheries', child: Text('Fisheries')),
+                      DropdownMenuItem(value: 'machinery', child: Text('Machinery')),
+                      DropdownMenuItem(value: 'machineryPart', child: Text('Machinery part')),
+                      DropdownMenuItem(value: 'seed', child: Text('Seed')),
+                      DropdownMenuItem(value: 'fertilizer', child: Text('Fertilizer')),
+                      DropdownMenuItem(value: 'pesticide', child: Text('Pesticide')),
+                      DropdownMenuItem(value: 'feed', child: Text('Feed')),
+                      DropdownMenuItem(value: 'medicine', child: Text('Medicine')),
+                      DropdownMenuItem(value: 'equipmentRental', child: Text('Equipment rental')),
+                      DropdownMenuItem(value: 'service', child: Text('Service')),
+                    ],
+                    onChanged: (value) => setState(() => _category = value ?? 'agriculturalOutput'),
+                  ),
+                  const SizedBox(height: 10),
                   _field(_name, 'Goods name', Icons.eco_rounded),
                   const SizedBox(height: 10),
                   _field(_code, 'Goods code', Icons.qr_code_rounded),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _description,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      prefixIcon: Icon(Icons.notes_rounded),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   _number(_quantity, 'Quantity in kg'),
                   const SizedBox(height: 10),
@@ -121,6 +165,26 @@ class _SellGoodsPanelState extends State<SellGoodsPanel> {
                     _address,
                     'Pickup location',
                     Icons.location_on_outlined,
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _grade,
+                    decoration: const InputDecoration(
+                      labelText: 'Grade or quality (optional)',
+                      prefixIcon: Icon(Icons.verified_outlined),
+                    ),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _deliveryAvailable,
+                    onChanged: (value) => setState(() => _deliveryAvailable = value),
+                    title: const Text('Delivery available'),
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _negotiable,
+                    onChanged: (value) => setState(() => _negotiable = value),
+                    title: const Text('Price negotiable'),
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(

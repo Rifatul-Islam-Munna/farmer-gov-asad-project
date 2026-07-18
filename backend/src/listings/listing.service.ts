@@ -1,4 +1,4 @@
-﻿import {
+import {
   BadRequestException,
   ForbiddenException,
   Injectable,
@@ -8,8 +8,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { toApiEntity } from '../lib/database/base.entity';
 import { UserType } from '../user/entities/user.entity';
-import { CreateListingDto, SearchListingsDto } from './dto/listing.dto';
-import { Listing, ListingStatus } from './entities/listing.entity';
+import { CreateListingDto } from './dto/listing.dto';
+import { ListingSearchDto } from './dto/listing-search.dto';
+import {
+  Listing,
+  ListingStatus,
+  ListingTransactionType,
+  MarketplaceCategory,
+} from './entities/listing.entity';
 
 @Injectable()
 export class ListingService {
@@ -33,8 +39,11 @@ export class ListingService {
       this.listingRepository.create({
         ownerId,
         assistingAgentId,
+        category: dto.category ?? MarketplaceCategory.AGRICULTURAL_OUTPUT,
+        transactionType: dto.transactionType ?? ListingTransactionType.SALE,
         goodCode: dto.goodCode.trim().toLowerCase(),
         goodName: dto.goodName.trim(),
+        description: dto.description?.trim(),
         imageUrls: dto.imageUrls ?? [],
         quantity: dto.quantity,
         reservedQuantity: 0,
@@ -47,6 +56,8 @@ export class ListingService {
         governmentPrice: dto.governmentPrice,
         marketPrice: dto.marketPrice,
         minimumPrice: dto.minimumPrice,
+        negotiable: dto.negotiable ?? true,
+        deliveryAvailable: dto.deliveryAvailable ?? false,
         status,
         publishedAt: status === ListingStatus.PUBLISHED ? new Date() : null,
       }),
@@ -54,18 +65,25 @@ export class ListingService {
     return { data: this.toView(record) };
   }
 
-  async search(query: SearchListingsDto) {
+  async search(query: ListingSearchDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
     const qb = this.listingRepository
       .createQueryBuilder('listing')
       .where('listing.status IN (:...statuses)', {
         statuses: [ListingStatus.PUBLISHED, ListingStatus.RESERVED],
-      })
-      .orderBy('listing.createdAt', 'DESC')
-      .take(100);
+      });
 
     if (query.goodCode?.trim()) {
       qb.andWhere('listing.goodCode = :goodCode', {
         goodCode: query.goodCode.trim().toLowerCase(),
+      });
+    }
+    if (query.category)
+      qb.andWhere('listing.category = :category', { category: query.category });
+    if (query.transactionType) {
+      qb.andWhere('listing.transactionType = :transactionType', {
+        transactionType: query.transactionType,
       });
     }
     if (query.address?.trim()) {
@@ -73,9 +91,14 @@ export class ListingService {
         address: `%${query.address.trim()}%`,
       });
     }
+    if (query.grade?.trim()) {
+      qb.andWhere('listing.grade ILIKE :grade', {
+        grade: `%${query.grade.trim()}%`,
+      });
+    }
     if (query.search?.trim()) {
       qb.andWhere(
-        '(listing.goodName ILIKE :search OR listing.goodCode ILIKE :search OR listing.address ILIKE :search)',
+        '(listing.goodName ILIKE :search OR listing.goodCode ILIKE :search OR listing.description ILIKE :search OR listing.address ILIKE :search)',
         { search: `%${query.search.trim()}%` },
       );
     }
@@ -89,8 +112,73 @@ export class ListingService {
         maximumPrice: query.maximumPrice,
       });
     }
+    if (query.minimumQuantity != null) {
+      qb.andWhere(
+        '(listing.quantity - listing.reservedQuantity) >= :minimumQuantity',
+        {
+          minimumQuantity: query.minimumQuantity,
+        },
+      );
+    }
+    if (query.deliveryAvailable != null) {
+      qb.andWhere('listing.deliveryAvailable = :deliveryAvailable', {
+        deliveryAvailable: query.deliveryAvailable,
+      });
+    }
+    if (query.negotiable != null) {
+      qb.andWhere('listing.negotiable = :negotiable', {
+        negotiable: query.negotiable,
+      });
+    }
+    if (query.harvestFrom) {
+      qb.andWhere('listing.harvestDate >= :harvestFrom', {
+        harvestFrom: new Date(query.harvestFrom),
+      });
+    }
+    if (query.harvestTo) {
+      qb.andWhere('listing.harvestDate <= :harvestTo', {
+        harvestTo: new Date(query.harvestTo),
+      });
+    }
 
-    return { data: (await qb.getMany()).map((item) => this.toView(item)) };
+    switch (query.sortBy) {
+      case 'priceLow':
+        qb.orderBy('listing.minimumPrice', 'ASC').addOrderBy(
+          'listing.id',
+          'ASC',
+        );
+        break;
+      case 'priceHigh':
+        qb.orderBy('listing.minimumPrice', 'DESC').addOrderBy(
+          'listing.id',
+          'DESC',
+        );
+        break;
+      case 'quantityHigh':
+        qb.orderBy(
+          '(listing.quantity - listing.reservedQuantity)',
+          'DESC',
+        ).addOrderBy('listing.id', 'DESC');
+        break;
+      default:
+        qb.orderBy('listing.createdAt', 'DESC').addOrderBy(
+          'listing.id',
+          'DESC',
+        );
+    }
+
+    qb.skip((page - 1) * pageSize).take(pageSize);
+    const [records, total] = await qb.getManyAndCount();
+    return {
+      data: records.map((item) => this.toView(item)),
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+        hasNextPage: page * pageSize < total,
+      },
+    };
   }
 
   async findOne(id: string) {
@@ -110,7 +198,10 @@ export class ListingService {
   async cancel(id: string, userId: string, role: UserType) {
     const record = await this.listingRepository.findOne({ where: { id } });
     if (!record) throw new NotFoundException('Listing not found');
-    if (role !== UserType.ADMIN && record.ownerId !== userId) {
+    if (
+      ![UserType.ADMIN, UserType.SUPER_ADMIN].includes(role) &&
+      record.ownerId !== userId
+    ) {
       throw new ForbiddenException('You do not own this listing');
     }
     if ([ListingStatus.SOLD, ListingStatus.CANCELLED].includes(record.status)) {
@@ -121,7 +212,7 @@ export class ListingService {
   }
 
   async canManage(id: string, userId: string, role: UserType) {
-    if (role === UserType.ADMIN) return true;
+    if ([UserType.ADMIN, UserType.SUPER_ADMIN].includes(role)) return true;
     return this.listingRepository.exists({ where: { id, ownerId: userId } });
   }
 
@@ -147,9 +238,8 @@ export class ListingService {
       }
 
       record.reservedQuantity += quantity;
-      if (record.reservedQuantity >= record.quantity) {
+      if (record.reservedQuantity >= record.quantity)
         record.status = ListingStatus.RESERVED;
-      }
       return repository.save(record);
     });
   }

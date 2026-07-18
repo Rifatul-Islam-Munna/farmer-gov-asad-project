@@ -34,10 +34,23 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _uploading = false;
   bool _obscure = true;
 
-  bool get _needsDocuments =>
-      _role == UserRole.agent ||
-      _role == UserRole.buyer ||
-      _role == UserRole.medicineSeller;
+  bool get _needsDocuments => {
+        UserRole.agent,
+        UserRole.agricultureSpecialist,
+        UserRole.veterinaryDoctor,
+        UserRole.seller,
+        UserRole.machinerySeller,
+        UserRole.medicineSeller,
+      }.contains(_role);
+
+  bool get _needsBusinessName => {
+        UserRole.wholesaleBuyer,
+        UserRole.buyer,
+        UserRole.seller,
+        UserRole.machinerySeller,
+      }.contains(_role);
+
+  bool get _needsAddress => _role != UserRole.publicUser;
 
   @override
   void dispose() {
@@ -93,15 +106,16 @@ class _RegisterPageState extends State<RegisterPage> {
               ? double.tryParse(_land.text)
               : null,
           documents: List.unmodifiable(_documents),
-          businessName: _role == UserRole.buyer
-              ? _optional(_business.text)
-              : null,
-          shopName: _role == UserRole.medicineSeller
+          businessName:
+              _needsBusinessName ? _optional(_business.text) : null,
+          shopName: {
+                UserRole.seller,
+                UserRole.machinerySeller,
+                UserRole.medicineSeller,
+              }.contains(_role)
               ? _optional(_shop.text)
               : null,
-          address: _role == UserRole.agent || _role == UserRole.medicineSeller
-              ? _optional(_address.text)
-              : null,
+          address: _needsAddress ? _optional(_address.text) : null,
         ),
       );
       AppToast.show(
@@ -126,9 +140,16 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     const roles = [
       UserRole.farmer,
+      UserRole.wholesaleBuyer,
       UserRole.buyer,
+      UserRole.studentVolunteer,
       UserRole.agent,
+      UserRole.agricultureSpecialist,
+      UserRole.veterinaryDoctor,
+      UserRole.seller,
+      UserRole.machinerySeller,
       UserRole.medicineSeller,
+      UserRole.publicUser,
     ];
 
     return Scaffold(
@@ -199,27 +220,34 @@ class _RegisterPageState extends State<RegisterPage> {
                 number: true,
               ),
             ],
-            if (_role == UserRole.buyer) ...[
+            if (_needsBusinessName) ...[
               const SizedBox(height: 12),
               _field(
                 _business,
-                'Business name (optional)',
+                'Business name',
                 Icons.business_outlined,
-                optional: true,
               ),
             ],
-            if (_role == UserRole.agent ||
-                _role == UserRole.medicineSeller) ...[
+            if (_needsAddress) ...[
               const SizedBox(height: 12),
               _field(
                 _address,
-                _role == UserRole.agent ? 'Service address' : 'Shop address',
+                _role == UserRole.agent
+                    ? 'Service address'
+                    : _role == UserRole.agricultureSpecialist ||
+                          _role == UserRole.veterinaryDoctor
+                    ? 'Practice address'
+                    : 'Business or home address',
                 Icons.location_on_outlined,
               ),
             ],
-            if (_role == UserRole.medicineSeller) ...[
+            if ({
+              UserRole.seller,
+              UserRole.machinerySeller,
+              UserRole.medicineSeller,
+            }.contains(_role)) ...[
               const SizedBox(height: 12),
-              _field(_shop, 'Shop name', Icons.storefront_outlined),
+              _field(_shop, 'Shop or business name', Icons.storefront_outlined),
             ],
             if (_needsDocuments) ...[
               const SizedBox(height: 18),
@@ -310,19 +338,29 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  String _roleLabel(UserRole role) => switch (role) {
-    UserRole.farmer => 'Farmer',
-    UserRole.buyer => 'Buyer',
-    UserRole.agent => 'Agent',
-    UserRole.medicineSeller => 'Medicine seller',
-    UserRole.admin => 'Admin',
-  };
+  String _roleLabel(UserRole role) {
+    final source = role.name.replaceAllMapped(
+      RegExp(r'([A-Z])'),
+      (match) => ' ${match.group(1)}',
+    );
+    return source[0].toUpperCase() + source.substring(1);
+  }
 
   IconData _roleIcon(UserRole role) => switch (role) {
     UserRole.farmer => Icons.agriculture_outlined,
+    UserRole.wholesaleBuyer => Icons.warehouse_outlined,
     UserRole.buyer => Icons.shopping_basket_outlined,
+    UserRole.studentVolunteer => Icons.volunteer_activism_outlined,
     UserRole.agent => Icons.support_agent_outlined,
+    UserRole.agricultureSpecialist => Icons.eco_outlined,
+    UserRole.veterinaryDoctor => Icons.pets_outlined,
+    UserRole.seller => Icons.storefront_outlined,
+    UserRole.machinerySeller => Icons.precision_manufacturing_outlined,
     UserRole.medicineSeller => Icons.medical_services_outlined,
+    UserRole.publicUser => Icons.public_outlined,
+    UserRole.governmentOfficer => Icons.account_balance_outlined,
+    UserRole.support => Icons.support_outlined,
     UserRole.admin => Icons.admin_panel_settings_outlined,
+    UserRole.superAdmin => Icons.security_outlined,
   };
 }

@@ -1,4 +1,4 @@
-﻿import { BaseAppEntity } from '../../lib/database/base.entity';
+import { BaseAppEntity } from '../../lib/database/base.entity';
 import { Column, Entity, Index } from 'typeorm';
 
 export enum ListingStatus {
@@ -12,7 +12,30 @@ export enum ListingStatus {
   REJECTED = 'rejected',
 }
 
+export enum MarketplaceCategory {
+  AGRICULTURAL_OUTPUT = 'agriculturalOutput',
+  LIVESTOCK = 'livestock',
+  POULTRY = 'poultry',
+  FISHERIES = 'fisheries',
+  MACHINERY = 'machinery',
+  MACHINERY_PART = 'machineryPart',
+  SEED = 'seed',
+  FERTILIZER = 'fertilizer',
+  PESTICIDE = 'pesticide',
+  FEED = 'feed',
+  MEDICINE = 'medicine',
+  EQUIPMENT_RENTAL = 'equipmentRental',
+  SERVICE = 'service',
+}
+
+export enum ListingTransactionType {
+  SALE = 'sale',
+  RENTAL = 'rental',
+  SERVICE = 'service',
+}
+
 @Entity({ name: 'listings' })
+@Index(['category', 'status', 'createdAt'])
 @Index(['goodCode', 'status', 'createdAt'])
 export class Listing extends BaseAppEntity {
   @Index()
@@ -24,12 +47,31 @@ export class Listing extends BaseAppEntity {
   assistingAgentId?: string | null;
 
   @Index()
+  @Column({
+    type: 'enum',
+    enum: MarketplaceCategory,
+    default: MarketplaceCategory.AGRICULTURAL_OUTPUT,
+  })
+  category!: MarketplaceCategory;
+
+  @Index()
+  @Column({
+    type: 'enum',
+    enum: ListingTransactionType,
+    default: ListingTransactionType.SALE,
+  })
+  transactionType!: ListingTransactionType;
+
+  @Index()
   @Column({ length: 80 })
   goodCode!: string;
 
   @Index()
   @Column({ length: 160 })
   goodName!: string;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string | null;
 
   @Column({ type: 'text', array: true, default: () => 'ARRAY[]::text[]' })
   imageUrls!: string[];
@@ -66,6 +108,12 @@ export class Listing extends BaseAppEntity {
 
   @Column({ type: 'double precision' })
   minimumPrice!: number;
+
+  @Column({ default: true })
+  negotiable!: boolean;
+
+  @Column({ default: false })
+  deliveryAvailable!: boolean;
 
   @Index()
   @Column({

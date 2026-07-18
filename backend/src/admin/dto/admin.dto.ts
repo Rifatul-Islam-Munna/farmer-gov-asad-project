@@ -1,5 +1,8 @@
 ﻿import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
+  ArrayUnique,
+  IsArray,
   IsBoolean,
   IsEmail,
   IsEnum,
@@ -156,4 +159,22 @@ export class AdminUpdateInventoryDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean;
+}
+
+export class AdminUpdateRolesDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayUnique()
+  @IsEnum(UserType, { each: true })
+  roles: UserType[];
+}
+
+export class AdminUpdateAccountStatusDto {
+  @IsIn(['active', 'suspended', 'deleted'])
+  status: 'active' | 'suspended' | 'deleted';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  reason?: string;
 }

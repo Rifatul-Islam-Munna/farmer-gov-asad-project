@@ -1,4 +1,4 @@
-# AgriVision AI — Master Implementation Plan
+# AgriVision AI â€” Master Implementation Plan
 
 > Source of truth for implementation of the Flutter + NestJS + Next.js agriculture platform.
 >
@@ -14,18 +14,18 @@ AgriVision AI is a Bangladesh-focused smart agriculture platform that connects f
 
 Primary client applications:
 
-- `farmer/` — Flutter Android/iOS application for farmers and other mobile users.
-- `frontend/` — Next.js web application, primarily the admin/control portal and future browser workflows.
-- `backend/` — NestJS REST/WebSocket API and all core business logic.
+- `farmer/` â€” Flutter Android/iOS application for farmers and other mobile users.
+- `frontend/` â€” Next.js web application, primarily the admin/control portal and future browser workflows.
+- `backend/` â€” NestJS REST/WebSocket API and all core business logic.
 
 Primary data/infrastructure components:
 
-- MongoDB for transactional/document data through Mongoose.
+- PostgreSQL for canonical transactional and relational business data through TypeORM.
 - Qdrant for vector embeddings and similarity search.
 - Object storage compatible with S3 for original images, thumbnails, documents, invoices, and generated assets.
 - Redis/BullMQ for queues, retries, throttling support, scheduled work, and background processing.
-- Gemini as the first AI provider, routed through a provider-neutral AI gateway with 5–10 API keys and future support for OpenAI or custom providers.
-- OneSignal/Firebase-compatible push notification infrastructure for mobile alerts.
+- Gemini as the first AI provider, routed through a provider-neutral AI gateway with an admin-managed encrypted key pool and future support for OpenAI or custom providers.
+- OneSignal as the mandatory remote push provider, with local native presentation and siren handling in Flutter.
 
 ---
 
@@ -40,7 +40,7 @@ Primary data/infrastructure components:
 - Secrets must never be shipped to Flutter or exposed in Next.js client bundles.
 - All AI calls must pass through a provider abstraction.
 - All long-running image ingestion and vectorization jobs must run asynchronously through BullMQ.
-- MongoDB stores canonical business records and Qdrant stores searchable vector representations plus lightweight identifiers.
+- PostgreSQL stores canonical business records and Qdrant stores searchable vector representations plus lightweight identifiers.
 
 ### 2.2 Explicitly excluded from current plan
 
@@ -76,51 +76,51 @@ Recommended ownership:
 
 ```text
 project-gov-farmer/
-├─ backend/                 # NestJS API, jobs, AI gateway, Qdrant integration
-├─ farmer/                  # Flutter mobile app
-├─ frontend/                # Next.js admin and web portal
-├─ scripts/                 # setup, migration, seed, validation scripts
-├─ plan.md                  # implementation specification
-├─ done.md                  # audited completion checklist
-└─ README.md                # local setup and project overview
+â”œâ”€ backend/                 # NestJS API, jobs, AI gateway, Qdrant integration
+â”œâ”€ farmer/                  # Flutter mobile app
+â”œâ”€ frontend/                # Next.js admin and web portal
+â”œâ”€ scripts/                 # setup, migration, seed, validation scripts
+â”œâ”€ plan.md                  # implementation specification
+â”œâ”€ done.md                  # audited completion checklist
+â””â”€ README.md                # local setup and project overview
 ```
 
 Recommended backend modules:
 
 ```text
 backend/src/
-├─ auth/
-├─ users/
-├─ roles/
-├─ farms/
-├─ crops/
-├─ livestock/
-├─ poultry/
-├─ fisheries/
-├─ diagnoses/
-├─ image-profiles/
-├─ ai/
-│  ├─ providers/
-│  ├─ routing/
-│  ├─ prompts/
-│  ├─ moderation/
-│  └─ schemas/
-├─ vectors/
-├─ uploads/
-├─ weather/
-├─ alerts/
-├─ marketplace/
-├─ orders/
-├─ invoices/
-├─ consultations/
-├─ chat/
-├─ notifications/
-├─ news/
-├─ government-services/
-├─ admin/
-├─ analytics/
-├─ jobs/
-└─ common/
+â”œâ”€ auth/
+â”œâ”€ users/
+â”œâ”€ roles/
+â”œâ”€ farms/
+â”œâ”€ crops/
+â”œâ”€ livestock/
+â”œâ”€ poultry/
+â”œâ”€ fisheries/
+â”œâ”€ diagnoses/
+â”œâ”€ image-profiles/
+â”œâ”€ ai/
+â”‚  â”œâ”€ providers/
+â”‚  â”œâ”€ routing/
+â”‚  â”œâ”€ prompts/
+â”‚  â”œâ”€ moderation/
+â”‚  â””â”€ schemas/
+â”œâ”€ vectors/
+â”œâ”€ uploads/
+â”œâ”€ weather/
+â”œâ”€ alerts/
+â”œâ”€ marketplace/
+â”œâ”€ orders/
+â”œâ”€ invoices/
+â”œâ”€ consultations/
+â”œâ”€ chat/
+â”œâ”€ notifications/
+â”œâ”€ news/
+â”œâ”€ government-services/
+â”œâ”€ admin/
+â”œâ”€ analytics/
+â”œâ”€ jobs/
+â””â”€ common/
 ```
 
 ---
@@ -379,7 +379,7 @@ Flutter / Next.js
   -> HTTPS request with JWT
   -> NestJS validation + role guard + throttling
   -> service layer
-  -> MongoDB / Qdrant / storage / external API
+  -> PostgreSQL / Qdrant / storage / external API
   -> standardized response
   -> client state update
 ```
@@ -420,10 +420,10 @@ Error envelope:
 7. Worker validates actual MIME, strips risky metadata, corrects orientation, creates thumbnails, and calculates checksum.
 8. Processing status is available through polling and WebSocket events.
 
-### 6.3 Image-profile creation flow (10–500 images)
+### 6.3 Image-profile creation flow (10â€“500 images)
 
 1. Admin/specialist creates an `ImageProfile` with a canonical label.
-2. Client uploads 10–500 raw images in batches; recommended batch size is 10–25.
+2. Client uploads 10â€“500 raw images in batches; recommended batch size is 10â€“25.
 3. Backend deduplicates with checksum/perceptual hash.
 4. Low-resolution, corrupt, unsupported, or extreme-aspect-ratio files are rejected.
 5. Sharp creates normalized images and thumbnails.
@@ -451,13 +451,13 @@ Error envelope:
 5. Confidence is calibrated, not treated as raw cosine similarity.
 6. Suggested initial decision policy:
    - `>= 0.85`: high-confidence likely match
-   - `0.70–0.8499`: possible match; show alternatives and request more images
+   - `0.70â€“0.8499`: possible match; show alternatives and request more images
    - `< 0.70`: unknown/insufficient confidence
 7. Thresholds must be configurable per domain/profile and validated against a labeled test set.
 8. The response includes top matches, confidence, number of supporting samples, and a safety disclaimer.
 9. For disease or medical-like conclusions, similarity results are evidence only; Gemini generates an explanatory response and a specialist review route remains available.
 
-Important: “70–80%” must be displayed as calibrated confidence only after evaluation. Do not label raw Qdrant cosine score as a literal probability.
+Important: â€œ70â€“80%â€ must be displayed as calibrated confidence only after evaluation. Do not label raw Qdrant cosine score as a literal probability.
 
 ---
 
@@ -498,7 +498,7 @@ Operations:
 - payload filtering by active model version and domain
 - scheduled snapshots/backups
 - rebuild command for model migration
-- deletion synchronization when MongoDB records are deleted/archived
+- deletion synchronization when PostgreSQL records are soft-deleted, archived, or permanently removed
 
 Qdrant credentials remain in backend environment variables only.
 
@@ -527,19 +527,19 @@ interface EmbeddingProvider {
 
 Provider implementations:
 
-- `GeminiProvider` — enabled now.
-- `OpenAiProvider` — placeholder/disabled until configured.
-- `CustomHttpProvider` — future configurable internal model endpoint.
+- `GeminiProvider` â€” enabled now.
+- `OpenAiProvider` â€” placeholder/disabled until configured.
+- `CustomHttpProvider` â€” future configurable internal model endpoint.
 
 Business modules must depend on the interface/gateway, never import Gemini SDK directly.
 
-### 8.2 Multi-key Gemini routing (5–10 keys)
+### 8.2 Multi-key Gemini routing (5â€“10 keys)
 
 Environment configuration:
 
 ```env
 AI_DEFAULT_PROVIDER=gemini
-GEMINI_API_KEYS=key1,key2,key3,key4,key5
+# Gemini keys are encrypted and managed from the admin dashboard
 GEMINI_TEXT_MODEL=...
 GEMINI_VISION_MODEL=...
 AI_REQUEST_TIMEOUT_MS=45000
@@ -548,7 +548,7 @@ AI_MAX_RETRIES=2
 
 Key-pool behavior:
 
-- Parse and validate keys at startup.
+- Load the encrypted key pool from PostgreSQL through the backend integration-settings service.
 - Never log full keys.
 - Maintain per-key state: healthy, cooling-down, disabled, last error, request count.
 - Use weighted round-robin or least-recently-used routing.
@@ -556,7 +556,7 @@ Key-pool behavior:
 - Apply exponential backoff with jitter.
 - Use a circuit breaker after repeated failures.
 - Distinguish permanent request errors from key-specific quota errors.
-- Cap retries to prevent 5–10 duplicate billable calls.
+- Cap retries to prevent 5â€“10 duplicate billable calls.
 - Track provider/model/key alias, latency, token usage, and failure category.
 - Admin can view health but never retrieve raw keys.
 
@@ -772,7 +772,7 @@ Never trust unvalidated free-form JSON.
 
 - Admin authentication and RBAC.
 - Management dashboards.
-- Image-profile bulk uploader supporting 10–500 files with chunking, progress, failed-file retry, and duplicate reporting.
+- Image-profile bulk uploader supporting 10â€“500 files with chunking, progress, failed-file retry, and duplicate reporting.
 - AI configuration health view without exposing secrets.
 - Moderation, CMS, reports, alerts, and audit logs.
 - Server-side API proxy only where justified; canonical business API remains NestJS.
@@ -780,7 +780,7 @@ Never trust unvalidated free-form JSON.
 ### NestJS
 
 - All authorization and business rules.
-- MongoDB persistence.
+- PostgreSQL persistence through TypeORM.
 - Upload orchestration.
 - Background jobs.
 - Gemini and future provider routing.
@@ -807,10 +807,10 @@ Never trust unvalidated free-form JSON.
 - Encrypt secrets and use deployment secret manager.
 - Remove EXIF GPS unless explicitly required and consented.
 - User consent for AI processing and retention.
-- Deletion workflow removes MongoDB records, storage objects, and Qdrant points.
+- Deletion workflow coordinates PostgreSQL records, storage objects, and Qdrant points.
 - Idempotency keys for checkout, payments, and ingestion confirmation.
 - Centralized logs with request IDs and secret redaction.
-- MongoDB backup and Qdrant snapshot procedures.
+- PostgreSQL backup/restore and Qdrant snapshot procedures.
 - Graceful degradation when AI/Qdrant/weather providers are unavailable.
 
 ---
@@ -820,7 +820,7 @@ Never trust unvalidated free-form JSON.
 ### Backend
 
 - Unit tests for services, guards, provider routing, confidence aggregation.
-- Integration tests with MongoDB test database.
+- Integration tests with a PostgreSQL test database.
 - Qdrant integration tests against test collection.
 - Upload validation tests.
 - AI provider contract tests using mocks.
@@ -858,28 +858,28 @@ Measure:
 - confidence calibration
 - performance by class/profile
 
-Do not release a 70–80% confidence claim before this evaluation.
+Do not release a 70â€“80% confidence claim before this evaluation.
 
 ---
 
 ## 13. Delivery Phases
 
-### Phase 0 — Foundation
+### Phase 0 â€” Foundation
 
 - Normalize environment configuration.
 - Complete auth/roles and API conventions.
-- MongoDB indexes and migration/seed strategy.
+- PostgreSQL indexes, TypeORM migration, backup, restore, and seed strategy.
 - Redis/BullMQ and object storage setup.
 - CI checks for backend/frontend/flutter.
 - Docker Compose for local dependencies.
 
-### Phase 1 — Existing MVP completion
+### Phase 1 â€” Existing MVP completion
 
 - Stabilize current auth, marketplace, admin, alerts, market price, diagnosis demo.
 - Replace demo/mock data with API-backed records.
 - Add tests and API documentation.
 
-### Phase 2 — AI gateway and Gemini
+### Phase 2 â€” AI gateway and Gemini
 
 - Provider-neutral interfaces.
 - Gemini multi-key pool.
@@ -887,46 +887,46 @@ Do not release a 70–80% confidence claim before this evaluation.
 - AI usage logging, throttling, retries, and circuit breaker.
 - crop diagnosis and assistant integration.
 
-### Phase 3 — Qdrant image profiles
+### Phase 3 â€” Qdrant image profiles
 
 - Image profile schema and admin UI.
-- 10–500 image upload pipeline.
+- 10â€“500 image upload pipeline.
 - image normalization/deduplication.
 - embeddings and Qdrant upsert.
 - centroid profile generation.
 - similarity search and confidence aggregation.
 - evaluation tools and threshold configuration.
 
-### Phase 4 — Farm management
+### Phase 4 â€” Farm management
 
 - Digital farm profile.
 - crop cycles and dashboard.
 - irrigation/fertilizer/pest/harvest modules.
 - farm calendar and reports.
 
-### Phase 5 — Weather and alerts
+### Phase 5 â€” Weather and alerts
 
 - weather provider.
 - river/flood/storm rules.
 - push and voice alerts.
 - acknowledgement and emergency UX.
 
-### Phase 6 — Livestock, poultry, fisheries
+### Phase 6 â€” Livestock, poultry, fisheries
 
 - records, schedules, health tracking, production, alerts, diagnosis routing.
 
-### Phase 7 — Marketplace completion
+### Phase 7 â€” Marketplace completion
 
 - cart/checkout/order/delivery/payment.
 - invoices and QR verification.
 - buyer negotiation, auction option, recommendations.
 
-### Phase 8 — Consultation, news, government services
+### Phase 8 â€” Consultation, news, government services
 
 - specialists, appointments, chat/video adapter, prescriptions.
 - CMS and public information modules.
 
-### Phase 9 — Hardening and release
+### Phase 9 â€” Hardening and release
 
 - load testing.
 - security review.
@@ -962,21 +962,26 @@ Backend categories:
 ```env
 NODE_ENV=
 PORT=
-MONGODB_URI=
-JWT_ACCESS_SECRET=
-JWT_REFRESH_SECRET=
+DB_HOST=
+DB_PORT=
+DB_USERNAME=
+DB_PASSWORD=
+DB_NAME=
+DB_SYNCHRONIZE=
+ACCESS_TOKEN=
+REFRESH_TOKEN_SECRET=
 REDIS_URL=
-S3_ENDPOINT=
-S3_REGION=
-S3_BUCKET=
-S3_ACCESS_KEY_ID=
-S3_SECRET_ACCESS_KEY=
+MINIO_URL=
+MINIO_REGION=
+MINIO_BUCKET=
+MINIO_ACCESS_KEY=
+MINIO_SECRET_KEY=
 QDRANT_URL=
 QDRANT_API_KEY=
 QDRANT_SAMPLE_COLLECTION=agri_image_samples_v1
 QDRANT_PROFILE_COLLECTION=agri_image_profiles_v1
 AI_DEFAULT_PROVIDER=gemini
-GEMINI_API_KEYS=
+# Gemini keys are stored encrypted through the admin integration settings API.
 GEMINI_TEXT_MODEL=
 GEMINI_VISION_MODEL=
 IMAGE_EMBEDDING_PROVIDER=
@@ -993,7 +998,7 @@ Flutter/Next.js may contain only public configuration such as API base URL and p
 
 ## 16. Final Scope Validation
 
-This plan includes the PDF’s current-use features:
+This plan includes the PDFâ€™s current-use features:
 
 - crop disease and crop health
 - irrigation, fertilizer, pests, harvest/yield
@@ -1021,7 +1026,7 @@ This plan additionally incorporates the owner-requested Qdrant image-profile ser
 
 ---
 
-# 17. Architecture Addendum — Weather, Voice, Alerts, Performance, Roles, and Nested Routing
+# 17. Architecture Addendum â€” Weather, Voice, Alerts, Performance, Roles, and Nested Routing
 
 This addendum overrides any earlier generic wording where a more specific decision is stated below.
 
@@ -1043,15 +1048,15 @@ interface WeatherProvider {
 
 Implementation classes:
 
-- `WindyWeatherProvider` — active provider.
-- `MockWeatherProvider` — tests and local development.
-- `FallbackWeatherProvider` — optional future provider.
+- `WindyWeatherProvider` â€” active provider.
+- `MockWeatherProvider` â€” tests and local development.
+- `FallbackWeatherProvider` â€” optional future provider.
 
 ### Windy integration rules
 
 - Windy API keys exist only in NestJS environment variables.
 - Flutter and Next.js never call Windy directly.
-- Backend normalizes Windy responses to the project’s own weather DTOs.
+- Backend normalizes Windy responses to the projectâ€™s own weather DTOs.
 - All weather values include:
   - provider name;
   - model name if returned;
@@ -1064,7 +1069,7 @@ Implementation classes:
 - Avoid one external request per mobile screen refresh.
 - Use Redis to cache popular locations.
 - Apply request coalescing so simultaneous users in one area share one Windy request.
-- Store critical hazard snapshots in MongoDB for audit and notification decisions.
+- Store critical hazard snapshots in PostgreSQL for audit and notification decisions.
 - Separate display weather from emergency alert decisions.
 
 ### Weather domains to normalize
@@ -1166,14 +1171,14 @@ User holds/taps microphone
 
 Add after compatibility testing:
 
-- `speech_to_text` — simple online speech recognition bridge using platform services;
-- `flutter_tts` — fast device text-to-speech response;
-- `record` — optional raw audio capture when server-side transcription is needed;
-- `audio_session` — microphone/TTS focus management;
-- `just_audio` — playback of streamed/generated audio and alert previews;
-- `connectivity_plus` — detect internet state;
-- `permission_handler` — already present, for microphone/notification permissions;
-- `wakelock_plus` — only during an active critical voice workflow, never permanently;
+- `speech_to_text` â€” simple online speech recognition bridge using platform services;
+- `flutter_tts` â€” fast device text-to-speech response;
+- `record` â€” optional raw audio capture when server-side transcription is needed;
+- `audio_session` â€” microphone/TTS focus management;
+- `just_audio` â€” playback of streamed/generated audio and alert previews;
+- `connectivity_plus` â€” detect internet state;
+- `permission_handler` â€” already present, for microphone/notification permissions;
+- `wakelock_plus` â€” only during an active critical voice workflow, never permanently;
 - `rxdart` only if stream debouncing is not already handled by the selected state architecture.
 
 Preferred first version:
@@ -1206,7 +1211,7 @@ Do not let Gemini directly navigate or execute actions. Gemini returns a validat
     "crop": "rice"
   },
   "requiresConfirmation": false,
-  "spokenReply": "ক্যামেরা খুলছি।"
+  "spokenReply": "à¦•à§à¦¯à¦¾à¦®à§‡à¦°à¦¾ à¦–à§à¦²à¦›à¦¿à¥¤"
 }
 ```
 
@@ -1251,12 +1256,12 @@ interface NotificationChannelProvider {
 
 Providers:
 
-- `OneSignalPushProvider` — initial push provider.
-- `SmsProvider` — interface plus disabled placeholder implementation.
-- `WhatsAppProvider` — interface plus disabled placeholder implementation.
-- `EmailProvider` — SMTP/API adapter.
-- `VoiceCallProvider` — future emergency call adapter.
-- `InAppProvider` — always available.
+- `OneSignalPushProvider` â€” initial push provider.
+- `SmsProvider` â€” interface plus disabled placeholder implementation.
+- `WhatsAppProvider` â€” interface plus disabled placeholder implementation.
+- `EmailProvider` â€” SMTP/API adapter.
+- `VoiceCallProvider` â€” future emergency call adapter.
+- `InAppProvider` â€” always available.
 
 Never reference a vendor SDK inside business modules. Business modules publish a notification command to `NotificationOrchestrator`; the selected provider handles delivery.
 
@@ -1396,7 +1401,7 @@ Initial measurable targets:
 
 - app cold-start target appropriate to supported devices and measured in release builds;
 - first dashboard cached content visible within approximately one second after shell load;
-- normal API p95 under 500–800 ms excluding third-party/AI operations;
+- normal API p95 under 500â€“800 ms excluding third-party/AI operations;
 - weather cache hit response p95 under 300 ms;
 - list scrolling without visible jank at 60 Hz on selected baseline devices;
 - voice transcript UI responds immediately and network answer begins within a few seconds under normal connectivity;
@@ -1467,102 +1472,102 @@ The current app already uses AutoRoute and an `EmptyShellRoute` tab structure. C
 
 ```text
 /
-├─ splash
-├─ auth/
-│  ├─ login
-│  ├─ register
-│  ├─ otp
-│  ├─ forgot-password
-│  └─ verification-pending
-├─ onboarding/
-│  ├─ language
-│  ├─ role-selection
-│  ├─ profile
-│  └─ permissions
-└─ app/                       # authenticated shell
-   ├─ home/                   # nested stack
-   ├─ farms/                  # nested stack
-   ├─ diagnose/               # nested stack
-   ├─ marketplace/            # nested stack
-   ├─ alerts/                 # nested stack
-   ├─ assistant/              # nested stack/modal routes
-   ├─ consultations/          # nested stack
-   └─ account/                # nested stack
+â”œâ”€ splash
+â”œâ”€ auth/
+â”‚  â”œâ”€ login
+â”‚  â”œâ”€ register
+â”‚  â”œâ”€ otp
+â”‚  â”œâ”€ forgot-password
+â”‚  â””â”€ verification-pending
+â”œâ”€ onboarding/
+â”‚  â”œâ”€ language
+â”‚  â”œâ”€ role-selection
+â”‚  â”œâ”€ profile
+â”‚  â””â”€ permissions
+â””â”€ app/                       # authenticated shell
+   â”œâ”€ home/                   # nested stack
+   â”œâ”€ farms/                  # nested stack
+   â”œâ”€ diagnose/               # nested stack
+   â”œâ”€ marketplace/            # nested stack
+   â”œâ”€ alerts/                 # nested stack
+   â”œâ”€ assistant/              # nested stack/modal routes
+   â”œâ”€ consultations/          # nested stack
+   â””â”€ account/                # nested stack
 ```
 
 ### Example nested route tree
 
 ```text
 app/home
-├─ dashboard
-├─ weather-details
-├─ market-summary
-└─ quick-actions
+â”œâ”€ dashboard
+â”œâ”€ weather-details
+â”œâ”€ market-summary
+â””â”€ quick-actions
 
 app/farms
-├─ farm-list
-├─ farm/:farmId
-│  ├─ overview
-│  ├─ crops
-│  │  ├─ crop-list
-│  │  ├─ crop/:cropCycleId
-│  │  ├─ observations
-│  │  └─ plans
-│  ├─ livestock
-│  ├─ poultry
-│  ├─ fisheries
-│  ├─ calendar
-│  └─ reports
+â”œâ”€ farm-list
+â”œâ”€ farm/:farmId
+â”‚  â”œâ”€ overview
+â”‚  â”œâ”€ crops
+â”‚  â”‚  â”œâ”€ crop-list
+â”‚  â”‚  â”œâ”€ crop/:cropCycleId
+â”‚  â”‚  â”œâ”€ observations
+â”‚  â”‚  â””â”€ plans
+â”‚  â”œâ”€ livestock
+â”‚  â”œâ”€ poultry
+â”‚  â”œâ”€ fisheries
+â”‚  â”œâ”€ calendar
+â”‚  â””â”€ reports
 
 app/diagnose
-├─ choose-domain
-├─ capture
-├─ review-images
-├─ processing/:jobId
-├─ result/:diagnosisId
-└─ specialist-review/:diagnosisId
+â”œâ”€ choose-domain
+â”œâ”€ capture
+â”œâ”€ review-images
+â”œâ”€ processing/:jobId
+â”œâ”€ result/:diagnosisId
+â””â”€ specialist-review/:diagnosisId
 
 app/marketplace
-├─ browse
-├─ search
-├─ category/:category
-├─ listing/:listingId
-├─ seller/:sellerId
-├─ cart
-├─ checkout
-├─ orders
-│  └─ order/:orderId
-├─ sell
-│  ├─ draft
-│  ├─ photos
-│  ├─ pricing
-│  ├─ preview
-│  └─ publish
-└─ deals
+â”œâ”€ browse
+â”œâ”€ search
+â”œâ”€ category/:category
+â”œâ”€ listing/:listingId
+â”œâ”€ seller/:sellerId
+â”œâ”€ cart
+â”œâ”€ checkout
+â”œâ”€ orders
+â”‚  â””â”€ order/:orderId
+â”œâ”€ sell
+â”‚  â”œâ”€ draft
+â”‚  â”œâ”€ photos
+â”‚  â”œâ”€ pricing
+â”‚  â”œâ”€ preview
+â”‚  â””â”€ publish
+â””â”€ deals
 
 app/alerts
-├─ inbox
-├─ event/:eventId
-├─ weather-map
-├─ settings
-└─ history
+â”œâ”€ inbox
+â”œâ”€ event/:eventId
+â”œâ”€ weather-map
+â”œâ”€ settings
+â””â”€ history
 
 app/consultations
-├─ specialists
-├─ specialist/:id
-├─ booking/:id
-├─ appointments
-├─ session/:id
-└─ prescriptions
+â”œâ”€ specialists
+â”œâ”€ specialist/:id
+â”œâ”€ booking/:id
+â”œâ”€ appointments
+â”œâ”€ session/:id
+â””â”€ prescriptions
 
 app/account
-├─ profile
-├─ roles
-├─ language
-├─ notification-settings
-├─ privacy
-├─ security
-└─ help
+â”œâ”€ profile
+â”œâ”€ roles
+â”œâ”€ language
+â”œâ”€ notification-settings
+â”œâ”€ privacy
+â”œâ”€ security
+â””â”€ help
 ```
 
 ### Routing rules
@@ -1570,7 +1575,7 @@ app/account
 - root router contains only top-level flow boundaries;
 - each major feature owns its nested routes;
 - bottom navigation tabs use shell routes and retain independent navigation stacks;
-- switching tabs preserves each tab’s stack and scroll state;
+- switching tabs preserves each tabâ€™s stack and scroll state;
 - detail pages live under their feature route;
 - modal actions use modal/bottom-sheet routes only when appropriate;
 - role guards and verification guards are attached at branch level;
@@ -1585,24 +1590,24 @@ app/account
 
 ```text
 farmer/lib/core/router/
-├─ app_router.dart
-├─ app_router.gr.dart
-├─ guards/
-│  ├─ auth_guard.dart
-│  ├─ verification_guard.dart
-│  ├─ role_guard.dart
-│  └─ connectivity_guard.dart
-├─ routes/
-│  ├─ auth_routes.dart
-│  ├─ home_routes.dart
-│  ├─ farm_routes.dart
-│  ├─ diagnosis_routes.dart
-│  ├─ marketplace_routes.dart
-│  ├─ alert_routes.dart
-│  ├─ consultation_routes.dart
-│  └─ account_routes.dart
-└─ observers/
-   └─ app_route_observer.dart
+â”œâ”€ app_router.dart
+â”œâ”€ app_router.gr.dart
+â”œâ”€ guards/
+â”‚  â”œâ”€ auth_guard.dart
+â”‚  â”œâ”€ verification_guard.dart
+â”‚  â”œâ”€ role_guard.dart
+â”‚  â””â”€ connectivity_guard.dart
+â”œâ”€ routes/
+â”‚  â”œâ”€ auth_routes.dart
+â”‚  â”œâ”€ home_routes.dart
+â”‚  â”œâ”€ farm_routes.dart
+â”‚  â”œâ”€ diagnosis_routes.dart
+â”‚  â”œâ”€ marketplace_routes.dart
+â”‚  â”œâ”€ alert_routes.dart
+â”‚  â”œâ”€ consultation_routes.dart
+â”‚  â””â”€ account_routes.dart
+â””â”€ observers/
+   â””â”€ app_route_observer.dart
 ```
 
 The current `app_router.dart` is already partially nested. Refactor it into feature-owned route lists before the route count becomes too large.
@@ -1707,7 +1712,7 @@ Before production release:
 - Gemini multi-key exhaustion behavior tested;
 - Qdrant outage and rebuild tested;
 - backup restore drill completed;
-- image deletion removes MongoDB, object storage, and Qdrant data;
+- image deletion coordinates PostgreSQL, object storage, and Qdrant data;
 - app remains usable for core non-AI workflows when Gemini is unavailable;
 - weather display shows last-updated time when offline;
 - all AI, weather, and market advice is presented as advisory with data freshness;
@@ -1716,7 +1721,7 @@ Before production release:
 
 ---
 
-# 18. Final Product Rules Addendum — OneSignal, Siren Alerts, AI Fallback, Caching, Design System, and Feature Documentation
+# 18. Final Product Rules Addendum â€” OneSignal, Siren Alerts, AI Fallback, Caching, Design System, and Feature Documentation
 
 This section is authoritative and overrides earlier generic notification or design wording.
 
@@ -1854,7 +1859,7 @@ The application should cache any data that is safe, useful, and has a clear inva
 4. NestJS in-process short-lived cache for tiny immutable/config values.
 5. Redis distributed cache for shared API responses and locks.
 6. CDN/object-storage caching for public thumbnails and static assets.
-7. Qdrant for reusable vector retrieval, not as a replacement for MongoDB.
+7. Qdrant for reusable vector retrieval, not as a replacement for PostgreSQL.
 
 ### Recommended cached data
 
@@ -1961,7 +1966,7 @@ Flutter tokens belong in a central theme/design-system package or folder. Next.j
 
 For each major feature:
 
-1. Collect 3–5 relevant references from Dribbble, Mobbin, or Behance.
+1. Collect 3â€“5 relevant references from Dribbble, Mobbin, or Behance.
 2. Record the reference URLs in the feature documentation.
 3. Identify useful patterns: hierarchy, navigation, card layout, spacing, flow, feedback.
 4. Do not copy proprietary illustrations, branding, screenshots, or exact layouts.
@@ -2131,60 +2136,60 @@ Recommended nested routes:
 
 ```text
 /dashboard/admin/
-├─ overview
-├─ users
-├─ roles
-├─ marketplace
-├─ orders
-├─ content
-├─ integrations
-├─ alerts
-├─ reports
-└─ settings
+â”œâ”€ overview
+â”œâ”€ users
+â”œâ”€ roles
+â”œâ”€ marketplace
+â”œâ”€ orders
+â”œâ”€ content
+â”œâ”€ integrations
+â”œâ”€ alerts
+â”œâ”€ reports
+â””â”€ settings
 
 /dashboard/farmer/
-├─ overview
-├─ farms
-├─ crops
-├─ livestock
-├─ poultry
-├─ fisheries
-├─ diagnoses
-├─ sell
-├─ listings
-├─ orders
-├─ consultations
-└─ settings
+â”œâ”€ overview
+â”œâ”€ farms
+â”œâ”€ crops
+â”œâ”€ livestock
+â”œâ”€ poultry
+â”œâ”€ fisheries
+â”œâ”€ diagnoses
+â”œâ”€ sell
+â”œâ”€ listings
+â”œâ”€ orders
+â”œâ”€ consultations
+â””â”€ settings
 
 /dashboard/buyer/
-├─ overview
-├─ marketplace
-├─ saved-searches
-├─ offers
-├─ orders
-├─ deliveries
-├─ messages
-└─ settings
+â”œâ”€ overview
+â”œâ”€ marketplace
+â”œâ”€ saved-searches
+â”œâ”€ offers
+â”œâ”€ orders
+â”œâ”€ deliveries
+â”œâ”€ messages
+â””â”€ settings
 
 /dashboard/seller/
-├─ overview
-├─ products
-├─ inventory
-├─ orders
-├─ deliveries
-├─ messages
-├─ analytics
-└─ settings
+â”œâ”€ overview
+â”œâ”€ products
+â”œâ”€ inventory
+â”œâ”€ orders
+â”œâ”€ deliveries
+â”œâ”€ messages
+â”œâ”€ analytics
+â””â”€ settings
 
 /dashboard/machinery-seller/
-├─ overview
-├─ machinery
-├─ parts
-├─ rentals
-├─ service-areas
-├─ orders
-├─ deliveries
-└─ settings
+â”œâ”€ overview
+â”œâ”€ machinery
+â”œâ”€ parts
+â”œâ”€ rentals
+â”œâ”€ service-areas
+â”œâ”€ orders
+â”œâ”€ deliveries
+â””â”€ settings
 ```
 
 ## 19.2 Unlimited Gemini API-key pool
@@ -2238,7 +2243,7 @@ Rules:
 
 The marketplace is not only farmer-to-buyer crop sales. It supports multiple commercial directions.
 
-### Actor A — Farmer as crop/farm-output seller
+### Actor A â€” Farmer as crop/farm-output seller
 
 May sell:
 
@@ -2279,7 +2284,7 @@ Farmer filters and management:
 - district/upazila;
 - price range.
 
-### Actor B — Buyer/wholesale buyer purchasing crops
+### Actor B â€” Buyer/wholesale buyer purchasing crops
 
 Buyer marketplace filters:
 
@@ -2311,7 +2316,7 @@ Buyer features:
 - review/rating;
 - repeat order.
 
-### Actor C — External seller selling machinery and agricultural inputs
+### Actor C â€” External seller selling machinery and agricultural inputs
 
 This seller may be an individual business, dealer, manufacturer, distributor, or approved shop.
 
@@ -2452,3 +2457,322 @@ Still required:
 - full role-aware dashboard pages;
 - Redis-backed popular-query caching;
 - search ranking and optional PostgreSQL full-text search.
+
+
+
+---
+
+# 19. Public Browsing, Seller Category Approval, Product Guidance, and Tool-Building Knowledge
+
+This section adds the latest owner requirements. These features are planned work and must not be marked complete until backend rules, UI, tests, and practical `features.md` instructions exist.
+
+## 18.1 Public home and marketplace browsing
+
+- The public home page and marketplace/store browsing pages must be accessible without login.
+- Guests may view categories, subcategories, listings, product details, public seller profiles, prices, availability, educational tool guides, and public search results.
+- Authentication is required only when the visitor attempts a protected action, including:
+  - creating or publishing a listing;
+  - applying as a seller;
+  - requesting category permission;
+  - placing an order or offer;
+  - saving/favoriting where server persistence is required;
+  - contacting a seller through protected chat;
+  - adding private farm information;
+  - requesting diagnosis history or specialist review.
+- Protected actions must open a clear login/register flow and preserve the intended destination/action.
+- After successful login, the user returns to the original page and resumes the pending action safely.
+- Backend authorization remains authoritative; hiding a button is not sufficient security.
+
+## 18.2 Farmers may also become sellers
+
+- A farmer account may also hold an approved seller role on the same user account.
+- Do not create a second account merely because a farmer wants to sell products.
+- The user may switch between farmer and seller workspaces using the existing multi-role design.
+- Seller approval and category permissions are separate from general account verification.
+
+## 18.3 Admin-managed nested marketplace taxonomy
+
+Create an admin-managed taxonomy that supports unlimited practical depth:
+
+- category;
+- subcategory;
+- nested child categories;
+- localized Bangla and English names;
+- slug;
+- description;
+- image/icon;
+- sort order;
+- active/inactive status;
+- product type and safety classification;
+- whether professional documents or licenses are required;
+- whether products in the node require moderation before publication.
+
+Recommended model:
+
+`MarketplaceCategory`
+
+- id;
+- parentId nullable;
+- nameBn;
+- nameEn;
+- slug;
+- descriptionBn/descriptionEn;
+- imageUrl;
+- depth/path;
+- sortOrder;
+- status;
+- requiresSellerApproval;
+- requiresDocumentReview;
+- createdBy/updatedBy;
+- timestamps.
+
+Rules:
+
+- Taxonomy management occurs in the Next.js admin panel.
+- Admins can create, edit, reorder, activate, archive, and move nodes.
+- Deleting a category with listings or active seller permissions must be blocked or handled through a controlled migration/archive flow.
+- Public APIs return only active taxonomy nodes.
+- Listing forms load categories dynamically from the API rather than hard-coding enums.
+
+## 18.4 Seller application by category and subcategory
+
+- A user can apply to sell from the public Next.js website after login.
+- The application allows selection of one or more category or subcategory nodes.
+- Each requested node may require documents, notes, business details, licenses, location, and experience.
+- Admin reviews each requested category independently.
+- Approval for one category must not automatically allow selling in another category.
+- One seller may hold multiple approved category permissions.
+- The seller may later request additional categories without repeating already approved categories.
+- Admin can approve, reject, suspend, expire, or revoke each category permission with reviewer notes and an audit event.
+
+Recommended model:
+
+`SellerCategoryPermission`
+
+- id;
+- userId;
+- categoryId;
+- status: pending/approved/rejected/suspended/revoked/expired;
+- requestedAt;
+- approvedAt;
+- expiresAt nullable;
+- reviewerId;
+- reviewerNotes;
+- supporting documents;
+- createdAt/updatedAt.
+
+Publishing rule:
+
+- A listing may be drafted in any visible category.
+- A listing cannot be submitted/published unless the seller has an active permission for that category or an explicitly inherited parent/child permission according to configured policy.
+- The backend must enforce this rule transactionally.
+
+## 18.5 Product knowledge required from sellers
+
+For agricultural inputs, medicines, pesticides, fertilizers, feed, equipment, and similar products, listing creation must collect structured knowledge instead of only a short description.
+
+Required or conditionally required fields:
+
+- Bangla and English title;
+- full description;
+- intended use cases;
+- applicable crop/animal/fish/poultry types;
+- target problem, disease, pest, deficiency, or operational need;
+- symptoms or conditions for which the product may be relevant;
+- usage instructions;
+- dosage/rate where legally and safely appropriate;
+- application method;
+- contraindications and situations where it should not be used;
+- safety warnings, protective equipment, withholding period, and storage;
+- active ingredient/composition where applicable;
+- manufacturer and registration/license data;
+- evidence/source provided by seller;
+- images and documents;
+- moderation and verification status.
+
+Safety rules:
+
+- Seller text must not become a guaranteed diagnosis or medical claim.
+- Restricted products require stronger moderation and verified seller permissions.
+- AI-generated wording must be labeled, reviewed by the seller, and validated before publication.
+- Product recommendations must always show safety warnings and encourage specialist review for uncertain/high-risk cases.
+
+## 18.6 Low-AI-first product recommendation architecture
+
+Goal: use deterministic search and vector retrieval first, and call generative AI only when necessary.
+
+Recommended flow for typed or voice symptom search:
+
+1. Normalize Bangla/English transcript or text.
+2. Extract known crop, animal, symptom, season, location, and context using rules/dictionaries first.
+3. Generate/query a text embedding only when lexical/filter search is insufficient or vector search is configured.
+4. Search PostgreSQL filters plus Qdrant vectors built from approved product knowledge.
+5. Rank only active products from approved sellers with valid category permission.
+6. Return one or two strongest candidates plus alternatives, evidence fields, warnings, and confidence band.
+7. Use Gemini/provider gateway only to clarify ambiguous input, summarize retrieved evidence, or interpret an image when the local/vector path cannot confidently resolve the request.
+8. Never let the model invent a product that is not present and active in the marketplace database.
+
+Recommended vector text for each product:
+
+- title;
+- description;
+- use cases;
+- target crops/animals;
+- target conditions;
+- symptoms;
+- active ingredient/composition;
+- instructions;
+- exclusions and safety notes;
+- category path.
+
+## 18.7 Crop image-to-product assistance
+
+1. Farmer uploads or captures crop images and optionally adds symptoms by voice/text.
+2. Existing image-profile/Qdrant matching attempts to identify crop, condition, or known visual class.
+3. If confidence is insufficient, the provider-neutral vision AI may produce a structured, non-guaranteed interpretation.
+4. Backend converts the result into normalized condition/symptom terms.
+5. Product retrieval searches only approved marketplace products and verified product-use records.
+6. Return one or two likely relevant products only when evidence and safety constraints permit.
+7. Also return non-product actions, prevention, and a specialist escalation option.
+8. Store the evidence chain: image match, model/version if used, retrieved product IDs, scores, and disclaimer.
+
+## 18.8 Admin-managed practical tool-building guides
+
+Create a separate hierarchical knowledge taxonomy for practical farm tools, structures, repairs, and do-it-yourself guides.
+
+Examples:
+
+- irrigation tools;
+- poultry equipment;
+- fish-farming equipment;
+- storage structures;
+- composting tools;
+- simple machinery;
+- farm repairs;
+- livestock housing;
+- safety equipment.
+
+Taxonomy requirements:
+
+- unlimited practical nested category structure;
+- Bangla/English names and descriptions;
+- category image;
+- sort order and active status;
+- admin management in Next.js.
+
+`ToolGuide`
+
+- id;
+- categoryId;
+- titleBn/titleEn;
+- summary;
+- required materials;
+- required tools;
+- safety warnings;
+- estimated difficulty/time/cost;
+- ordered steps;
+- tags and searchable phrases;
+- published status;
+- creator/reviewer/audit fields.
+
+`ToolGuideStep`
+
+- guideId;
+- sequence;
+- title/instruction Bangla and English;
+- imageUrl nullable;
+- YouTube URL nullable;
+- safety note nullable;
+- optional materials/tools for this step.
+
+Admin editing requirements:
+
+- Upload step images sequentially.
+- Reorder steps and images with drag-and-drop using `react-sortablejs` or a maintained equivalent after compatibility/security review.
+- Add, edit, remove, and reorder YouTube links alongside image steps.
+- Preview the mobile presentation before publishing.
+- Validate YouTube URLs and avoid arbitrary unsafe embeds.
+
+## 18.9 Tool-guide discovery
+
+Farmers can find a guide through:
+
+- category and nested subcategory browsing with images;
+- Bangla/English text search;
+- Bangla voice search;
+- tapping a visual category card;
+- uploading/scanning an existing tool image.
+
+Voice flow:
+
+1. Capture Bangla speech.
+2. Convert to text using the configured speech service/device support.
+3. Search exact terms, synonyms, tags, and vectorized guide text.
+4. Use AI only to clarify an ambiguous request or suggest a normalized query.
+5. Return matching guides with direct category context.
+
+Image flow:
+
+1. Normalize uploaded image.
+2. Search tool image profiles/sample vectors in Qdrant.
+3. Show multiple likely matches and related guides.
+4. A raw similarity score must not be displayed as a literal probability.
+5. A 50–60% calibrated confidence band may be shown only after labeled evaluation demonstrates that interpretation.
+6. Low-confidence results must be labeled as possible matches and ask for another angle or manual category selection.
+
+## 18.10 Testing and completion gates
+
+Before marking any item in this section complete, validate:
+
+- guest home/store access and protected-action login return flow;
+- nested taxonomy CRUD, reordering, archive/move constraints, and localization;
+- multi-category seller application and independent admin decisions;
+- server-side prevention of unauthorized category publishing;
+- category revocation immediately blocking new publication while preserving audit/history;
+- product structured fields and safety validation;
+- deterministic/vector-first recommendation with AI fallback disabled/enabled;
+- guarantee that recommendations contain only active database products;
+- image/voice/text search primary and failure paths;
+- tool-guide step drag-and-drop persistence;
+- safe YouTube validation and rendering;
+- vector confidence calibration using labeled tests;
+- backend, Next.js, Flutter tests and practical `features.md` usage instructions.
+
+
+## OTP provider configuration contract
+
+The implemented OTP and password-reset flow uses the following environment configuration:
+
+```env
+OTP_PROVIDER_URL=
+OTP_PROVIDER_API_KEY=
+OTP_EXPIRES_MINUTES=5
+OTP_RESEND_COOLDOWN_SECONDS=60
+OTP_MAX_ATTEMPTS=5
+OTP_DAILY_LIMIT=10
+OTP_EXPOSE_CODE_IN_DEVELOPMENT=true
+```
+
+Rules:
+
+- The backend sends OTP requests to `OTP_PROVIDER_URL`.
+- The provider API key is sent through the `x-api-key` request header.
+- Both `OTP_PROVIDER_URL` and `OTP_PROVIDER_API_KEY` are required in production.
+- In development, leaving the provider URL or API key empty skips real SMS delivery.
+- `OTP_EXPOSE_CODE_IN_DEVELOPMENT=true` may expose `developmentCode` only outside production for local testing.
+- OTP expiry, resend cooldown, maximum attempts, and daily request limits are controlled by the matching environment values.
+- Password-reset OTPs follow the same provider, expiry, cooldown, attempt, and rate-limit rules.
+- Provider secrets must never be returned to clients, written to logs, or stored in audit payloads.
+
+
+## Marketplace implementation note ? 2026-07-17
+
+Completed in this pass:
+
+1. Removed the active Stripe dependency from Next.js checkout; orders now remain unpaid until a future bKash/other gateway adapter is configured.
+2. Completed the deterministic recommendation path by adding Unicode-safe tokenization and retaining catalog-only explainable ranking/evaluation.
+3. Added the missing saved-search delete API route.
+4. Added Next.js favorite/saved-search management UI with apply/remove/delete behavior.
+5. Verified backend Nest build and frontend Next.js production build.
+
+Completed follow-up: Flutter parity for favorites and saved searches is implemented, and dedicated Flutter widget tests now cover saved marketplace listing and deletion flows. Recommendation-specific automated coverage remains a separate quality task.

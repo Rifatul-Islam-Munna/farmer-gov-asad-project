@@ -39,6 +39,8 @@ class HomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       _WelcomeCard(name: session.name),
+                      const SizedBox(height: 14),
+                      _RoleCommandCard(content: content),
                       const SizedBox(height: 16),
                       _ScanPlantCard(
                         onTap: () => context.tabsRouter.setActiveIndex(1),
@@ -358,6 +360,110 @@ class _WelcomeCard extends StatelessWidget {
             Icons.agriculture_rounded,
             color: Color(0xFF53E8B8),
             size: 52,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoleCommandCard extends StatelessWidget {
+  const _RoleCommandCard({required this.content});
+
+  final RoleHomeContent content;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassCard(
+      borderRadius: 26,
+      blur: 6,
+      opacity: .12,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(17),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4BE2B7), Color(0xFF24956E)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF42DFB1).withValues(alpha: .28),
+                      blurRadius: 24,
+                      spreadRadius: -4,
+                    ),
+                  ],
+                ),
+                child: Icon(content.icon, color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      content.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 21,
+                        height: 1.15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      content.description,
+                      style: const TextStyle(
+                        color: Color(0xFFB7D0C8),
+                        height: 1.35,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+            decoration: BoxDecoration(
+              color: const Color(0xFF56E5BC).withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF65EAC4).withValues(alpha: .16),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.lightbulb_rounded,
+                  color: Color(0xFF6BE8C5),
+                  size: 19,
+                ),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    content.tip,
+                    style: const TextStyle(
+                      color: Color(0xFFC7DED7),
+                      height: 1.35,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

@@ -1,15 +1,32 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ??
-  "http://localhost:4000"
+export const API_URL = "/api/backend"
 
 export type ApiEnvelope<T> = { data: T; message?: string }
+
+export type UserRole =
+  | "farmer"
+  | "wholesaleBuyer"
+  | "buyer"
+  | "studentVolunteer"
+  | "agent"
+  | "agricultureSpecialist"
+  | "veterinaryDoctor"
+  | "seller"
+  | "machinerySeller"
+  | "medicineSeller"
+  | "publicUser"
+  | "governmentOfficer"
+  | "support"
+  | "admin"
+  | "superAdmin"
 
 export type AdminUser = {
   _id: string
   name: string
   phoneNumber: string
   email?: string
-  role: "admin" | "agent" | "farmer" | "buyer" | "medicineSeller"
+  role: UserRole
+  roles?: UserRole[]
+  accountStatus?: "active" | "suspended" | "deleted"
   verificationStatus: "pending" | "approved" | "rejected"
   address?: string
   businessName?: string
@@ -109,16 +126,37 @@ export type DashboardData = {
   recentListings: Listing[]
 }
 
+export function getCsrfToken() {
+  if (typeof document === "undefined") return undefined
+  const raw = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith("agrivision_csrf="))
+    ?.split("=")[1]
+  return raw ? decodeURIComponent(raw) : undefined
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
-  token?: string,
+  legacyToken?: string,
 ): Promise<T> {
+  void legacyToken
+  const method = (options.method ?? "GET").toUpperCase()
+  const csrfToken =
+    typeof document === "undefined"
+      ? undefined
+      : document.cookie
+          .split("; ")
+          .find((entry) => entry.startsWith("agrivision_csrf="))
+          ?.split("=")[1]
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}`, access_token: token } : {}),
+      ...(method !== "GET" && method !== "HEAD" && csrfToken
+        ? { "x-csrf-token": decodeURIComponent(csrfToken) }
+        : {}),
       ...options.headers,
     },
     cache: "no-store",

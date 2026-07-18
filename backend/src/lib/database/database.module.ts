@@ -1,4 +1,4 @@
-﻿import {
+import {
   Logger,
   Module,
   OnApplicationShutdown,
@@ -27,8 +27,7 @@ import { DataSource } from 'typeorm';
             : false,
         autoLoadEntities: true,
         synchronize:
-          config.get<string>('DB_SYNCHRONIZE', 'false') === 'true' &&
-          config.get<string>('NODE_ENV') !== 'production',
+          config.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
         migrationsRun:
           config.get<string>('DB_MIGRATIONS_RUN', 'false') === 'true',
         migrations: [__dirname + '/../../migrations/*{.ts,.js}'],

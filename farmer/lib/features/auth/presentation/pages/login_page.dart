@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/app_toast.dart';
 import '../../../../core/widgets/glass_card.dart';
+import '../../data/datasources/account_security_api.dart';
 import '../../data/datasources/auth_api.dart';
 import '../../data/models/login_request.model.dart';
 
@@ -56,6 +57,107 @@ class _LoginPageState extends State<LoginPage> {
       AppToast.show(_messageFromError(error));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    final destination = TextEditingController(text: _phoneController.text.trim());
+    final code = TextEditingController();
+    final password = TextEditingController();
+    var requested = false;
+    String? developmentCode;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Reset password'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: destination,
+                  enabled: !requested,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone number or email',
+                    prefixIcon: Icon(Icons.person_search_outlined),
+                  ),
+                ),
+                if (requested) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: code,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: InputDecoration(
+                      labelText: '6-digit code',
+                      helperText: developmentCode == null
+                          ? null
+                          : 'Development code: $developmentCode',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: password,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'New password',
+                      prefixIcon: Icon(Icons.lock_reset_rounded),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (!requested) {
+                  if (destination.text.trim().isEmpty) return;
+                  try {
+                    final response = await AccountSecurityApi()
+                        .requestPasswordReset(destination.text.trim());
+                    final value = response['developmentCode']?.toString();
+                    setDialogState(() {
+                      requested = true;
+                      developmentCode = value;
+                    });
+                  } catch (error) {
+                    AppToast.error(_messageFromError(error));
+                  }
+                  return;
+                }
+                if (code.text.length != 6 || password.text.length < 8) {
+                  AppToast.warning('Enter the 6-digit code and a password of at least 8 characters.');
+                  return;
+                }
+                try {
+                  await AccountSecurityApi().confirmPasswordReset(
+                    destination: destination.text.trim(),
+                    code: code.text.trim(),
+                    newPassword: password.text,
+                  );
+                  if (context.mounted) Navigator.pop(context, true);
+                } catch (error) {
+                  AppToast.error(_messageFromError(error));
+                }
+              },
+              child: Text(requested ? 'Reset password' : 'Send code'),
+            ),
+          ],
+        ),
+      ),
+    );
+    destination.dispose();
+    code.dispose();
+    password.dispose();
+    if (confirmed == true) {
+      AppToast.success('Password reset successfully. Sign in with the new password.');
     }
   }
 
@@ -158,7 +260,14 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _loading ? null : _resetPassword,
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   FilledButton(
                     onPressed: _loading ? null : _submit,
                     child: _loading

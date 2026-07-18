@@ -7,6 +7,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/utils/app_toast.dart';
+import '../../../auth/data/datasources/account_security_api.dart';
 import '../../../auth/data/datasources/auth_api.dart';
 import '../../../auth/data/datasources/profile_api.dart';
 import '../../../auth/data/models/user.model.dart';
@@ -132,6 +133,289 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  Future<void> _verifyPhone() async {
+    try {
+      final response = await AccountSecurityApi().requestPhoneVerification();
+      if (!mounted) return;
+      final code = TextEditingController();
+      final developmentCode = response['developmentCode']?.toString();
+      final confirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Verify phone number'),
+          content: TextField(
+            controller: code,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: InputDecoration(
+              labelText: '6-digit code',
+              helperText: developmentCode == null
+                  ? 'Enter the code sent to your phone.'
+                  : 'Development code: $developmentCode',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (code.text.trim().length != 6) return;
+                try {
+                  await AccountSecurityApi()
+                      .confirmPhoneVerification(code.text.trim());
+                  if (context.mounted) Navigator.pop(context, true);
+                } catch (error) {
+                  AppToast.error(error.toString());
+                }
+              },
+              child: const Text('Verify'),
+            ),
+          ],
+        ),
+      );
+      code.dispose();
+      if (confirmed == true) {
+        AppToast.success('Phone number verified successfully.');
+        await _load();
+      }
+    } catch (error) {
+      AppToast.error(error.toString());
+    }
+  }
+
+  Future<void> _switchRole() async {
+    final user = _user;
+    if (user == null || user.roles.length < 2) return;
+    var selected = user.role;
+    final changed = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Switch active workspace'),
+          content: DropdownButtonFormField<UserRole>(
+            initialValue: selected,
+            decoration: const InputDecoration(labelText: 'Approved role'),
+            items: user.roles
+                .map(
+                  (role) => DropdownMenuItem(
+                    value: role,
+                    child: Text(_roleLabel(role)),
+                  ),
+                )
+                .toList(growable: false),
+            onChanged: (value) {
+              if (value != null) setDialogState(() => selected = value);
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: selected == user.role
+                  ? null
+                  : () => Navigator.pop(context, true),
+              child: const Text('Switch and sign in again'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (changed != true) return;
+    try {
+      await AccountSecurityApi().changeActiveRole(selected.name);
+      AppToast.success('Workspace changed. Sign in again to continue.');
+      await appRouter.replaceAll([const LoginRoute()]);
+    } catch (error) {
+      AppToast.error(error.toString());
+    }
+  }
+
+  Future<void> _submitProfessionalReview() async {
+    final user = _user;
+    if (user == null) return;
+    final professionalRoles = <UserRole>{
+      UserRole.agent,
+      UserRole.agricultureSpecialist,
+      UserRole.veterinaryDoctor,
+      UserRole.seller,
+      UserRole.machinerySeller,
+      UserRole.medicineSeller,
+    };
+    final eligibleRoles = user.roles
+        .where(professionalRoles.contains)
+        .toList(growable: false);
+    if (eligibleRoles.isEmpty) {
+      AppToast.warning('This account has no professional role to review.');
+      return;
+    }
+
+    var selectedRole = eligibleRoles.contains(user.role)
+        ? user.role
+        : eligibleRoles.first;
+    final identityUrl = TextEditingController();
+    final credentialUrl = TextEditingController();
+    final licenseUrl = TextEditingController();
+    var identityConfirmed = false;
+    var credentialConfirmed = false;
+    var businessConfirmed = false;
+
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Submit professional review'),
+          content: SizedBox(
+            width: 520,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<UserRole>(
+                    initialValue: selectedRole,
+                    decoration: const InputDecoration(labelText: 'Role'),
+                    items: eligibleRoles
+                        .map(
+                          (role) => DropdownMenuItem(
+                            value: role,
+                            child: Text(_roleLabel(role)),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setDialogState(() => selectedRole = value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: identityUrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Identity document URL',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: credentialUrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Certificate or credential URL',
+                      prefixIcon: Icon(Icons.workspace_premium_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: licenseUrl,
+                    decoration: const InputDecoration(
+                      labelText: 'License or business document URL',
+                      prefixIcon: Icon(Icons.approval_outlined),
+                    ),
+                  ),
+                  CheckboxListTile(
+                    value: identityConfirmed,
+                    onChanged: (value) => setDialogState(
+                      () => identityConfirmed = value ?? false,
+                    ),
+                    title: const Text('Identity matches the account holder'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  CheckboxListTile(
+                    value: credentialConfirmed,
+                    onChanged: (value) => setDialogState(
+                      () => credentialConfirmed = value ?? false,
+                    ),
+                    title: const Text('Credentials are current and genuine'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  CheckboxListTile(
+                    value: businessConfirmed,
+                    onChanged: (value) => setDialogState(
+                      () => businessConfirmed = value ?? false,
+                    ),
+                    title: const Text('Business/service information is accurate'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (identityUrl.text.trim().isEmpty ||
+                    credentialUrl.text.trim().isEmpty ||
+                    licenseUrl.text.trim().isEmpty ||
+                    !identityConfirmed ||
+                    !credentialConfirmed ||
+                    !businessConfirmed) {
+                  AppToast.warning(
+                    'Add all required document URLs and complete the checklist.',
+                  );
+                  return;
+                }
+                Navigator.pop(context, true);
+              },
+              child: const Text('Submit review'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (submitted == true) {
+      try {
+        await AccountSecurityApi().submitProfessionalReview(
+          role: selectedRole.name,
+          documents: [
+            {
+              'key': 'identity',
+              'label': 'Identity document',
+              'url': identityUrl.text.trim(),
+            },
+            {
+              'key': 'credential',
+              'label': 'Professional credential',
+              'url': credentialUrl.text.trim(),
+            },
+            {
+              'key': 'license',
+              'label': 'License or business document',
+              'url': licenseUrl.text.trim(),
+            },
+          ],
+          checklist: {
+            'identityConfirmed': identityConfirmed,
+            'credentialConfirmed': credentialConfirmed,
+            'businessInformationConfirmed': businessConfirmed,
+          },
+        );
+        AppToast.success('Professional review package submitted.');
+      } catch (error) {
+        AppToast.error(error.toString());
+      }
+    }
+    identityUrl.dispose();
+    credentialUrl.dispose();
+    licenseUrl.dispose();
+  }
+
+  String _roleLabel(UserRole role) {
+    final source = role.name.replaceAllMapped(
+      RegExp(r'([A-Z])'),
+      (match) => ' ${match.group(1)}',
+    );
+    return source[0].toUpperCase() + source.substring(1);
+  }
+
   Future<void> _signOut() async {
     await AuthApi().logout();
     await appRouter.replaceAll([const LoginRoute()]);
@@ -204,6 +488,135 @@ class _AccountPageState extends State<AccountPage> {
               label: Text(user.verificationStatus),
             ),
           ),
+          const SizedBox(height: 16),
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: (user.isOtpVerified
+                              ? Colors.green
+                              : Colors.orange)
+                          .withValues(alpha: .12),
+                      foregroundColor:
+                          user.isOtpVerified ? Colors.green : Colors.orange,
+                      child: Icon(
+                        user.isOtpVerified
+                            ? Icons.phone_iphone_rounded
+                            : Icons.phone_locked_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Phone verification',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          Text(
+                            user.isOtpVerified
+                                ? 'Your phone number is verified.'
+                                : 'Verify your number with an expiring OTP code.',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!user.isOtpVerified)
+                      TextButton(
+                        onPressed: _verifyPhone,
+                        child: const Text('Verify'),
+                      ),
+                  ],
+                ),
+                if (user.roles.length > 1) ...[
+                  const Divider(height: 28),
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        backgroundColor: Color(0xFFEAF4E6),
+                        foregroundColor: AppColors.primary,
+                        child: Icon(Icons.switch_account_rounded),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Active workspace',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            Text(
+                              '${_roleLabel(user.role)} • ${user.roles.length} approved roles',
+                              style: const TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _switchRole,
+                        child: const Text('Switch'),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (user.roles.any(
+            (role) => {
+              UserRole.agent,
+              UserRole.agricultureSpecialist,
+              UserRole.veterinaryDoctor,
+              UserRole.seller,
+              UserRole.machinerySeller,
+              UserRole.medicineSeller,
+            }.contains(role),
+          )) ...[
+            const SizedBox(height: 12),
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Color(0xFFEAF4E6),
+                    foregroundColor: AppColors.primary,
+                    child: Icon(Icons.fact_check_outlined),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Professional verification package',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          'Submit identity, credential and license documents for admin review.',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton.filledTonal(
+                    onPressed: _submitProfessionalReview,
+                    tooltip: 'Submit documents',
+                    icon: const Icon(Icons.upload_file_rounded),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 22),
           _field(
             _name,

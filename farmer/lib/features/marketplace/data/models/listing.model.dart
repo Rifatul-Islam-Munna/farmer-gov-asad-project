@@ -3,8 +3,11 @@ class ListingModel {
     required this.id,
     required this.ownerId,
     this.assistingAgentId,
+    this.category = 'agriculturalOutput',
+    this.transactionType = 'sale',
     required this.goodCode,
     required this.goodName,
+    this.description,
     this.imageUrls = const <String>[],
     required this.quantity,
     this.reservedQuantity = 0,
@@ -15,14 +18,19 @@ class ListingModel {
     required this.governmentPrice,
     required this.marketPrice,
     required this.minimumPrice,
+    this.negotiable = true,
+    this.deliveryAvailable = false,
     required this.status,
   });
 
   final String id;
   final String ownerId;
   final String? assistingAgentId;
+  final String category;
+  final String transactionType;
   final String goodCode;
   final String goodName;
+  final String? description;
   final List<String> imageUrls;
   final double quantity;
   final double reservedQuantity;
@@ -33,6 +41,8 @@ class ListingModel {
   final double governmentPrice;
   final double marketPrice;
   final double minimumPrice;
+  final bool negotiable;
+  final bool deliveryAvailable;
   final String status;
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
@@ -43,8 +53,11 @@ class ListingModel {
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       ownerId: json['ownerId'] as String? ?? '',
       assistingAgentId: json['assistingAgentId'] as String?,
+      category: json['category'] as String? ?? 'agriculturalOutput',
+      transactionType: json['transactionType'] as String? ?? 'sale',
       goodCode: json['goodCode'] as String? ?? '',
       goodName: json['goodName'] as String? ?? '',
+      description: json['description'] as String?,
       imageUrls: images is List
           ? images.map((item) => item.toString()).toList(growable: false)
           : const <String>[],
@@ -59,26 +72,25 @@ class ListingModel {
       governmentPrice: (json['governmentPrice'] as num?)?.toDouble() ?? 0,
       marketPrice: (json['marketPrice'] as num?)?.toDouble() ?? 0,
       minimumPrice: (json['minimumPrice'] as num?)?.toDouble() ?? 0,
+      negotiable: json['negotiable'] as bool? ?? true,
+      deliveryAvailable: json['deliveryAvailable'] as bool? ?? false,
       status: json['status'] as String? ?? '',
     );
   }
+}
 
-  Map<String, dynamic> toJson() => {
-    '_id': id,
-    'ownerId': ownerId,
-    if (assistingAgentId != null) 'assistingAgentId': assistingAgentId,
-    'goodCode': goodCode,
-    'goodName': goodName,
-    'imageUrls': imageUrls,
-    'quantity': quantity,
-    'reservedQuantity': reservedQuantity,
-    'availableQuantity': availableQuantity,
-    'unit': unit,
-    if (grade != null) 'grade': grade,
-    if (address != null) 'address': address,
-    'governmentPrice': governmentPrice,
-    'marketPrice': marketPrice,
-    'minimumPrice': minimumPrice,
-    'status': status,
-  };
+class ListingPage {
+  const ListingPage({
+    required this.items,
+    required this.page,
+    required this.totalPages,
+    required this.total,
+    required this.hasNextPage,
+  });
+
+  final List<ListingModel> items;
+  final int page;
+  final int totalPages;
+  final int total;
+  final bool hasNextPage;
 }

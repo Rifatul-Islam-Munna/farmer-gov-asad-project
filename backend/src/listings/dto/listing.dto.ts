@@ -1,6 +1,7 @@
-﻿import {
+import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsNumber,
@@ -9,9 +10,21 @@
   MaxLength,
   Min,
 } from 'class-validator';
-import { ListingStatus } from '../entities/listing.entity';
+import {
+  ListingStatus,
+  ListingTransactionType,
+  MarketplaceCategory,
+} from '../entities/listing.entity';
 
 export class CreateListingDto {
+  @IsOptional()
+  @IsEnum(MarketplaceCategory)
+  category?: MarketplaceCategory;
+
+  @IsOptional()
+  @IsEnum(ListingTransactionType)
+  transactionType?: ListingTransactionType;
+
   @IsString()
   @MaxLength(50)
   goodCode: string;
@@ -19,6 +32,11 @@ export class CreateListingDto {
   @IsString()
   @MaxLength(120)
   goodName: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  description?: string;
 
   @IsOptional()
   @IsArray()
@@ -69,32 +87,16 @@ export class CreateListingDto {
   minimumPrice: number;
 
   @IsOptional()
+  @IsBoolean()
+  negotiable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  deliveryAvailable?: boolean;
+
+  @IsOptional()
   @IsEnum(ListingStatus)
   status?: ListingStatus;
-}
-
-export class SearchListingsDto {
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @IsOptional()
-  @IsString()
-  goodCode?: string;
-
-  @IsOptional()
-  @IsString()
-  address?: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  minimumPrice?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  maximumPrice?: number;
 }
 
 export class UpdateListingStatusDto {

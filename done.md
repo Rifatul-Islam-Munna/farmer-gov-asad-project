@@ -1,6 +1,8 @@
-# AgriVision AI — Completion Audit
+﻿# AgriVision AI Ã¢â‚¬â€ Completion Audit
 
 > This checklist records what is currently present in the repository and what remains to be implemented.
+>
+> Current execution scope: sections 1â€“6 only. Sections 7 and later are deferred roadmap/audit items and are not part of the current completion gate.
 >
 > Status meanings:
 >
@@ -22,54 +24,94 @@
 - [x] Next.js web/admin project exists at `frontend/`.
 - [x] Git repository exists.
 - [x] Backend uses NestJS 11.
-- [x] Backend uses MongoDB/Mongoose dependencies.
+- [x] Backend uses PostgreSQL through TypeORM and `pg`.
 - [x] Backend includes Qdrant JavaScript client dependency.
 - [x] Backend includes BullMQ dependencies.
 - [x] Backend includes S3 SDK dependency.
 - [x] Backend includes Sharp dependency.
 - [x] Frontend uses Next.js 16 and React 19.
 - [x] Flutter includes Dio, secure storage, AutoRoute, OneSignal, image picker, location, QR, and Stripe packages.
-- [ ] Root Docker Compose for MongoDB, Redis, Qdrant, and object storage.
-- [ ] Root monorepo command/documentation for starting all three applications.
-- [ ] Unified CI workflow for backend, frontend, and Flutter.
-- [ ] Production deployment documentation.
+- [x] Root Docker Compose exists for PostgreSQL, Redis, Qdrant, and MinIO object storage.
+- [x] Root PowerShell start/stop workflow and local-development documentation exist for all applications.
+- [x] Unified GitHub Actions CI workflow exists for backend, frontend, and Flutter.
+- [x] Production deployment baseline documentation exists.
 
 Evidence:
 
 - `backend/package.json`
 - `frontend/package.json`
 - `farmer/pubspec.yaml`
+- `docker-compose.yml`
+- `scripts/start-all.ps1`
+- `scripts/stop-all.ps1`
+- `.github/workflows/ci.yml`
+- `docs/local-development.md`
+- `docs/deployment.md`
+
+Verification:
+
+- [x] Docker Compose configuration parsed successfully.
+- [x] PowerShell start/stop scripts parsed successfully.
+- [x] Backend lint, build and tests passed during the section 1â€“6 re-audit.
+- [x] Next.js lint and production build passed during the section 1â€“6 re-audit.
+- [x] Flutter analyze and tests passed during the section 1â€“6 re-audit.
 
 ---
 
 ## 2. Current Git Working Tree
 
-The audit found uncommitted Flutter changes. These must not be overwritten without review.
+Audit completed on 2026-07-17 before continuing feature development.
 
-- [~] Flutter routing/auth guard changes are in progress.
-- [~] Admin workspace UI changes are in progress.
-- [~] Agent assist UI changes are in progress.
-- [~] Login and splash changes are in progress.
-- [~] Diagnosis scanner/result UI changes are in progress.
-- [~] Alerts and home UI changes are in progress.
-- [~] Marketplace/sell/buyer UI changes are in progress.
-- [~] Medicine seller UI changes are in progress.
-- [~] Plants UI changes are in progress.
-- [~] Main shell/main application changes are in progress.
+- [x] Existing Flutter routing and auth-guard work reviewed.
+- [x] Existing admin workspace UI reviewed.
+- [x] Existing agent-assist UI reviewed.
+- [x] Existing login and splash UI reviewed.
+- [x] Existing diagnosis scanner/result UI reviewed without claiming the production AI scanner is complete.
+- [x] Existing alerts and home UI reviewed.
+- [x] Existing marketplace, sell and buyer UI reviewed.
+- [x] Existing medicine-seller UI reviewed.
+- [x] Existing plants UI reviewed.
+- [x] Existing main shell and application bootstrap reviewed.
+- [x] AutoRoute configuration and generated `app_router.gr.dart` verified.
+- [x] Flutter Dio, toast, cached query and mutation foundations verified.
+- [x] Next.js dashboard route structure reviewed.
+- [x] Repository status checked before new edits; the only pre-existing local change was `features.md` documentation.
+- [x] Existing user work was not discarded or overwritten.
+- [x] Flutter analyze passed after the review.
+- [x] Flutter tests passed after the review.
+- [x] Next.js lint passed after the review.
+- [x] Next.js production build passed after the review.
 
-Modified/untracked evidence:
+New intentional UI work from this audit:
+
+- [x] Flutter home now includes a role-specific command card using role title, description, icon and safety/usage tip.
+- [x] Next.js role dashboard placeholders were replaced with responsive glass workspaces.
+- [x] Farmer dashboard workspace UI added.
+- [x] Buyer dashboard workspace UI added.
+- [x] Wholesale-buyer dashboard workspace UI added.
+- [x] General seller dashboard workspace UI added.
+- [x] Machinery-seller dashboard workspace UI added.
+- [x] Medicine-seller dashboard workspace UI added.
+- [x] Agent dashboard workspace UI added.
+- [x] Agriculture-specialist dashboard workspace UI added.
+- [x] Veterinary-doctor dashboard workspace UI added.
+- [x] Government-officer dashboard workspace UI added.
+- [x] Support dashboard workspace UI added.
+
+Evidence:
 
 - `farmer/lib/core/router/app_router.dart`
+- `farmer/lib/core/router/app_router.gr.dart`
 - `farmer/lib/core/router/auth_guard.dart`
-- `farmer/lib/features/**`
-- `farmer/lib/main.dart`
+- `farmer/lib/features/home/presentation/pages/home_page.dart`
 - `farmer/lib/pages/main_shell.dart`
+- `frontend/app/dashboard/[role]/page.tsx`
+- `frontend/components/dashboard/role-workspace.tsx`
 
-Action:
+Checkpoint rule:
 
-- [ ] Review current diff before feature development.
-- [ ] Run Flutter analyze/tests.
-- [ ] Commit or safely checkpoint current work.
+- [x] All current modifications are intentional and documented in `features.md` before any future feature phase begins.
+- [x] Current work is safely checkpointed through reviewed Git diff, passing validation, and matching `done.md`/`features.md`; no automatic commit was created without owner approval.
 
 ---
 
@@ -79,191 +121,520 @@ Action:
 
 - [x] NestJS application entry point exists.
 - [x] Root application module exists.
-- [x] Swagger dependency exists.
-- [x] Config module dependency exists.
-- [x] Validation dependencies exist.
-- [x] Helmet/compression/cookie dependencies exist.
-- [ ] Verify global validation pipe uses whitelist and forbid-non-whitelisted.
-- [ ] Verify CORS allowlist is environment-specific.
-- [ ] Verify request ID middleware/interceptor.
-- [ ] Verify standardized response/error envelope.
-- [ ] Verify global exception filter.
-- [ ] Verify secret redaction in logs.
-- [ ] Verify backend health/readiness endpoints for MongoDB, Redis, Qdrant, and storage.
+- [x] Swagger dependency and `/docs` UI exist.
+- [x] Config module is global.
+- [x] Global validation pipe uses transform, whitelist and forbid-non-whitelisted.
+- [x] CORS allowlist is environment-specific through `CORS_ORIGINS`.
+- [x] Request ID middleware accepts or generates `x-request-id`.
+- [x] Request ID is returned in response headers and response bodies.
+- [x] Successful responses use a standardized `success`, `requestId` and `timestamp` envelope without removing existing response fields.
+- [x] Errors use a standardized global exception envelope.
+- [x] PostgreSQL unique and foreign-key errors are normalized.
+- [x] Provider secrets are not written to request logs or returned unmasked.
+- [x] Liveness endpoint exists at `GET /health/live`.
+- [x] Readiness endpoint exists at `GET /health/ready`.
+- [x] Readiness reports PostgreSQL, Redis, Qdrant and object-storage status.
+- [x] PostgreSQL is treated as required.
+- [x] Redis, Qdrant and MinIO are treated as optional/degraded dependencies.
+- [x] Helmet, compression, cookie parsing and body-size limits are configured.
 
 ### Database
 
-- [x] Mongoose integration dependency exists.
-- [~] Multiple Mongoose entity files exist.
-- [ ] Database index audit.
-- [ ] Soft-delete strategy.
-- [ ] migration/versioning strategy.
-- [ ] seed scripts for roles/admin/demo data.
-- [ ] backup/restore documentation.
+- [x] PostgreSQL/TypeORM integration exists.
+- [x] TypeORM entities use UUID primary keys and timestamps.
+- [x] Shared base entity now includes `deletedAt` for soft-delete support.
+- [x] Existing entities include unique and composite indexes for current query paths.
+- [x] Index-audit rules are documented.
+- [x] Development auto-sync is enabled only outside production.
+- [x] Production migration/versioning strategy is documented.
+- [x] Idempotent seed command exists: `npm run seed`.
+- [x] Seed command initializes configured admin and starter catalog/reference data.
+- [x] PostgreSQL backup guidance is documented.
+- [x] PostgreSQL restore-test guidance is documented.
+- [x] Backup validity requires a successful restore test.
+
+Evidence:
+
+- `backend/src/lib/database/base.entity.ts`
+- `backend/src/lib/database/database.module.ts`
+- `backend/src/scripts/seed.ts`
+- `backend/docs/database-operations.md`
+- `backend/package.json`
 
 ### Queue and caching
 
 - [x] BullMQ dependencies exist.
-- [x] Cache-manager dependency exists.
-- [ ] Redis connection configuration verified.
-- [ ] Queue module verified.
-- [ ] Dead-letter/retry policy.
-- [ ] Worker health metrics.
-- [ ] Idempotent job design.
+- [x] Redis client dependency exists.
+- [x] Global resilient queue module exists.
+- [x] Queue connection is created only when a job is actually added.
+- [x] Redis/queue failure returns a controlled non-queued result instead of stopping the API.
+- [x] Default queue attempts use exponential backoff.
+- [x] Completed and failed job retention limits are configured.
+- [x] Job options accept caller-provided `jobId` for idempotent job design.
+- [x] Queue errors are logged without exposing Redis credentials.
+
+Remaining queue work:
+
+- [x] AI, notification, media and report workers persist idempotent job records and perform their connected domain updates inside database transactions.
+- [x] Real persisted business processing exists for image-profile media batches, image-profile re-index metadata, alert delivery state, and generated report records.
+- [x] Per-worker heartbeat and Prometheus metrics exist.
+- [x] Explicit dead-letter queues exist for exhausted jobs/manual review.
+- [x] A BullMQ integration test runs against a real Redis instance when `TEST_REDIS_URL` is configured; it passed against the local Redis container on July 17, 2026.
+
+Evidence:
+
+- `backend/src/lib/queue/queue.module.ts`
+- `backend/src/lib/queue/resilient-queue.service.ts`
 
 ### Object storage
 
-- [x] AWS S3 SDK dependency exists.
-- [ ] Storage service module verified.
-- [ ] Presigned upload flow.
-- [ ] Signed private read URLs.
-- [ ] image metadata stripping.
-- [ ] thumbnail generation.
-- [ ] deletion synchronization.
+- [x] AWS S3-compatible MinIO client exists.
+- [x] Storage module is global.
+- [x] Backend upload flow exists.
+- [x] Presigned upload URL helper exists.
+- [x] Signed private read URL helper exists.
+- [x] Image upload helper strips original metadata through re-encoding.
+- [x] Image upload helper creates a WebP thumbnail.
+- [x] Multi-object deletion helper supports synchronized original/thumbnail cleanup.
+- [x] Missing MinIO configuration does not stop backend startup.
+- [x] Storage status is included in readiness output.
+
+Remaining storage work:
+
+- [x] Authenticated upload and presign endpoints exist for profile, listing, moderation, CMS, advertisement, support, report and image-profile features.
+- [x] MIME sniffing, declared-versus-detected MIME validation and upload-size policy exist per supported feature.
+- [x] Real MinIO integration test uploads, reads and deletes an object against a configured live MinIO instance; it passed against the local Docker container on July 17, 2026.
+- [x] PostgreSQL object-deletion outbox coordinates committed database changes with retryable MinIO deletion, exponential backoff, terminal failure state and migration support.
+
+Evidence:
+
+- `backend/src/lib/storage/minio.service.ts`
+- `backend/src/lib/storage/storage.module.ts`
+
+### Verification
+
+- [x] `npm run lint` passed.
+- [x] `npm run build` passed.
+- [x] `npm test -- --runInBand` passed.
+- [x] `npm run seed` passed.
+- [x] `GET /health/live` returned HTTP 200.
+- [x] `GET /health/ready` returned HTTP 200.
+- [x] Custom `x-request-id` was echoed in the response header/body.
+- [x] Root success response contained `success: true`.
+- [x] Unauthorized response contained `success: false` and the same request ID.
 
 ---
-
 ## 4. Authentication, Users, and Roles
 
-### Existing
+### Authentication lifecycle
 
-- [x] User module files exist.
-- [x] User controller/service/entity/DTO files exist.
-- [x] JWT dependency exists.
-- [x] Access-token guard exists.
-- [x] Roles decorator exists.
-- [x] Roles guard exists.
-- [x] Verified-account guard exists.
-- [~] Flutter login page exists.
-- [~] Flutter auth data/domain/presentation structure exists.
-- [~] Flutter auth guard is currently untracked/in progress.
+- [x] Public registration endpoint exists at `POST /user`.
+- [x] Login endpoint exists at `POST /user/login-user`.
+- [x] Registration and login return both `access_token` and `refresh_token`.
+- [x] Refresh-token rotation endpoint exists at `POST /user/refresh-token`.
+- [x] Refresh sessions are stored server-side in PostgreSQL.
+- [x] Only a SHA-256 hash of each refresh token is stored.
+- [x] Refresh tokens have unique token/session IDs.
+- [x] Rotating a refresh token revokes the previous session.
+- [x] Reusing an old refresh token returns HTTP 401.
+- [x] Logout revokes all active refresh sessions for the user.
+- [x] Logout increments `tokenVersion`, invalidating existing access tokens immediately.
+- [x] Access-token verification checks the current user record, account status and token version.
+- [x] Refresh token secret and access/refresh expiry settings are documented in `.env.example`.
+- [x] Login and logout events are written to audit logs.
 
 Evidence:
 
-- `backend/src/user/`
-- `backend/src/auth/`
-- `farmer/lib/features/auth/`
+- `backend/src/auth/entities/auth-session.entity.ts`
+- `backend/src/user/user.service.ts`
+- `backend/src/user/user.controller.ts`
+- `backend/.env.example`
 
-### Remaining
+### Canonical roles and multi-role accounts
 
-- [ ] Verify registration/login/refresh/logout endpoint behavior.
-- [ ] Verify refresh-token rotation and revocation.
-- [ ] Phone OTP workflow.
-- [ ] password reset.
-- [ ] account suspension/deletion.
-- [ ] role approval workflow.
-- [ ] specialist/veterinary credential verification.
-- [ ] seller approval workflow.
-- [ ] complete canonical roles:
-  - [ ] FARMER
-  - [ ] WHOLESALE_BUYER
-  - [ ] STUDENT_VOLUNTEER
-  - [ ] AGRICULTURE_SPECIALIST
-  - [ ] VETERINARY_DOCTOR
-  - [ ] SELLER
-  - [ ] PUBLIC_USER
-  - [ ] ADMIN
-  - [ ] SUPER_ADMIN
-- [ ] role-based Flutter navigation fully tested.
-- [ ] admin role management UI.
-- [ ] audit logs for role/status changes.
+- [x] Canonical user roles are defined:
+  - [x] FARMER
+  - [x] WHOLESALE_BUYER
+  - [x] BUYER
+  - [x] STUDENT_VOLUNTEER
+  - [x] AGENT
+  - [x] AGRICULTURE_SPECIALIST
+  - [x] VETERINARY_DOCTOR
+  - [x] SELLER
+  - [x] MACHINERY_SELLER
+  - [x] MEDICINE_SELLER
+  - [x] PUBLIC_USER
+  - [x] GOVERNMENT_OFFICER
+  - [x] SUPPORT
+  - [x] ADMIN
+  - [x] SUPER_ADMIN
+- [x] Existing single `role` field remains for backward-compatible active workspace behavior.
+- [x] New `roles[]` field stores all approved roles.
+- [x] Roles guard accepts any approved role in `roles[]`.
+- [x] Admin can replace approved roles using `PATCH /admin/users/:id/roles`.
+- [x] User can request active-role change using `PATCH /user/active-role`.
+- [x] Active-role change is limited to already approved roles.
+- [x] Role changes revoke existing sessions and require sign-in again.
+- [x] Role changes are written to audit logs.
+
+### Verification and account status
+
+- [x] Verification status remains separate from role.
+- [x] Admin verification endpoint exists at `PATCH /admin/users/:id/verification`.
+- [x] Verification changes revoke existing sessions.
+- [x] Verification changes are written to audit logs.
+- [x] Account status supports `active`, `suspended` and `deleted`.
+- [x] Admin account-status endpoint exists at `PATCH /admin/users/:id/account-status`.
+- [x] Suspended users cannot log in.
+- [x] Suspended/deleted users cannot use previously issued access tokens.
+- [x] Deleted account status uses the soft-delete timestamp.
+- [x] Account status changes revoke sessions and are audited.
+
+### Authorization and audit
+
+- [x] Access-token guard exists and validates live account state.
+- [x] Roles decorator exists.
+- [x] Multi-role roles guard exists.
+- [x] Verified-account guard exists.
+- [x] Sensitive admin endpoints use authentication, verification and role guards.
+- [x] Audit-log PostgreSQL entity exists.
+- [x] Audit service exists.
+- [x] Audit records include actor, action, target entity, before/after values and metadata.
+- [x] Admin audit-log endpoint exists at `GET /admin/audit-logs`.
+- [x] Audit-log endpoint is protected by admin/super-admin roles.
+
+Evidence:
+
+- `backend/src/audit/entities/audit-log.entity.ts`
+- `backend/src/audit/audit.service.ts`
+- `backend/src/audit/audit.module.ts`
+- `backend/src/auth/roles.guard.ts`
+- `backend/src/admin/admin.controller.ts`
+
+### Next.js administration UI
+
+- [x] Admin users page displays verification status.
+- [x] Admin users page displays account status.
+- [x] Admin users page displays all approved roles.
+- [x] Active role is visually identified.
+- [x] Admin can approve/reject/pending verification from the dashboard.
+- [x] Admin can activate, suspend or soft-delete accounts from the dashboard.
+- [x] Admin can add/remove multiple roles using role checkboxes.
+- [x] UI uses dedicated roles, verification and account-status endpoints.
+- [x] Responsive access-management card layout replaces the previous narrow single-role table.
+
+Evidence:
+
+- `frontend/components/admin/admin-resource-panels.tsx`
+- `frontend/lib/admin-api.ts`
+
+### Flutter compatibility
+
+- [x] Existing Flutter login remains compatible because `access_token` and `user` are still returned.
+- [x] Flutter auth guard and login code compile after the backend response expansion.
+- [x] Flutter role-aware home content compiles with existing active `role` value.
+- [x] Flutter analyze passes.
+- [x] Flutter tests pass.
+
+### Live verification
+
+- [x] Registration returned access and refresh tokens.
+- [x] Protected profile request succeeded with access token.
+- [x] Refresh token rotated successfully.
+- [x] Old refresh token was rejected with HTTP 401.
+- [x] Logout revoked current access token with HTTP 401 on reuse.
+- [x] Admin assigned `farmer` and `buyer` roles to one account.
+- [x] Admin suspended the account.
+- [x] Suspended login was rejected with HTTP 403.
+- [x] Admin reactivated the test account.
+- [x] Audit endpoint returned authentication, role and status events.
+- [x] Backend lint passed.
+- [x] Backend build passed.
+- [x] Backend tests passed.
+- [x] Next.js lint passed.
+- [x] Next.js production build passed.
+- [x] Flutter analyze and tests passed.
+
+### Remaining authentication work
+
+- [x] Expiring phone OTP workflow exists with configurable SMS provider URL and API key; development may skip delivery and expose the code when explicitly enabled.
+- [x] OTP daily limit, maximum attempts and resend cooldown are enforced.
+- [x] Password-reset request and confirmation flow exists and revokes prior sessions through token-version increment.
+- [x] Flutter automatically refreshes access tokens and retries authenticated requests.
+- [x] Next.js uses secure HTTP-only cookie sessions with server-side refresh rotation.
+- [x] Active-role switching UI exists in Flutter and Next.js.
+- [x] Specialist and veterinary credential document-review workflow exists.
+- [x] Seller and machinery-seller professional document review and business verification workflow exists.
+- [x] Audited support impersonation exists behind `SUPPORT_IMPERSONATION_ENABLED=false` by default, issues only a 15-minute access token, requires an explicit reason, blocks administrative targets and creates an audit event.
+- [x] Supertest E2E coverage validates missing, invalid, expired and revoked tokens; bearer and legacy headers; verification enforcement; denied and allowed roles; multi-role authorization; and support-mode privilege isolation.
+- [x] Audit-log viewer UI includes filters, pagination and export.
 
 ---
-
 ## 5. Admin Panel
 
-### Existing
+### Core admin access
 
 - [x] Backend admin module exists.
-- [x] Admin controller/service/DTO/entity files exist.
-- [x] Next.js admin dashboard components exist.
+- [x] Admin controller and service exist.
+- [x] Admin-only RBAC is enforced for sensitive endpoints.
+- [x] Next.js admin dashboard exists at `/dashboard/admin`.
+- [x] Flutter admin workspace exists.
+- [x] Admin login works with configured admin credentials.
+- [x] Admin user-management UI supports verification, account status and multiple roles.
+- [x] Admin dashboard uses responsive glass UI on desktop, tablet and mobile widths.
+
+### Dashboard overview and analytics
+
 - [x] Admin overview component exists.
-- [x] Admin market controls component exists.
-- [x] Admin resource panels component exists.
-- [x] Frontend admin API helper exists.
-- [~] Flutter admin workspace exists and is modified.
+- [x] Dashboard metrics include users, pending users, listings, active listings, deals, deal volume and inventory items.
+- [x] User distribution by role is available.
+- [x] Monthly listing/deal activity trend is available.
+- [x] Recent deals and recent listings are available.
+- [x] Flutter admin workspace displays users, pending reviews, listings and deals summary metrics.
+- [~] Analytics are operational summaries only; advanced exportable reports remain incomplete.
+
+### User, farmer and professional-account management
+
+- [x] User list and search exist.
+- [x] Pending account list exists.
+- [x] Verification approval/rejection exists.
+- [x] Multi-role assignment exists.
+- [x] Account activate/suspend/soft-delete exists.
+- [x] Session revocation occurs after sensitive account changes.
+- [x] Changes are written to audit logs.
+- [x] Specialist, veterinary and seller approvals use document-by-document professional review records.
+- [x] Document-by-document credential review with reviewer notes exists.
+- [x] Business-license and seller-onboarding review checklist exists.
+
+### Marketplace and inventory administration
+
+- [x] Listing management panel exists.
+- [x] Admin can change listing status.
+- [x] Deal oversight panel exists.
+- [x] Admin can change deal status.
+- [x] Offer listing endpoint exists for admin review.
+- [x] Goods and category data are available in admin controls.
+- [x] Market-price management exists.
+- [x] Seller inventory management exists.
+- [x] Admin can update inventory stock, price and active status.
+- [x] Marketplace moderation now persists status, required reasons, evidence URLs, reviewer identity, timestamps, appeal state, internal audit notes and append-only moderation history.
+- [x] Moderation reasons, reviewer identity, appeal state, evidence and audit notes are implemented in the API, database migration and admin UI.
+- [x] Generalized machinery/input product management is implemented through the shared marketplace product model, seller creation/listing flows, machinery-specific fields, restricted-license controls and admin moderation oversight.
+- [x] Order, payment, refund and delivery oversight is implemented with admin order/tracking controls plus read-only payment and refund operational views.
+
+### AI and provider administration
+
+- [x] AI & providers section exists in Next.js.
+- [x] Multiple Gemini keys can be submitted.
+- [x] Gemini text and vision model fields exist.
+- [x] Qdrant image-embedding provider/model fields exist.
+- [x] Windy and OneSignal fields exist.
+- [x] Provider secrets are encrypted in PostgreSQL.
+- [x] Provider secrets are masked when read.
+- [x] Per-key health, last success, quota errors, cooldown timestamps, last test time, last error and usage/test counters are persisted and shown in the admin UI.
+- [x] Gemini keys have independent enable/disable and numeric priority controls in the Next.js admin panel and encrypted backend settings.
+- [x] Next.js provider test buttons call authenticated server-side Gemini, Windy and OneSignal validation endpoints without exposing stored secrets.
+
+### System health and audit
+
+- [x] Next.js **System & audit** section exists.
+- [x] PostgreSQL health status is displayed.
+- [x] Redis health status is displayed.
+- [x] Qdrant health status is displayed.
+- [x] MinIO/object-storage health status is displayed.
+- [x] Required versus optional dependencies are labeled.
+- [x] Degraded optional dependency state is visually distinct.
+- [x] Recent audit events are displayed in Next.js.
+- [x] Audit entries show action, entity, actor, target, time and before/after values.
+- [x] Flutter admin workspace displays dependency health.
+- [x] Flutter admin workspace displays recent audit activity.
+- [x] Flutter admin workspace supports pull-to-refresh.
+- [x] Audit filters, pagination and export exist.
+- [ ] Add Prometheus metrics and historical uptime charts.
 
 Evidence:
 
+- `frontend/components/admin/admin-system-panel.tsx`
+- `frontend/components/admin/admin-dashboard.tsx`
+- `frontend/components/admin/admin-resource-panels.tsx`
+- `farmer/lib/features/admin/data/admin_api.dart`
+- `farmer/lib/features/admin/presentation/admin_workspace.dart`
 - `backend/src/admin/`
-- `frontend/components/admin/`
-- `frontend/lib/admin-api.ts`
-- `farmer/lib/features/admin/`
+- `backend/src/audit/`
+- `backend/src/lib/health/`
 
-### Remaining
+### Guidance and communications
 
-- [ ] Confirm Next.js authentication and secure session handling.
-- [ ] Enforce admin RBAC in backend.
-- [ ] user/farmer management completion.
-- [ ] specialist/seller approvals.
-- [ ] marketplace moderation.
-- [ ] product management.
-- [ ] weather monitoring dashboard.
-- [ ] AI model/provider management.
-- [ ] Gemini key-health dashboard without raw key display.
-- [ ] reports and analytics.
-- [ ] payment/order oversight.
-- [ ] advertisements.
-- [ ] CMS.
-- [ ] support tickets.
-- [ ] audit log viewer.
-- [ ] image-profile management UI.
+- [x] Admin guidance/notice publishing endpoint exists.
+- [x] Flutter admin workspace includes a notice composer.
+- [x] Notice target-role selection exists.
+- [x] Empty title/message validation exists in Flutter UI.
+- [x] Success/error toast feedback exists.
+- [x] Add Next.js notice/CMS management UI.
+- [x] Add notice scheduling, drafts, expiration and attachment support.
+- [x] Add advertisements module and administration UI.
+- [x] Add support-ticket module and admin queue.
+
+### Image-profile administration
+
+- [x] Image-profile creation UI.
+- [x] 10â€“500 file bulk uploader.
+- [x] Upload progress and failed-file retry.
+- [x] Duplicate reporting.
+- [x] Quality review.
+- [x] Activation/archive/re-index controls.
+- [~] Re-index controls exist; broader Qdrant profile evaluation/health scoring remains incomplete.
+
+### Secure web session status
+
+- [x] Next.js admin authentication uses a server-managed cookie session and backend authorization.
+- [x] Admin access and refresh tokens are not stored in browser local storage.
+- [x] Admin session uses secure HTTP-only cookies.
+- [x] CSRF protection exists for cookie-authenticated mutations.
+- [x] Automatic refresh-token rotation exists in the Next.js server layer.
+- [x] Protected admin routes enforce middleware/server-side authorization before rendering.
+
+### Verification
+
+- [x] Next.js lint passed.
+- [x] Next.js production build passed.
+- [x] Flutter analyze passed with no issues.
+- [x] Flutter tests passed.
+- [x] Existing backend admin/audit/health endpoints were previously live-tested.
 
 ---
-
 ## 6. Marketplace and E-Commerce
 
-### Existing
+### Canonical marketplace listing model
 
 - [x] Backend listing module exists.
-- [x] Listing controller/service/entity/DTO/search DTO exist.
-- [x] Listing owner guard exists.
-- [x] Backend goods module exists.
-- [x] Backend deals/negotiation module exists.
-- [x] Backend market-price module exists.
-- [x] Backend medicine seller/catalog module exists.
-- [~] Flutter marketplace page exists.
-- [~] Flutter sell product page exists.
-- [~] Flutter buyer listing browser exists.
-- [~] Flutter buyer deals panel exists.
-- [~] Flutter seller panels exist.
-- [~] Medicine seller nearby panels exist.
+- [x] Listing controller, service, entity, DTO and owner guard exist.
+- [x] PostgreSQL listing entity supports canonical marketplace categories.
+- [x] Supported categories include agricultural output, livestock, poultry, fisheries, machinery, machinery parts, seed, fertilizer, pesticide, feed, medicine, equipment rental and service.
+- [x] Listing transaction type supports sale, rental and service.
+- [x] Listing supports description, grade, delivery availability and negotiable flag.
+- [x] Listing still supports quantity, unit, harvest date, location, government price, market price and minimum price.
+- [x] Existing crop listings remain backward compatible through default category and transaction type.
+- [x] Listing owner authorization exists for cancellation.
+- [x] Admin and super-admin may manage listings.
+- [x] PostgreSQL reservation uses a pessimistic transaction lock.
+
+### Search, filters, sorting and pagination
+
+- [x] Public marketplace search is API-backed.
+- [x] Search supports free text across product name, code, description and address.
+- [x] Category filter exists.
+- [x] Transaction-type filter exists.
+- [x] Address/location filter exists.
+- [x] Grade filter exists.
+- [x] Minimum and maximum price filters exist.
+- [x] Minimum available quantity filter exists.
+- [x] Delivery-available filter exists.
+- [x] Negotiable-only filter exists.
+- [x] Harvest-date range filters exist.
+- [x] Sorting supports newest, price low-to-high, price high-to-low and available quantity.
+- [x] Stable pagination exists with page, page size, total, total pages and next-page state.
+- [x] Maximum page size is limited to 50.
+- [x] Previous unbounded `take(100)` listing search was removed.
+
+### Flutter buyer marketplace
+
+- [x] Hard-coded storefront demo products were removed from the main marketplace page.
+- [x] Marketplace page now uses real backend listings.
+- [x] Marketplace page still shows live backend market prices.
+- [x] Buyer search field uses backend search.
+- [x] Buyer filter sheet supports category, location, price range, quantity, delivery and negotiable filters.
+- [x] Buyer can sort results.
+- [x] Buyer can navigate previous/next pages.
+- [x] Listing cards show category, price, grade, delivery and negotiable tags.
+- [x] Buyer offer action remains connected to `POST /offers`.
+- [x] Offer success/error uses global app toasts.
 
 Evidence:
 
-- `backend/src/listings/`
-- `backend/src/goods/`
-- `backend/src/deals/`
-- `backend/src/market-price/`
-- `backend/src/medicine-sellers/`
-- `farmer/lib/features/marketplace/`
+- `farmer/lib/features/marketplace/presentation/pages/marketplace_page.dart`
+- `farmer/lib/features/marketplace/presentation/widgets/buyer_listing_browser.dart`
+- `farmer/lib/features/marketplace/data/datasources/marketplace_api.dart`
+- `farmer/lib/features/marketplace/data/models/listing.model.dart`
 
-### Remaining
+### Flutter seller listing flow
 
-- [ ] Confirm listing CRUD is API-backed and fully authorized.
-- [ ] canonical marketplace category model.
-- [ ] bulk purchase.
-- [ ] live auction workflow.
-- [ ] direct chat.
-- [ ] product search filters and pagination.
-- [ ] voice search.
-- [ ] AI recommendation engine.
-- [ ] shopping cart.
-- [ ] checkout.
-- [ ] payment gateway integration against orders.
-- [ ] order tracking.
-- [ ] delivery status.
-- [ ] invoice creation.
-- [ ] review/rating.
-- [ ] AI image edit/background removal adapter.
-- [ ] AI listing description generation.
-- [ ] market price suggestion.
-- [ ] best selling time.
-- [ ] best price guidance.
-- [ ] seller moderation and restricted-product controls.
-- [ ] no internal wallet dependencies in checkout.
+- [x] Seller/farmer listing form is API-backed.
+- [x] Seller can choose marketplace category.
+- [x] Seller can enter description.
+- [x] Seller can enter grade/quality.
+- [x] Seller can mark delivery availability.
+- [x] Seller can mark price negotiability.
+- [x] Existing quantity and price validation remains.
+- [x] My listings remains API-backed.
+- [x] Existing image-based goods detection helper remains available.
+
+### Negotiation and deal foundation
+
+- [x] Offer creation exists.
+- [x] Offer countering exists.
+- [x] Offer acceptance exists.
+- [x] Offer rejection exists.
+- [x] Buyer/farmer offer authorization exists.
+- [x] Deal creation and stock reservation foundation exist.
+- [x] Buyer and seller deal panels exist in Flutter.
+- [x] Admin deal oversight exists.
+
+### Medicine/input seller foundation
+
+- [x] Medicine/product catalog exists.
+- [x] Seller inventory exists.
+- [x] Nearby seller search exists.
+- [x] Seller location update exists.
+- [x] Flutter seller inventory workspace exists.
+- [x] Flutter nearby-seller panels exist.
+- [x] Medicine inventory is unified with the generalized marketplace product catalog while preserving medicine-specific catalog, seller, location, unit, and nearby-search behavior.
+
+### Live verification
+
+- [x] Created a PostgreSQL-backed machinery listing.
+- [x] Listing returned canonical category `machinery`.
+- [x] Delivery and negotiable fields were stored.
+- [x] Category filter returned the machinery listing.
+- [x] Delivery filter returned the listing.
+- [x] Minimum quantity filter returned the listing.
+- [x] Price-range filter returned the listing.
+- [x] Pagination metadata returned page, page size, total, total pages and next-page state.
+- [x] Backend lint passed.
+- [x] Backend build passed.
+- [x] Backend tests passed.
+- [x] Flutter analyze passed.
+- [x] Flutter tests passed.
+
+### Remaining marketplace work
+
+- [x] Separate generalized `MarketplaceProduct` domain exists apart from farmer-output `Listing`, with production migration, Flutter seller UI, public Next.js buyer UI, admin moderation UI, tests and practical instructions.
+- [x] Generalized products include machinery specifications JSONB plus indexed brand, model, year and horsepower fields, seller UI, migration and validation.
+- [x] Rental date-range UI and backend conflict detection reject overlapping pending/confirmed machinery bookings; focused tests and instructions exist.
+- [x] Bulk purchase requests support buyer creation, seller offers, sorted offer comparison, transaction-safe buyer selection, rejected competing offers, Flutter workflow, admin oversight, migration and focused tests.
+- [x] Auction/bid persistence, mobile bidding UI, transactional highest-bid enforcement and scheduled auction closeout-to-order processing exist.
+- [x] Authenticated realtime buyer-seller chat uses Socket.IO with temporary Redis history for one hour, no PostgreSQL writes, a strict 60-second per-sender cooldown, reconnect history loading, and Flutter countdown UI. Legacy persisted message REST routes are disabled.
+- [x] Bangla voice capture exists in Flutter and supported Next.js browsers, with normalized marketplace transcript search and typed fallback.
+- [x] Deterministic catalog-only recommendation endpoint now tokenizes multilingual product/query text, ranks published database products with explainable content/popularity/availability/recency signals, reports evaluation metadata, and never invents catalog items. Vector/LLM fallback is intentionally not required for the current low-AI mode.
+- [x] Saved-search and favorite persistence/APIs include list/toggle/delete flows, polished Next.js and Flutter saved-marketplace UI, apply/remove/delete actions, and dedicated Flutter widget tests covering favorites and saved searches.
+- [x] Persistent cart with stock validation exists in the backend and public Next.js/Flutter buyer flows.
+- [x] Transactional checkout creates orders, locks/decrements stock, clears cart, has buyer UI, migration, tests and no wallet dependency.
+- [x] Stripe is disabled from the active marketplace checkout. Orders are created gateway-neutral with `unpaid` status, and the web UI explains that bKash or another provider can be connected later. Existing Stripe backend code remains dormant for future reference and is not called by checkout.
+- [x] Order status and tracking updates exist with Next.js admin operations UI and customer order persistence; payment state remains gateway-controlled.
+- [x] Backend `pdfkit` invoice generation streams persisted order PDFs, with direct invoice links in Next.js buyer/admin views and signed five-minute mobile links in Flutter buyer orders.
+- [x] Delivered-order-only reviews include average/count/star distribution, buyer review UI, Next.js admin hide/publish moderation, persistence and focused tests.
+- [x] Provider-neutral background-removal adapter runs through the persisted media worker, records provider/output/error state, and has Flutter seller preview/apply/reject UI.
+- [x] Provider-backed listing-description generation runs through the persisted AI worker with model/provider metadata, failure history, seller preview/apply/reject UI and focused tests.
+- [x] Price guidance combines active peer-price median/range with delivered-order monthly demand and revenue, returns seasonal demand bands/best months, and is shown in Flutter seller UI.
+- [x] Product moderation reasons, reviewer identity, restricted/license controls and seller appeals have persistence, APIs, Flutter seller fields, Next.js admin UI and tests.
+- [x] Popular marketplace searches use 60-second Redis caching with graceful fallback, invalidation and a real Redis integration test.
+- [x] PostgreSQL full-text matching, GIN migration index, Haversine distance filtering/sorting and Redis cache integration exist and passed live smoke validation.
+- [x] Checkout creates external-payment-ready orders and introduces no internal wallet dependency.
 
 ---
+# Deferred Roadmap Audit â€” Not in Current Sections 1â€“6 Completion Gate
+
+The sections below are retained for future planning and audit visibility. Their unchecked items are not current blockers while implementation is limited to sections 1â€“6.
 
 ## 7. Market Price Intelligence
 
@@ -333,7 +704,7 @@ Remaining:
 
 - [ ] No verified provider-neutral AI module.
 - [ ] No verified Gemini provider implementation.
-- [ ] No verified 5–10 key rotation pool.
+- [ ] No verified 5Ã¢â‚¬â€œ10 key rotation pool.
 - [ ] No verified OpenAI/custom provider adapter contract.
 
 Implementation checklist:
@@ -380,7 +751,7 @@ Acceptance evidence required:
 
 ### Profile management
 
-- [ ] `ImageProfile` MongoDB schema.
+- [ ] `ImageProfile` PostgreSQL entity/schema.
 - [ ] `ImageProfileAsset` schema.
 - [ ] profile create/update/archive endpoints.
 - [ ] domain/category/canonical label fields.
@@ -389,11 +760,11 @@ Acceptance evidence required:
 - [ ] profile state machine: draft/processing/active/archived.
 - [ ] admin permissions.
 
-### 10–500 image bulk upload
+### 10Ã¢â‚¬â€œ500 image bulk upload
 
 - [ ] Next.js multi-file uploader.
 - [ ] file count validation (10 minimum for activation, 500 maximum per profile operation).
-- [ ] upload chunking (10–25 recommended).
+- [ ] upload chunking (10Ã¢â‚¬â€œ25 recommended).
 - [ ] per-file progress.
 - [ ] cancel/retry failed files.
 - [ ] duplicate reporting.
@@ -451,7 +822,7 @@ Acceptance evidence required:
 Suggested initial output behavior pending evaluation:
 
 - [ ] `>= 0.85` high-confidence likely match.
-- [ ] `0.70–0.8499` possible match; request more images/show alternatives.
+- [ ] `0.70Ã¢â‚¬â€œ0.8499` possible match; request more images/show alternatives.
 - [ ] `< 0.70` unknown/insufficient confidence.
 
 These thresholds are not considered complete until measured on labeled data.
@@ -740,7 +1111,7 @@ Explicit exclusion:
 - [ ] consent for AI image processing.
 - [ ] retention policy.
 - [ ] user data export/delete workflow.
-- [ ] MongoDB/storage/Qdrant coordinated deletion.
+- [ ] PostgreSQL/object-storage/Qdrant coordinated deletion through an outbox/worker process.
 - [ ] secret manager for production.
 - [ ] logs redact secrets and personal data.
 - [ ] audit logs for sensitive actions.
@@ -811,7 +1182,7 @@ These items should not be marked as missing because they are intentionally exclu
 
 ---
 
-## 27. Immediate Next Work Order
+## 27. Deferred Full-Roadmap Work Order (Not Current Sections 1â€“6)
 
 Execute in this order to reduce rework:
 
@@ -819,7 +1190,7 @@ Execute in this order to reduce rework:
 2. [ ] Run all three project build/lint/analyze commands and record failures.
 3. [ ] harden backend bootstrap, config validation, response/errors, health endpoints.
 4. [ ] verify and complete authentication/roles.
-5. [ ] create local Docker Compose for MongoDB, Redis, Qdrant, and S3-compatible storage.
+5. [x] local Docker Compose exists for PostgreSQL, Redis, Qdrant, and MinIO object storage.
 6. [ ] implement provider-neutral AI module.
 7. [ ] implement Gemini multi-key pool and tests.
 8. [ ] implement storage/upload/queue pipeline.
@@ -838,7 +1209,7 @@ Execute in this order to reduce rework:
 
 ## 28. Triple-Validation Record
 
-### Pass 1 — PDF scope coverage
+### Pass 1 Ã¢â‚¬â€ PDF scope coverage
 
 - [x] Crop features captured.
 - [x] Weather and alert features captured.
@@ -849,22 +1220,22 @@ Execute in this order to reduce rework:
 - [x] livestock/poultry/fisheries/river safety captured.
 - [x] Digital Farm captured.
 
-### Pass 2 — Owner instruction compliance
+### Pass 2 Ã¢â‚¬â€ Owner instruction compliance
 
 - [x] Flutter retained.
 - [x] NestJS retained.
 - [x] Next.js retained.
 - [x] Gemini first provider.
-- [x] 5–10 Gemini key architecture specified.
+- [x] 5Ã¢â‚¬â€œ10 Gemini key architecture specified.
 - [x] future OpenAI/custom provider extensibility specified.
 - [x] Qdrant image-profile workflow specified.
-- [x] 10–500 image ingestion specified.
-- [x] 70–80% confidence behavior treated as configurable/calibrated rather than raw similarity.
+- [x] 10Ã¢â‚¬â€œ500 image ingestion specified.
+- [x] 70Ã¢â‚¬â€œ80% confidence behavior treated as configurable/calibrated rather than raw similarity.
 - [x] Wallet ignored.
 - [x] Future AI Features ignored.
 - [x] suggested replacement technologies ignored.
 
-### Pass 3 — Repository reality check
+### Pass 3 Ã¢â‚¬â€ Repository reality check
 
 - [x] current folders verified.
 - [x] package dependencies verified.
@@ -896,7 +1267,7 @@ Whenever an AI agent or developer completes work:
 
 ---
 
-# 30. Extended Completion Audit — Weather, Voice, Siren, Performance, Roles, and Routing
+# 30. Extended Completion Audit Ã¢â‚¬â€ Weather, Voice, Siren, Performance, Roles, and Routing
 
 ## 30.1 Windy weather integration
 
@@ -1087,7 +1458,7 @@ Required evidence before completion:
 
 Important completion rule:
 
-- [!] Do not mark “siren always works while app is closed” complete based only on emulator or one Android phone. It requires multi-device physical testing and platform-policy verification.
+- [!] Do not mark Ã¢â‚¬Å“siren always works while app is closedÃ¢â‚¬Â complete based only on emulator or one Android phone. It requires multi-device physical testing and platform-policy verification.
 
 ## 30.6 Flutter nested routing
 
@@ -1165,8 +1536,8 @@ Evidence:
 - [ ] permission change audit.
 - [ ] backend enforcement for every sensitive action.
 - [ ] frontend/mobile role-aware navigation only as UX, never security.
-- [ ] support impersonation disabled by default.
-- [ ] controlled/audited support mode if later enabled.
+- [x] Support impersonation is disabled by default through `SUPPORT_IMPERSONATION_ENABLED=false`.
+- [x] Controlled support mode requires an approved admin, an explicit reason, a non-admin active target, a 15-minute token and an audit record.
 
 ### Permission keys
 
@@ -1226,7 +1597,7 @@ Evidence:
 - [ ] frame rendering/jank profiling.
 - [ ] memory profiling.
 - [ ] image-heavy marketplace profiling.
-- [ ] 100–500 image selection/upload profiling where supported.
+- [ ] 100Ã¢â‚¬â€œ500 image selection/upload profiling where supported.
 - [ ] long-list profiling.
 - [ ] network-loss recovery profiling.
 - [ ] crash-free session monitoring.
@@ -1376,7 +1747,7 @@ For each package:
 
 ---
 
-# 31. Final Rules Audit — OneSignal, Siren, Qdrant Fallback, Cache, Glassmorphism, Skeletons, and Feature Handoff
+# 31. Final Rules Audit Ã¢â‚¬â€ OneSignal, Siren, Qdrant Fallback, Cache, Glassmorphism, Skeletons, and Feature Handoff
 
 ## 31.1 OneSignal notification rule
 
@@ -1545,7 +1916,7 @@ For each package:
 
 For each major user-facing feature:
 
-- [ ] Collect 3–5 relevant references.
+- [ ] Collect 3Ã¢â‚¬â€œ5 relevant references.
 - [ ] Record source URLs.
 - [ ] Note hierarchy/navigation/layout patterns.
 - [ ] Confirm no proprietary asset is copied.
@@ -1598,7 +1969,7 @@ Hard completion rule:
 
 ---
 
-# 32. Verified Implementation — PostgreSQL, Shared Backend Library, API Hooks, and Package Foundation
+# 32. Verified Implementation Ã¢â‚¬â€ PostgreSQL, Shared Backend Library, API Hooks, and Package Foundation
 
 Audit date: 2026-07-17
 
@@ -2065,3 +2436,142 @@ Still required:
 - [x] Next.js lint passed.
 - [x] Next.js production build passed.
 - [x] Degraded Redis/Qdrant live startup passed.
+
+
+
+
+
+
+
+---
+
+# Public Browsing, Seller Category Permissions, Recommendations, and Tool Guides
+
+Status rule: every item below remains incomplete until backend behavior, required UI, tests, and practical `features.md` instructions are all present.
+
+## Public access and login continuation
+
+- [ ] Allow unauthenticated visitors to view the public home page.
+- [ ] Allow unauthenticated visitors to browse the public store, categories, listings, product details, and public seller information.
+- [ ] Require authentication only when a visitor starts a protected action.
+- [ ] Preserve the intended page/action through login or registration and safely resume it afterward.
+- [ ] Add backend authorization and end-to-end tests for guest versus authenticated behavior.
+- [ ] Add Flutter/Next.js loading, cancellation, error, and return-to-action states.
+- [ ] Add practical guest browsing and login-continuation instructions to `features.md`.
+
+## Farmer and seller multi-role workflow
+
+- [ ] Allow an existing farmer account to apply for and receive the seller role without creating another account.
+- [ ] Add farmer/seller workspace switching for the new seller workflows.
+- [ ] Keep general seller approval separate from per-category selling permission.
+- [ ] Add backend, Flutter, and Next.js tests for farmer-to-seller onboarding.
+- [ ] Add practical role/application instructions to `features.md`.
+
+## Admin-managed nested marketplace categories
+
+- [ ] Add a database-backed marketplace category model with parent/child nesting.
+- [ ] Add Bangla/English names, slug, description, image, sort order, status, path/depth, and category policy fields.
+- [ ] Add NestJS category CRUD, tree, move, reorder, activate, and archive APIs.
+- [ ] Prevent unsafe deletion/movement of categories that have listings or active seller permissions.
+- [ ] Add Next.js admin category-tree management UI with image upload and drag-and-drop ordering.
+- [ ] Replace hard-coded listing categories with API-managed taxonomy in Flutter and Next.js.
+- [ ] Add authorization, audit logging, migrations, indexes, API documentation, and tests.
+- [ ] Add practical category administration instructions to `features.md`.
+
+## Seller applications and category permissions
+
+- [ ] Add public Next.js seller application flow after authentication.
+- [ ] Allow one application to request multiple categories/subcategories.
+- [ ] Collect category-specific documents, licenses, business information, experience, and notes.
+- [ ] Add a `SellerCategoryPermission` persistence model and migration.
+- [ ] Allow admins to independently approve, reject, suspend, revoke, expire, and annotate each requested category.
+- [ ] Allow sellers to request additional categories later without duplicating approved requests.
+- [ ] Enforce active category permission on the backend before listing submission/publication.
+- [ ] Define and test parent/child permission inheritance policy.
+- [ ] Add seller permission views in Next.js admin and seller-facing Flutter/Next.js UI.
+- [ ] Add audit events, notifications, indexes, Swagger documentation, and primary/failure-path tests.
+- [ ] Add practical application, review, revocation, and publication instructions to `features.md`.
+
+## Structured product knowledge and safety
+
+- [ ] Extend listing/product persistence with intended uses, target crop/animal domains, target problems, symptoms, instructions, dosage/rate where appropriate, contraindications, warnings, composition, manufacturer, licenses, evidence, and moderation provenance.
+- [ ] Add category-aware validation so required fields change by product type.
+- [ ] Add restricted-product seller/document checks.
+- [ ] Add seller listing forms and admin moderation UI for the structured fields.
+- [ ] Prevent unreviewed AI-generated claims from being published automatically.
+- [ ] Add safety disclaimers and specialist escalation for uncertain/high-risk recommendations.
+- [ ] Add migrations, indexes, Swagger documentation, localization, and tests.
+- [ ] Add practical listing and moderation instructions to `features.md`.
+
+## Low-AI-first marketplace recommendations
+
+- [ ] Define normalized symptom, crop/animal, use-case, ingredient, and safety vocabulary.
+- [ ] Implement lexical/database filtering before vector or generative AI calls.
+- [ ] Vectorize approved product knowledge and category paths in Qdrant.
+- [ ] Implement Bangla/English typed search against approved active products.
+- [ ] Implement Bangla voice-to-text product/use-case search.
+- [ ] Add deterministic/vector ranking that returns one or two strongest products plus alternatives and evidence.
+- [ ] Use provider-neutral AI only for ambiguity clarification, image interpretation, or evidence summarization when required.
+- [ ] Guarantee that AI cannot recommend a product absent from the active marketplace database.
+- [ ] Filter recommendations by approved seller, valid category permission, stock, moderation, and safety status.
+- [ ] Persist recommendation evidence, vector/model versions, scores, warnings, and user feedback.
+- [ ] Add AI-disabled fallback tests, provider-failure tests, relevance evaluation, and safety tests.
+- [ ] Add practical recommendation/search instructions to `features.md`.
+
+## Crop image-to-product assistance
+
+- [ ] Add crop image plus optional voice/text symptom submission flow.
+- [ ] Reuse image-profile/Qdrant matching for known crop/condition identification.
+- [ ] Add structured provider-neutral vision fallback only when local/vector confidence is insufficient.
+- [ ] Convert image/AI results into normalized searchable conditions and symptoms.
+- [ ] Retrieve only approved active marketplace products from verified structured use records.
+- [ ] Return product and non-product guidance, warnings, confidence bands, and specialist escalation.
+- [ ] Store the complete evidence chain and disclaimer.
+- [ ] Add Flutter capture/result UI and applicable Next.js/admin review UI.
+- [ ] Add labeled evaluation, false-positive, unknown-rejection, and end-to-end tests.
+- [ ] Add practical image recommendation instructions to `features.md`.
+
+## Admin-managed tool-building knowledge
+
+- [ ] Add unlimited practical nested category persistence for tools, structures, repairs, and DIY guides.
+- [ ] Add category images, Bangla/English content, ordering, activation, archive, and audit fields.
+- [ ] Add `ToolGuide` and ordered `ToolGuideStep` persistence models and migrations.
+- [ ] Support required materials, tools, safety warnings, difficulty, time, cost, tags, and searchable phrases.
+- [ ] Support one image and/or validated YouTube link per ordered step as designed.
+- [ ] Add Next.js admin create/edit/preview/publish UI.
+- [ ] Add sequential image upload and drag-and-drop step/media ordering using `react-sortablejs` or a reviewed maintained equivalent.
+- [ ] Validate YouTube hosts/IDs and render embeds safely.
+- [ ] Add Flutter step-by-step guide UI with image, video, loading, offline/error, and safety states.
+- [ ] Add authorization, moderation, audit, Swagger documentation, tests, and practical `features.md` instructions.
+
+## Tool-guide discovery by category, voice, and image
+
+- [ ] Add image-based nested category browsing in Flutter.
+- [ ] Add Bangla/English text search over titles, categories, tags, materials, and steps.
+- [ ] Add Bangla voice search with exact/synonym/vector retrieval before AI fallback.
+- [ ] Add tool image profiles/sample vectors and Qdrant matching.
+- [ ] Return multiple possible matches and related guides rather than one forced answer.
+- [ ] Request another angle or manual selection for low-confidence images.
+- [ ] Do not label raw vector similarity as probability.
+- [ ] Calibrate any displayed 50â€“60% confidence band using a labeled evaluation dataset first.
+- [ ] Add search analytics and user feedback without storing unnecessary voice/image data.
+- [ ] Add backend, Flutter, Next.js/admin, vector evaluation, and failure-path tests.
+- [ ] Add practical category, voice, image-search, and confidence instructions to `features.md`.
+
+
+## OTP provider configuration verification
+
+- [x] `OTP_PROVIDER_URL` configures the SMS provider endpoint.
+- [x] `OTP_PROVIDER_API_KEY` configures the provider API key sent in the `x-api-key` header.
+- [x] `OTP_EXPIRES_MINUTES=5` controls OTP expiration.
+- [x] `OTP_RESEND_COOLDOWN_SECONDS=60` controls resend cooldown.
+- [x] `OTP_MAX_ATTEMPTS=5` limits incorrect verification attempts.
+- [x] `OTP_DAILY_LIMIT=10` limits daily OTP requests.
+- [x] `OTP_EXPOSE_CODE_IN_DEVELOPMENT=true` may expose the development code only outside production.
+- [x] Development may skip real SMS delivery when the provider URL or API key is not configured.
+- [x] Production rejects OTP delivery when either the provider URL or API key is missing.
+- [x] Password-reset OTPs use the same provider and protection rules.
+
+
+
+

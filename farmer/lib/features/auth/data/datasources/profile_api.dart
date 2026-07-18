@@ -41,6 +41,7 @@ class ProfileApi {
     final model = ProfileResponseModel.fromJson(responseData ?? const {});
     await GetIt.I<SessionStorage>().saveProfile(
       role: model.data.role.name,
+      roles: model.data.roles.map((item) => item.name).toList(growable: false),
       name: model.data.name,
       status: model.data.verificationStatus,
     );

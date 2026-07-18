@@ -7,6 +7,24 @@ class AdminApi {
 
   final Dio _client;
 
+  Future<Map<String, dynamic>> dashboard() async {
+    final response = await _client.get<Map<String, dynamic>>('/admin/dashboard');
+    return Map<String, dynamic>.from(response.data?['data'] as Map? ?? const {});
+  }
+
+  Future<Map<String, dynamic>> health() async {
+    final response = await _client.get<Map<String, dynamic>>('/health/ready');
+    return Map<String, dynamic>.from(response.data?['data'] as Map? ?? const {});
+  }
+
+  Future<List<Map<String, dynamic>>> auditLogs({int limit = 20}) async {
+    final response = await _client.get<Map<String, dynamic>>(
+      '/admin/audit-logs',
+      queryParameters: {'limit': limit},
+    );
+    return _list(response.data?['data']);
+  }
+
   Future<List<Map<String, dynamic>>> pendingUsers() async {
     final response = await _client.get<Map<String, dynamic>>(
       '/admin/users/pending',

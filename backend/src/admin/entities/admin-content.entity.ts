@@ -25,6 +25,22 @@ export class Guidance extends BaseAppEntity {
   active!: boolean;
 
   @Index()
+  @Column({ type: 'varchar', length: 20, default: 'published' })
+  status!: 'draft' | 'scheduled' | 'published' | 'expired';
+
+  @Index()
+  @Column({ type: 'timestamptz', nullable: true })
+  publishAt?: Date | null;
+
+  @Index()
+  @Column({ type: 'timestamptz', nullable: true })
+  expiresAt?: Date | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  attachmentUrl?: string | null;
+
+  @Index()
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   publishedAt!: Date;
 }
+

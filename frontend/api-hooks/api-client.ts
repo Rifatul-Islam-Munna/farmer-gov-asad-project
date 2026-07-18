@@ -20,24 +20,27 @@ export class ApiClientError extends Error {
   }
 }
 
-const baseURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  process.env.BASE_URL ??
-  "http://localhost:4000"
+function csrfToken() {
+  if (typeof document === "undefined") return undefined
+  const raw = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith("agrivision_csrf="))
+    ?.split("=")[1]
+  return raw ? decodeURIComponent(raw) : undefined
+}
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL,
+  baseURL: "/api/backend",
   timeout: 30_000,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 })
 
 apiClient.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token =
-      window.localStorage.getItem("access_token") ??
-      window.localStorage.getItem("farmer-admin-token")
-    if (token) config.headers.Authorization = `Bearer ${token}`
+  const method = config.method?.toUpperCase() ?? "GET"
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    const token = csrfToken()
+    if (token) config.headers["x-csrf-token"] = token
   }
   return config
 })

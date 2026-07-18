@@ -1,15 +1,26 @@
-﻿import { BaseAppEntity } from '../../lib/database/base.entity';
+import { BaseAppEntity } from '../../lib/database/base.entity';
 import { Column, Entity, Index } from 'typeorm';
 
 export enum UserType {
-  ADMIN = 'admin',
-  AGENT = 'agent',
   FARMER = 'farmer',
+  WHOLESALE_BUYER = 'wholesaleBuyer',
   BUYER = 'buyer',
+  STUDENT_VOLUNTEER = 'studentVolunteer',
+  AGENT = 'agent',
+  AGRICULTURE_SPECIALIST = 'agricultureSpecialist',
+  VETERINARY_DOCTOR = 'veterinaryDoctor',
+  SELLER = 'seller',
+  MACHINERY_SELLER = 'machinerySeller',
   MEDICINE_SELLER = 'medicineSeller',
+  PUBLIC_USER = 'publicUser',
+  GOVERNMENT_OFFICER = 'governmentOfficer',
+  SUPPORT = 'support',
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'superAdmin',
 }
 
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
+export type AccountStatus = 'active' | 'suspended' | 'deleted';
 
 export type UserLocation = {
   latitude?: number;
@@ -36,6 +47,21 @@ export class User extends BaseAppEntity {
   @Index()
   @Column({ type: 'enum', enum: UserType, default: UserType.FARMER })
   role!: UserType;
+
+  @Column({
+    type: 'enum',
+    enum: UserType,
+    array: true,
+    default: [UserType.FARMER],
+  })
+  roles!: UserType[];
+
+  @Index()
+  @Column({ type: 'varchar', length: 20, default: 'active' })
+  accountStatus!: AccountStatus;
+
+  @Column({ type: 'integer', default: 0 })
+  tokenVersion!: number;
 
   @Column({ type: 'varchar', nullable: true, length: 40 })
   gender?: string | null;

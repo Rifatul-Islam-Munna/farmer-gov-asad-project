@@ -2,6 +2,7 @@
   Body,
   Controller,
   Get,
+  Header,
   Param,
   Patch,
   Post,
@@ -17,9 +18,13 @@ import { RolesGuard } from '../auth/roles.guard';
 import { VerifiedAccountGuard } from '../auth/verified-account.guard';
 import { CreateGoodDto } from '../goods/dto/good.dto';
 import { CreateMarketPriceDto } from '../market-price/dto/market-price.dto';
+import { AuditService } from '../audit/audit.service';
 import { UserType } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
 import {
   AdminSearchDto,
+  AdminUpdateAccountStatusDto,
+  AdminUpdateRolesDto,
   AdminUpdateDealDto,
   AdminUpdateInventoryDto,
   AdminUpdateListingDto,
@@ -29,8 +34,12 @@ import {
   UpdateVerificationDto,
 } from './dto/admin.dto';
 import { AdminService } from './admin.service';
-import { UpdateIntegrationSettingsDto } from './dto/integration-setting.dto';
+import {
+  TestProviderDto,
+  UpdateIntegrationSettingsDto,
+} from './dto/integration-setting.dto';
 import { IntegrationSettingsService } from './integration-settings.service';
+import { SupportImpersonationDto } from './dto/support-impersonation.dto';
 
 @ApiTags('Administration')
 @Controller()
@@ -38,6 +47,8 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly integrationSettingsService: IntegrationSettingsService,
+    private readonly userService: UserService,
+    private readonly auditService: AuditService,
   ) {}
 
   @Get('guidance')
@@ -74,8 +85,26 @@ export class AdminController {
   @ApiBearerAuth()
   @Roles(UserType.ADMIN)
   @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
-  updateUser(@Param('id') id: string, @Body() dto: AdminUpdateUserDto) {
-    return this.adminService.updateUser(id, dto);
+  async updateUser(
+    @Param('id') id: string,
+    @Body() dto: AdminUpdateUserDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    const { role, verificationStatus, ...profile } = dto;
+    if (Object.keys(profile).length) {
+      await this.adminService.updateUser(id, profile);
+    }
+    if (role) {
+      await this.userService.setRoles(request.user.id, id, [role]);
+    }
+    if (verificationStatus) {
+      await this.userService.setVerificationStatus(
+        request.user.id,
+        id,
+        verificationStatus,
+      );
+    }
+    return this.userService.findProfile(id);
   }
 
   @Patch('admin/users/:id/verification')
@@ -85,8 +114,13 @@ export class AdminController {
   updateVerification(
     @Param('id') id: string,
     @Body() dto: UpdateVerificationDto,
+    @Req() request: AuthenticatedRequest,
   ) {
-    return this.adminService.updateVerification(id, dto);
+    return this.userService.setVerificationStatus(
+      request.user.id,
+      id,
+      dto.status,
+    );
   }
 
   @Post('admin/guidance')
@@ -209,5 +243,126 @@ export class AdminController {
     @Req() request: AuthenticatedRequest,
   ) {
     return this.integrationSettingsService.update(request.user.id, dto);
+  }
+
+  @Post('admin/integrations/test')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Safely validate a configured provider key server-side',
+  })
+  @Roles(UserType.ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  testIntegration(
+    @Body() dto: TestProviderDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.integrationSettingsService.testProvider(request.user.id, dto);
+  }
+
+  @Patch('admin/users/:id/roles')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Replace approved roles for a user' })
+  @Roles(UserType.ADMIN, UserType.SUPER_ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  updateRoles(
+    @Param('id') id: string,
+    @Body() dto: AdminUpdateRolesDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.userService.setRoles(request.user.id, id, dto.roles);
+  }
+
+  @Patch('admin/users/:id/account-status')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Activate, suspend or soft-delete a user account' })
+  @Roles(UserType.ADMIN, UserType.SUPER_ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  updateAccountStatus(
+    @Param('id') id: string,
+    @Body() dto: AdminUpdateAccountStatusDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.userService.setAccountStatus(
+      request.user.id,
+      id,
+      dto.status,
+      dto.reason,
+    );
+  }
+
+  @Post('admin/support/impersonate')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Issue a short-lived, audited support-mode token' })
+  @Roles(UserType.ADMIN, UserType.SUPER_ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  supportImpersonate(
+    @Body() dto: SupportImpersonationDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.userService.issueSupportModeToken(
+      request.user.id,
+      dto.targetUserId,
+      dto.reason,
+      {
+        ipAddress: request.ip,
+        userAgent: request.header('user-agent')?.slice(0, 255),
+      },
+    );
+  }
+
+  @Get('admin/audit-logs/export')
+  @ApiBearerAuth()
+  @Header('Content-Type', 'text/csv; charset=utf-8')
+  @Header(
+    'Content-Disposition',
+    'attachment; filename="agrivision-audit-logs.csv"',
+  )
+  @Roles(UserType.ADMIN, UserType.SUPER_ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  exportAuditLogs(
+    @Query('action') action?: string,
+    @Query('entityType') entityType?: string,
+    @Query('actorUserId') actorUserId?: string,
+    @Query('entityId') entityId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.auditService.exportCsv({
+      action,
+      entityType,
+      actorUserId,
+      entityId,
+      from,
+      to,
+    });
+  }
+
+  @Get('admin/audit-logs')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Filter and paginate security and administrative audit events',
+  })
+  @Roles(UserType.ADMIN, UserType.SUPER_ADMIN)
+  @UseGuards(AccessTokenGuard, VerifiedAccountGuard, RolesGuard)
+  auditLogs(
+    @Query('action') action?: string,
+    @Query('entityType') entityType?: string,
+    @Query('actorUserId') actorUserId?: string,
+    @Query('entityId') entityId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '50',
+  ) {
+    return this.auditService.search({
+      action,
+      entityType,
+      actorUserId,
+      entityId,
+      from,
+      to,
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 50,
+    });
   }
 }

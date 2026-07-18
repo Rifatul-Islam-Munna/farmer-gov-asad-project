@@ -1,6 +1,7 @@
 ﻿import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
+import { MarketplaceProduct } from '../marketplace/entities/marketplace.entity';
 import { UserModule } from '../user/user.module';
 import { CatalogController } from './catalog.controller';
 import { CatalogService } from './catalog.service';
@@ -10,7 +11,7 @@ import { SellerService } from './seller.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Medicine, SellerInventory, User]),
+    TypeOrmModule.forFeature([Medicine, SellerInventory, MarketplaceProduct, User]),
     UserModule,
   ],
   controllers: [CatalogController, SellerController],
@@ -18,3 +19,4 @@ import { SellerService } from './seller.service';
   exports: [CatalogService, SellerService, TypeOrmModule],
 })
 export class MedicineSellerModule {}
+

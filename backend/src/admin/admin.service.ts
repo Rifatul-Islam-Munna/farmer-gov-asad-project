@@ -247,6 +247,8 @@ export class AdminService {
         title: dto.title.trim(),
         message: dto.message.trim(),
         active: dto.active ?? true,
+        status: dto.active === false ? 'draft' : 'published',
+        publishAt: new Date(),
         publishedAt: new Date(),
       }),
     );
@@ -269,6 +271,9 @@ export class AdminService {
     const data = await this.guidanceRepository
       .createQueryBuilder('guidance')
       .where('guidance.active = true')
+      .andWhere("guidance.status = 'published'")
+      .andWhere('(guidance.publishAt IS NULL OR guidance.publishAt <= NOW())')
+      .andWhere('(guidance.expiresAt IS NULL OR guidance.expiresAt > NOW())')
       .andWhere('guidance.targetRole IN (:...roles)', {
         roles: ['all', normalizedRole],
       })
@@ -416,3 +421,4 @@ export class AdminService {
     return { data: toApiEntity(await this.inventoryRepository.save(data)) };
   }
 }
+

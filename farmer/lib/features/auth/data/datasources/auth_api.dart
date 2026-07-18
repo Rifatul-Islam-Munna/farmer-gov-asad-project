@@ -47,7 +47,11 @@ class AuthApi {
   Future<void> _saveSession(AuthResponseModel response) {
     return GetIt.I<SessionStorage>().saveSession(
       token: response.accessToken,
+      refreshToken: response.refreshToken,
       role: response.user.role.name,
+      roles: response.user.roles
+          .map((item) => item.name)
+          .toList(growable: false),
       name: response.user.name,
       status: response.user.verificationStatus,
     );
